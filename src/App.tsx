@@ -72,12 +72,12 @@ function App() {
           <div className="container hero-grid">
             <div className="hero-copy">
               <span className="eyebrow">FREE ONLINE TOOLS</span>
-              <h1>Simple Tools.<br/><span>Powerful Results.</span></h1>
-              <p>Free online tools for QR codes, PDFs, images and everyday digital tasks. Fast, simple and designed to work in your browser.</p>
+              <h1>Free Online Tools.<br/><span>Simple. Fast. Useful.</span></h1>
+              <p>Free online tools for QR codes, PDFs, images and everyday digital tasks. Create, convert, compress and manage your files directly in your browser.</p>
               <div className="hero-search">
                 <Search size={20}/>
                 <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search for a tool, e.g. QR generator..." />
-                <button>Search</button>
+                <button type="button">Search</button>
               </div>
               <div className="trust-row">
                 <span><ShieldCheck size={17}/> Free to use</span>
