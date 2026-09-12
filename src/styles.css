@@ -9,3 +9,43 @@
 .footer{background:#172b49;color:#cbd5e4;padding:45px 0 18px}.footer .brand{color:#fff}.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:30px}.footer-grid>div{display:flex;flex-direction:column;gap:9px}.footer-grid p{color:#aebbd0;font-size:13px;max-width:280px}.footer b{color:#fff;font-size:13px;margin-bottom:5px}.copyright{border-top:1px solid rgba(255,255,255,.12);margin-top:35px;padding-top:16px;font-size:11px;color:#9eacc1}
 @media(max-width:900px){.nav-links{gap:13px}.nav-search{width:165px}.hero-grid{grid-template-columns:1fr}.hero-art{display:none}.tool-grid{grid-template-columns:repeat(2,1fr)}.content-section{grid-template-columns:1fr}.article-list{grid-template-columns:1fr 1fr}.footer-grid{grid-template-columns:2fr 1fr 1fr}}
 @media(max-width:650px){.container{width:min(100% - 24px,1180px)}.nav{height:64px}.nav-links{display:none;position:absolute;left:12px;right:12px;top:70px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px;box-shadow:0 20px 45px rgba(30,50,80,.12);flex-direction:column}.nav-links.open{display:flex}.nav-search{display:none}.mobile-menu{display:grid;place-items:center}.hero-grid{min-height:550px}.hero h1{font-size:40px}.hero p{font-size:15px}.trust-row{gap:10px;flex-wrap:wrap}.tool-grid{grid-template-columns:1fr}.article-list{grid-template-columns:1fr}.section-heading h2,.content-section h2,.faq h2{font-size:25px}.footer-grid{grid-template-columns:1fr 1fr}.footer-grid>div:first-child{grid-column:1/-1}}
+/* Phase 1F-A: Tool Page UI */
+.tool-page{min-height:calc(100vh - 72px);padding:42px 0 70px;background:#f7f9fc}
+.tool-back{display:inline-flex;align-items:center;gap:7px;color:#52627a;text-decoration:none;font-size:13px;font-weight:700;margin-bottom:28px;transition:color .18s ease}
+.tool-back:hover{color:#1769e0}
+.tool-page-header{max-width:760px;margin-bottom:30px}
+.tool-page-header .eyebrow{display:inline-block;margin-bottom:8px}
+.tool-page-header h1{margin:0 0 12px;color:#172b49;font-size:44px;line-height:1.1;letter-spacing:-.035em}
+.tool-page-header p{margin:0;max-width:700px;color:#68778d;font-size:16px;line-height:1.65}
+.tool-workspace{width:100%;min-height:390px;background:#fff;border:1px solid #e1e8f2;border-radius:20px;padding:32px;box-shadow:0 10px 35px rgba(26,52,84,.045);display:flex;align-items:center;justify-content:center}
+.tool-workspace-placeholder{width:min(100%,580px);text-align:center;padding:35px 20px}
+.tool-placeholder-icon{width:64px;height:64px;margin:0 auto 18px;border-radius:18px;background:#edf5ff;color:#1769e0;display:grid;place-items:center}
+.tool-workspace-placeholder h2{margin:0 0 10px;color:#172b49;font-size:24px;line-height:1.2}
+.tool-workspace-placeholder p{margin:0 auto;max-width:500px;color:#718096;font-size:14px;line-height:1.65}
+.tool-trust{display:flex;justify-content:center;align-items:center;gap:28px;margin-top:20px;color:#68778d;font-size:13px}
+.tool-trust>div{display:flex;align-items:center;gap:7px}
+.tool-trust svg{color:#20a466}
+
+@media(max-width:900px){
+.tool-page{padding-top:34px}
+.tool-page-header h1{font-size:40px}
+}
+
+@media(max-width:650px){
+.tool-page{min-height:calc(100vh - 64px);padding:28px 0 50px}
+.tool-back{margin-bottom:22px}
+.tool-page-header{margin-bottom:22px}
+.tool-page-header h1{font-size:34px;letter-spacing:-.025em}
+.tool-page-header p{font-size:14px}
+.tool-workspace{min-height:330px;padding:20px 14px;border-radius:16px}
+.tool-workspace-placeholder{padding:24px 8px}
+.tool-placeholder-icon{width:58px;height:58px;border-radius:16px}
+.tool-workspace-placeholder h2{font-size:21px}
+.tool-workspace-placeholder p{font-size:13px}
+.tool-trust{flex-direction:column;gap:10px;margin-top:18px}
+}
+
+@media(max-width:420px){
+.tool-page-header h1{font-size:30px}
+.tool-workspace{min-height:300px}
+}
