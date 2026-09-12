@@ -42,17 +42,17 @@ function App() {
     <div className="app">
       <header className="header">
         <div className="container nav">
-          <a className="brand" href="#">
+          <a className="brand" href="/">
             <span className="brand-mark"><QrCode size={20}/></span>
             <span>Codivio</span>
           </a>
 
           <nav className={`nav-links ${mobileOpen ? "open" : ""}`}>
-            <a href="#qr">QR Tools</a>
-            <a href="#pdf">PDF Tools</a>
-            <a href="#image">Image Tools</a>
-            <a href="#all">All Tools</a>
-            <a href="#blog">Blog</a>
+            <a href="/categories/qr-tools">QR Tools</a>
+            <a href="/categories/pdf-tools">PDF Tools</a>
+            <a href="/categories/image-tools">Image Tools</a>
+            <a href="/tools">All Tools</a>
+            <a href="/blog">Blog</a>
           </nav>
 
           <div className="nav-actions">
@@ -148,10 +148,10 @@ function App() {
 
       <footer className="footer">
         <div className="container footer-grid">
-          <div><a className="brand" href="#"><span className="brand-mark"><QrCode size={18}/></span>Codivio</a><p>Free online tools for everyday digital tasks.</p></div>
-          <div><b>Tools</b><a href="#qr">QR Tools</a><a href="#pdf">PDF Tools</a><a href="#image">Image Tools</a></div>
-          <div><b>Resources</b><a href="#blog">Blog</a><a href="#">FAQ</a></div>
-          <div><b>Legal</b><a href="#">Privacy</a><a href="#">Terms</a><a href="#">Contact</a></div>
+          <div><a className="brand" href="/"><span className="brand-mark"><QrCode size={18}/></span>Codivio</a><p>Free online tools for everyday digital tasks.</p></div>
+          <div><b>Tools</b><a href="/categories/qr-tools">QR Tools</a><a href="/categories/pdf-tools">PDF Tools</a><a href="/categories/image-tools">Image Tools</a></div>
+          <div><b>Resources</b><a href="/blog">Blog</a><a href="/faq">FAQ</a></div>
+          <div><b>Legal</b><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/contact">Contact</a></div>
         </div>
         <div className="container copyright">(c) 2026 Codivio. All rights reserved.</div>
       </footer>
