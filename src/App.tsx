@@ -1,5 +1,12 @@
 import { useMemo, useState } from "react";
 import {
+  Navigate,
+  Route,
+  Routes,
+  useParams,
+} from "react-router-dom";
+import ToolPage from "./pages/ToolPage";
+import {
   Search,
   QrCode,
   ScanLine,
@@ -314,7 +321,7 @@ const categories = [
   "Other Tools",
 ] as const;
 
-function App() {
+function HomePage() {
   const [query, setQuery] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -623,6 +630,34 @@ function ToolCard({ tool }: { tool: Tool }) {
         <ArrowRight size={15} />
       </span>
     </a>
+  );
+}
+
+function ToolRoute() {
+  const { slug } = useParams<{ slug: string }>();
+
+  const tool = tools.find((item) => item.slug === slug);
+
+  if (!tool) {
+    return <Navigate to="/" replace />;
+  }
+
+  return (
+    <ToolPage
+      name={tool.name}
+      description={tool.description}
+      category={tool.category}
+    />
+  );
+}
+
+function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<HomePage />} />
+      <Route path="/tools/:slug" element={<ToolRoute />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
 
