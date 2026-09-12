@@ -7,24 +7,26 @@ import {
 
 type Tool = {
   name: string;
+  slug: string;
   description: string;
   category: "QR Tools" | "PDF Tools" | "Image Tools" | "Other Tools";
   icon: React.ReactNode;
+  status: "coming-soon";
 };
 
 const tools: Tool[] = [
-  { name: "QR Code Generator", description: "Create QR codes for URLs, text, WiFi and more.", category: "QR Tools", icon: <QrCode /> },
-  { name: "QR Code Scanner", description: "Scan a QR code using your camera or an image.", category: "QR Tools", icon: <ScanLine /> },
-  { name: "WiFi QR Code", description: "Create a QR code for fast WiFi sharing.", category: "QR Tools", icon: <QrCode /> },
-  { name: "vCard QR Code", description: "Share contact details with a QR code.", category: "QR Tools", icon: <QrCode /> },
-  { name: "PDF Merge", description: "Combine multiple PDF files into one.", category: "PDF Tools", icon: <Combine /> },
-  { name: "PDF Split", description: "Split a PDF into separate files or pages.", category: "PDF Tools", icon: <FileText /> },
-  { name: "PDF Compress", description: "Reduce PDF file size online.", category: "PDF Tools", icon: <Minimize2 /> },
-  { name: "PDF to JPG", description: "Convert PDF pages into JPG images.", category: "PDF Tools", icon: <FileText /> },
-  { name: "Image Resize", description: "Resize images to exact dimensions.", category: "Image Tools", icon: <Maximize /> },
-  { name: "Image Compress", description: "Reduce image size while preserving quality.", category: "Image Tools", icon: <Minimize2 /> },
-  { name: "Image Converter", description: "Convert JPG, PNG and WebP images.", category: "Image Tools", icon: <ImageIcon /> },
-  { name: "Background Remover", description: "Remove image backgrounds quickly.", category: "Image Tools", icon: <ImageIcon /> },
+  { name: "QR Code Generator", slug: "qr-code-generator", status: "coming-soon", description: "Create QR codes for URLs, text, WiFi and more.", category: "QR Tools", icon: <QrCode /> },
+  { name: "QR Code Scanner", slug: "qr-code-scanner", status: "coming-soon", description: "Scan a QR code using your camera or an image.", category: "QR Tools", icon: <ScanLine /> },
+  { name: "WiFi QR Code", slug: "wifi-qr-code", status: "coming-soon", description: "Create a QR code for fast WiFi sharing.", category: "QR Tools", icon: <QrCode /> },
+  { name: "vCard QR Code", slug: "vcard-qr-code", status: "coming-soon", description: "Share contact details with a QR code.", category: "QR Tools", icon: <QrCode /> },
+  { name: "PDF Merge", slug: "pdf-merge", status: "coming-soon", description: "Combine multiple PDF files into one.", category: "PDF Tools", icon: <Combine /> },
+  { name: "PDF Split", slug: "pdf-split", status: "coming-soon", description: "Split a PDF into separate files or pages.", category: "PDF Tools", icon: <FileText /> },
+  { name: "PDF Compress", slug: "pdf-compress", status: "coming-soon", description: "Reduce PDF file size online.", category: "PDF Tools", icon: <Minimize2 /> },
+  { name: "PDF to JPG", slug: "pdf-to-jpg", status: "coming-soon", description: "Convert PDF pages into JPG images.", category: "PDF Tools", icon: <FileText /> },
+  { name: "Image Resize", slug: "image-resize", status: "coming-soon", description: "Resize images to exact dimensions.", category: "Image Tools", icon: <Maximize /> },
+  { name: "Image Compress", slug: "image-compress", status: "coming-soon", description: "Reduce image size while preserving quality.", category: "Image Tools", icon: <Minimize2 /> },
+  { name: "Image Converter", slug: "image-converter", status: "coming-soon", description: "Convert JPG, PNG and WebP images.", category: "Image Tools", icon: <ImageIcon /> },
+  { name: "Background Remover", slug: "background-remover", status: "coming-soon", description: "Remove image backgrounds quickly.", category: "Image Tools", icon: <ImageIcon /> },
 ];
 
 const categories = ["QR Tools", "PDF Tools", "Image Tools", "Other Tools"] as const;
@@ -161,7 +163,7 @@ function App() {
 
 function ToolCard({tool}: {tool: Tool}) {
   return (
-    <a className="tool-card" href="#">
+    <a className="tool-card" href={`/tools/${tool.slug}`}>
       <div className="tool-icon">{tool.icon}</div>
       <div className="tool-category">{tool.category}</div>
       <h3>{tool.name}</h3>
