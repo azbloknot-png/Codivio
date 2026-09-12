@@ -9,6 +9,7 @@ dist/
 .env
 .env.*
 !.env.example
+.dev.vars*
 
 # Testing
 coverage/
@@ -30,5 +31,6 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+
 # Local starter archive
 Codivio_Project_Starter_v1.zip
