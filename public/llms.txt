@@ -1,0 +1,12 @@
+# Codovio
+
+Codovio is a free online tools platform for QR codes, PDF files, images and everyday digital tasks.
+
+Primary tool categories:
+- QR Tools
+- PDF Tools
+- Image Tools
+- Other Tools
+
+Website:
+https://codovio.online/

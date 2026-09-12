@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: OAI-AdsBot
+Allow: /
+
+Disallow: /admin/
+Disallow: /api/private/
+
+Sitemap: https://codovio.online/sitemap.xml
