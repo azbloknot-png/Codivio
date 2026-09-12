@@ -44,7 +44,7 @@ function App() {
         <div className="container nav">
           <a className="brand" href="#">
             <span className="brand-mark"><QrCode size={20}/></span>
-            <span>Codovio</span>
+            <span>Codivio</span>
           </a>
 
           <nav className={`nav-links ${mobileOpen ? "open" : ""}`}>
@@ -93,7 +93,7 @@ function App() {
           </div>
         </section>
 
-        <section className="container ad-slot">ADVERTISEMENT <span>728 × 90</span></section>
+        <section className="container ad-slot">ADVERTISEMENT <span>728 x 90</span></section>
 
         <section className="container section" id="all">
           <div className="section-heading">
@@ -121,11 +121,11 @@ function App() {
           );
         })}
 
-        <section className="container ad-slot">ADVERTISEMENT <span>728 × 90</span></section>
+        <section className="container ad-slot">ADVERTISEMENT <span>728 x 90</span></section>
 
         <section className="container content-section" id="blog">
           <div>
-            <span className="eyebrow">CODOVIO BLOG</span>
+            <span className="eyebrow">CODIVIO BLOG</span>
             <h2>Helpful guides for everyday digital tasks</h2>
             <p>Learn how to create QR codes, compress PDFs, resize images and choose the right file format. Our blog is built around practical answers and useful tutorials.</p>
           </div>
@@ -139,21 +139,21 @@ function App() {
         <section className="container faq">
           <div className="section-heading"><div><span className="eyebrow">FAQ</span><h2>Frequently Asked Questions</h2></div></div>
           {[
-            ["Are Codovio tools free?", "Yes. The platform is designed around free, easy-to-use online tools."],
+            ["Are Codivio tools free?", "Yes. The platform is designed around free, easy-to-use online tools."],
             ["Do I need an account?", "Core tools can be designed to work without registration."],
-            ["Can I use Codovio on mobile?", "Yes. The interface is responsive and designed for phones, tablets and desktop."],
+            ["Can I use Codivio on mobile?", "Yes. The interface is responsive and designed for phones, tablets and desktop."],
           ].map(([q,a]) => <details key={q}><summary>{q}</summary><p>{a}</p></details>)}
         </section>
       </main>
 
       <footer className="footer">
         <div className="container footer-grid">
-          <div><a className="brand" href="#"><span className="brand-mark"><QrCode size={18}/></span>Codovio</a><p>Free online tools for everyday digital tasks.</p></div>
+          <div><a className="brand" href="#"><span className="brand-mark"><QrCode size={18}/></span>Codivio</a><p>Free online tools for everyday digital tasks.</p></div>
           <div><b>Tools</b><a href="#qr">QR Tools</a><a href="#pdf">PDF Tools</a><a href="#image">Image Tools</a></div>
           <div><b>Resources</b><a href="#blog">Blog</a><a href="#">FAQ</a></div>
           <div><b>Legal</b><a href="#">Privacy</a><a href="#">Terms</a><a href="#">Contact</a></div>
         </div>
-        <div className="container copyright">© 2026 Codovio. All rights reserved.</div>
+        <div className="container copyright">(c) 2026 Codivio. All rights reserved.</div>
       </footer>
     </div>
   );
