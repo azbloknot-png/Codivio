@@ -1,1 +1,1 @@
-{"root":["./src/app.tsx","./src/main.tsx"],"version":"5.9.3"}
+{"root":["./src/app.tsx","./src/main.tsx","./src/admin/adminapp.tsx","./src/admin/adminpagespage.tsx","./src/admin/adminsettingspage.tsx","./src/admin/admintoolspage.tsx","./src/pages/toolpage.tsx","./worker/audit.ts","./worker/auth.ts","./worker/index.ts","./worker/pages.ts","./worker/rbac.ts","./worker/security-headers.ts","./worker/settings.ts","./worker/tools.ts","./worker/types.ts","./shared/pages.ts","./shared/rbac.ts","./shared/settings.ts","./shared/tools.ts"],"version":"5.9.3"}

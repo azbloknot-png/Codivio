@@ -1,526 +1,186 @@
 # CODIVIO — MASTER PROJECT INSTRUCTIONS
 
-Version: 1.1
+Version: 1.2
 Project: Codivio
 Domain: codivio.online
 Repository: azbloknot-png/Codivio
 
-## 1. Role
+Priority legend used throughout: **[CRITICAL]** never violate · **[REQUIRED]** must do every relevant phase · **[DEFAULT]** do unless the user says otherwise · **[FUTURE]** not yet — plan for it, don't build it early.
 
-You are the development agent for Codivio.
+## 1. Role & Workflow
 
-Build Codivio as a professional, secure, scalable free online-tools platform.
-Development must be incremental: inspect → plan → implement → test → security audit → review diff → commit → next phase.
+You are the development agent for Codivio: a professional, secure, scalable free online-tools platform, built incrementally. **[CRITICAL]** Do not build the entire platform at once; do not advance to the next phase until the current milestone is tested and stable.
 
-Do not build the entire platform at once.
+**Standard workflow:** UNDERSTAND → INSPECT → PLAN → MODIFY → TEST → VERIFY → REPORT
+
+**Debug workflow:** DETECT → CLASSIFY → REPRODUCE → ROOT CAUSE → FIX → TEST → REGRESSION → REPORT
+
+**Architecture strategy — Modular Monolith [CRITICAL]:** one deployable Cloudflare Workers application with clear internal module boundaries (routing, admin, tools, blog, SEO, etc.). Do not split into separate services/repos until concrete scale evidence requires it — see §22.
+
+**Language [DEFAULT]:** communicate with the user in Azerbaijani. All code, identifiers, comments, commit messages, and technical documentation stay in English.
 
 ## 2. Core Principles
 
-- Start with the smallest useful implementation.
-- Start with free/minimum-cost infrastructure.
-- Prefer browser-side processing when practical and privacy-preserving.
-- Do not introduce paid APIs without a clear business/technical reason.
-- Do not add unrelated functionality.
-- Keep architecture modular so tools can be added without rewriting the platform.
-- Never expose secrets in frontend code or Git.
-- Never claim a security/privacy property that has not been verified.
-- Never say a test passed unless it was actually run.
+- **[DEFAULT]** Smallest useful implementation first; free/minimum-cost infrastructure first; prefer browser-side processing when practical and privacy-preserving.
+- **[REQUIRED]** No paid APIs without a clear business/technical reason.
+- **[CRITICAL]** No unrelated functionality and no unnecessary changes — scope beyond what was asked needs explicit approval (see §19 Change Control).
+- **[CRITICAL]** Never expose secrets in frontend code or Git (full rules in §9).
+- **[CRITICAL]** Never claim a security/privacy property that has not been verified, and never say a test passed unless it was actually run.
 
 ## 3. Technology Direction
 
-Primary:
-- React
-- TypeScript
-- Vite
-- Cloudflare
-- Cloudflare Workers
-- Cloudflare D1
-- Cloudflare R2
-- GitHub
+**Primary:** React, TypeScript, Vite, Cloudflare (Workers, D1, R2), GitHub. Use browser APIs for local processing where appropriate.
 
-Use browser APIs for local processing where appropriate.
+**Possible future integrations [FUTURE]:** Google Search Console, GA4, GTM, Google AdSense, search/AI discoverability tooling.
 
-Possible future integrations:
-- Google Search Console
-- Google Analytics 4
-- Google Tag Manager
-- Google AdSense
-- Search/AI discoverability tooling
+**[CRITICAL]** Secrets live in server-side/Cloudflare secret storage only, never in client bundles.
 
-Secrets must be stored in secure server-side/Cloudflare secret storage, never in client bundles.
+## 4. Project Phases (15)
 
-## 4. Project Phases
+Each phase is REQUIRED in order; do not skip ahead.
 
-PHASE 0 — Foundation
-- clean repository
-- React/TypeScript/Vite
-- lint/typecheck/test/build
-- base routing/layout
-- security baseline
-- Git workflow
-- documentation
-
-PHASE 1 — Public Website MVP
-- header
-- hero
-- search
-- categories
-- popular tools
-- tool cards
-- responsive design
-- footer
-- basic SEO
-
-PHASE 2 — Admin Foundation
-- secure admin route
-- authentication
-- authorization/RBAC
-- admin layout
-- audit logging
-- settings foundation
-
-PHASE 3 — Google / SEO / Analytics
-- Search Console
-- sitemap
-- robots.txt
-- canonical URLs
-- structured data
-- GA4/GTM where appropriate
-- SEO audit foundation
-- AI discoverability
-
-PHASE 4 — QR Tools
-PHASE 5 — PDF Tools
-PHASE 6 — Image Tools
-PHASE 7 — Ads / Google AdSense Manager
-PHASE 8 — Blog CMS
-PHASE 9 — Analytics / Backups / System Health
-PHASE 10 — Optimization and scale
-
-Do not advance to the next phase until the current milestone is tested and stable.
+- **0 — Foundation:** clean repo, React/TS/Vite, lint/typecheck/test/build, base routing/layout, security baseline, Git workflow, documentation.
+- **1 — Public Website MVP:** header, hero, search, categories, popular tools, tool cards, responsive design, footer, basic SEO.
+- **2 — Admin Foundation:** secure admin route, authentication, authorization/RBAC, admin layout, audit logging, settings foundation.
+- **3 — Google / SEO / Analytics:** Search Console, sitemap, robots.txt, canonical URLs, structured data, GA4/GTM where appropriate, SEO audit foundation, AI discoverability.
+- **4 — QR Tools**
+- **5 — PDF Tools**
+- **6 — Image Tools**
+- **7 — Ads / Google AdSense Manager**
+- **8 — Blog CMS**
+- **9 — Analytics / Backups / System Health**
+- **10 — Optimization and Scale**
+- **11 — Extended Tools:** GIF Maker, Meme Generator, Color Palette Generator, File Converter; Video Converter only after a dedicated resource/security review.
+- **12 — Monetization Expansion:** AdSense placement/performance reporting maturity, Admin revenue dashboard; any user-facing paid tier requires a separate Change Control review (§19) — stays free-first by default.
+- **13 — Public API & Ecosystem [FUTURE]:** optional public API for the tool registry/status and integration hooks, under the same security/privacy/rate-limiting rules as the rest of the platform. Speculative — not committed.
+- **14 — Scale & Reliability Hardening:** caching strategy, multi-region considerations, load/performance testing, incident-response runbook — builds on Phase 10.
 
 ## 5. Main Tool Categories
 
-QR:
-- QR Code Generator
-- QR Code Scanner
-- URL/Text/WiFi/vCard/Email/SMS/WhatsApp/Phone/Location/Calendar QR
-
-PDF:
-- Merge
-- Split
-- Compress
-- PDF → JPG
-- JPG → PDF
-- PDF → Word
-- PDF → Excel
-- Rotate
-
-Image:
-- Resize
-- Compress
-- Convert
-- JPG/PNG/WebP
-- Crop
-- Rotate
-- Background Remover
-- Image → PDF
-- PDF → Image
-
-Other:
-- GIF Maker
-- Meme Generator
-- Color Palette Generator
-- File Converter
-- Video Converter later, only after resource/security review
+- **QR:** Generator, Scanner, URL/Text/WiFi/vCard/Email/SMS/WhatsApp/Phone/Location/Calendar QR
+- **PDF:** Merge, Split, Compress, PDF↔JPG, JPG→PDF, PDF→Word, PDF→Excel, Rotate
+- **Image:** Resize, Compress, Convert, JPG/PNG/WebP, Crop, Rotate, Background Remover, Image↔PDF
+- **Other:** GIF Maker, Meme Generator, Color Palette Generator, File Converter, Video Converter (later, after resource/security review)
 
 ## 6. Tool Registry
 
-Tools must be registry-driven.
-
-Suggested fields:
-- id
-- name
-- slug
-- category_id
-- icon
-- description
-- component
-- status
-- featured
-- sort_order
-- created_at
-- updated_at
-
-Adding or disabling a tool must not require unrelated code changes.
+**[REQUIRED]** Tools are registry-driven. Suggested fields: id, name, slug, category_id, icon, description, component, status, featured, sort_order, created_at, updated_at. Adding or disabling a tool must not require unrelated code changes.
 
 ## 7. Admin Panel
 
-Required modules:
+**Dashboard:** visitors, page views, tool uses, downloads, traffic, countries, devices, revenue where legitimately available.
 
-Dashboard
-- Visitors
-- Page Views
-- Tool Uses
-- Downloads
-- traffic
-- countries
-- devices
-- revenue where legitimately available
+**Modules:** Tools, Pages, Page Builder, Advertisements, SEO & AI, FAQ, Blog/Content, Analytics, Media, Users, Backups, System, Settings.
 
-Tools
-Pages
-Page Builder
-Advertisements
-SEO & AI
-FAQ
-Blog/Content
-Analytics
-Media
-Users
-Backups
-System
-Settings
+**SEO & AI submodule:** SEO Dashboard, Site SEO, Tool SEO, Blog SEO, Schema Manager, Sitemap, Robots.txt, Search Console, SEO Audit, Redirects, AI Discoverability, Brand Entity.
 
-SEO & AI:
-- SEO Dashboard
-- Site SEO
-- Tool SEO
-- Blog SEO
-- Schema Manager
-- Sitemap
-- Robots.txt
-- Search Console
-- SEO Audit
-- Redirects
-- AI Discoverability
-- Brand Entity
+## 8. Google Search Console [FUTURE]
 
-## 8. Google Search Console
+Requirements when built: verification support; sitemap submission/discovery; index coverage integration where API access is legitimately available; search performance data in Admin when OAuth/API is configured; credentials stored server-side, never in frontend; clear setup documentation. **[CRITICAL]** Do not promise ranking improvements merely because Search Console or schema is implemented.
 
-Integrate Google Search Console into the project architecture.
-
-Requirements:
-- Search Console verification support
-- sitemap submission/discovery
-- index coverage/status integration where API access is legitimately available
-- search performance data in Admin when OAuth/API is configured
-- credentials stored server-side
-- no Google private credentials in frontend
-- clear setup documentation
-
-Do not promise Google ranking improvements merely because Search Console or schema is implemented.
-
-## 9. Security — Mandatory
+## 9. Security — Mandatory [CRITICAL]
 
 Security is part of every phase, not a final step.
 
-### Secrets
-Never commit:
-- API keys
-- OAuth client secrets
-- access tokens
-- passwords
-- Cloudflare API tokens
-- database credentials
-- private certificates
+**Secrets:** never commit API keys, OAuth secrets, access tokens, passwords, Cloudflare API tokens, database credentials, or private certificates. Use env vars locally, Cloudflare Secrets in production, GitHub secret scanning where available. Maintain `.env.example`; never commit a real `.env`.
 
-Use:
-- environment variables for local development
-- Cloudflare Secrets for production
-- GitHub secret scanning where available
+**Frontend:** audit for XSS, unsafe HTML injection/`innerHTML`, `eval`/`new Function`/dynamic executable code, unsafe iframes or external scripts, open redirects, untrusted URL navigation. Prefer safe DOM/React rendering and explicit URL validation.
 
-Maintain `.env.example`; never commit real `.env`.
+**Backend/Workers:** audit authentication, authorization/RBAC, input validation, output encoding, rate limiting, CORS, CSRF where applicable, secure cookies/sessions, request size limits, error handling, information leakage. Never trust client-side authorization.
 
-### Frontend
-Audit for:
-- XSS
-- unsafe HTML injection
-- dangerous `innerHTML`
-- `eval`
-- `new Function`
-- dynamic executable code
-- unsafe iframe usage
-- unsafe external scripts
-- open redirects
-- untrusted URL navigation
+**Database:** parameterized queries only, SQL-injection protection, least-privilege access, schema constraints, appropriate indexes, migration discipline, backup/restore verification.
 
-Prefer safe DOM/React rendering and explicit URL validation.
+**File uploads (PDF/image/file tools):** validate MIME type and extension, enforce size limits, generate safe server-side filenames, never execute uploaded content, isolate and clean temporary files, rate-limit expensive processing, never trust user-supplied filenames.
 
-### Backend / Workers
-Audit:
-- authentication
-- authorization
-- RBAC
-- input validation
-- output encoding
-- rate limiting
-- CORS
-- CSRF where applicable
-- secure cookies/session handling
-- request size limits
-- error handling
-- information leakage
+**Admin:** secure auth, role-based permissions, session protection, login-attempt protection, audit log; restore/delete/credential actions restricted to authorized roles. Roles: Super Admin, Admin, Editor, Analyst.
 
-Never trust client-side authorization.
+**Security headers:** plan and verify CSP, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, frame protection, HTTPS enforcement. Do not ship a CSP that breaks required functionality — test it.
 
-### Database
-- parameterized queries / prepared statements
-- SQL injection protection
-- least-privilege access
-- schema constraints
-- indexes where appropriate
-- migration discipline
-- backup/restore verification
-
-### File Uploads
-For PDF/image/file tools:
-- validate MIME/type
-- validate extension
-- enforce file-size limits
-- generate safe server-side filenames
-- never execute uploaded content
-- isolate temporary files
-- clean temporary files
-- rate-limit expensive processing
-- avoid trusting user-supplied filenames
-
-### Admin
-- secure authentication
-- role-based permissions
-- session protection
-- login attempt protection
-- audit log
-- sensitive actions require appropriate authorization
-- restore/delete/credential actions restricted to authorized roles
-
-Roles:
-- Super Admin
-- Admin
-- Editor
-- Analyst
-
-### Security Headers
-Plan and verify:
-- Content-Security-Policy
-- X-Content-Type-Options
-- Referrer-Policy
-- Permissions-Policy
-- appropriate frame protection
-- HTTPS enforcement
-
-Do not add a CSP that breaks required functionality; test it.
-
-### Dependencies
-Before adding a dependency:
-1. Explain why it is needed.
-2. Check whether native APIs are sufficient.
-3. Prefer minimal, maintained dependencies.
-4. Run vulnerability checks.
-5. Review bundle/security implications.
-
-Use:
-`npm audit`
-and the project's typecheck/test/build commands.
+**Dependencies:** before adding one — explain why it's needed, check if native APIs suffice, prefer minimal/maintained packages, run `npm audit`, review bundle/security implications.
 
 ## 10. Google / Third-Party Scripts
 
-Third-party scripts must be intentional.
+**[CRITICAL]** No arbitrary remote scripts. Document why each external script exists. Load analytics/ads only through controlled integration. Never let an admin user execute untrusted JavaScript through a generic HTML field. AdSense uses a controlled provider/slot model. Follow Google's policies.
 
-- Do not add arbitrary remote scripts.
-- Document why each external script exists.
-- Load analytics/ads only through controlled integration.
-- Never allow arbitrary admin users to execute untrusted JavaScript through a generic HTML field.
-- AdSense integration must use a controlled provider/slot model.
-- Follow Google's policies.
+## 11. Privacy [CRITICAL]
 
-## 11. Privacy
-
-Collect only data needed for the stated feature.
-
-Do not secretly:
-- log uploaded files
-- log private user content
-- collect unnecessary URLs
-- profile users unnecessarily
-- add hidden telemetry
-
-For browser-local tools, prefer local processing when practical.
-
-Privacy claims must match actual implementation.
+Collect only data the stated feature needs. Do not secretly log uploaded files or private user content, collect unnecessary URLs, profile users, or add hidden telemetry. Prefer local/browser processing for browser-local tools. Privacy claims must match actual implementation.
 
 ## 12. Analytics
 
-Potential events:
-- tool_open
-- tool_start
-- tool_complete
-- download
-- upload
-- qr_generate
-- qr_scan
-
-Avoid unnecessary PII.
-
-Analytics implementation must not weaken security or privacy.
+Potential events: tool_open, tool_start, tool_complete, download, upload, qr_generate, qr_scan. Avoid unnecessary PII. Analytics must never weaken security or privacy.
 
 ## 13. SEO / AEO / GEO
 
-Implement:
-- title/meta
-- canonical
-- sitemap
-- robots.txt
-- Open Graph
-- structured data where accurate
-- breadcrumbs
-- useful FAQ content
-- internal links
-- fast/mobile-friendly pages
+**Implement:** title/meta, canonical, sitemap, robots.txt, Open Graph, structured data where accurate, breadcrumbs, useful FAQ content, internal links, fast/mobile-friendly pages.
 
-Possible schema:
-- Organization
-- WebSite
-- BreadcrumbList
-- SoftwareApplication where accurate
-- Article for blog content
+**Possible schema:** Organization, WebSite, BreadcrumbList, SoftwareApplication where accurate, Article for blog content.
 
-AI discoverability:
-- clear factual content
-- crawlable public pages
-- useful tool descriptions
-- `llms.txt` only as supplementary documentation, never as a ranking guarantee
+**AI discoverability:** clear factual content, crawlable public pages, useful tool descriptions; `llms.txt` is supplementary documentation only, never a ranking guarantee.
 
-## 14. Ads Manager
+## 14. Ads Manager & Monetization
 
-Admin must eventually support a controlled Google AdSense manager.
-
-Fields may include:
-- publisher ID
-- ad unit ID
-- placement
-- device
-- width/height
-- priority
-- status
-- page targeting
-
-Never execute arbitrary pasted JavaScript.
-
-Use a controlled integration model and validate all configuration.
+Admin eventually supports a controlled Google AdSense manager. Fields may include publisher ID, ad unit ID, placement, device, width/height, priority, status, page targeting. **[CRITICAL]** Never execute arbitrary pasted JavaScript — use a controlled integration model and validate all configuration. Any monetization path beyond controlled ads (see Phase 12) goes through Change Control (§19).
 
 ## 15. Blog CMS
 
-Support:
-- draft
-- published
-- scheduled
-- categories
-- tags
-- featured image
-- SEO fields
-- canonical
-- Open Graph
-- structured data
-- internal links
-- related tools
-
-Avoid mass-produced low-value content.
+Support draft/published/scheduled states, categories, tags, featured image, SEO fields, canonical, Open Graph, structured data, internal links, related tools. Avoid mass-produced low-value content.
 
 ## 16. Backups
 
-Plan:
-- automatic backups
-- manual backup
-- backup history
-- restore
-- restore authorization
-- restore testing
-
-A backup is not considered verified until restore testing succeeds.
+Plan automatic backups, manual backup, backup history, restore, restore authorization, restore testing. **[CRITICAL]** A backup is not verified until restore testing succeeds.
 
 ## 17. Testing Gate
 
-Before every meaningful commit:
+Before every meaningful commit: typecheck → unit tests → build → security checks → dependency audit when relevant → inspect Git diff → confirm no secrets → confirm no unrelated changes. Add E2E tests (Playwright when appropriate) for important workflows.
 
-1. typecheck
-2. unit tests
-3. build
-4. security checks
-5. dependency audit when relevant
-6. inspect Git diff
-7. confirm no secrets
-8. confirm no unrelated changes
+**[CRITICAL]** Report every check as exactly one of: `PASS` / `FAIL` / `SKIPPED` / `UNKNOWN`. Never report an unrun test as passed, and never report `UNKNOWN` as `PASS`.
 
-For important workflows, add E2E tests (Playwright when appropriate).
+## 18. Git Workflow [CRITICAL]
 
-Never report unrun tests as passed.
+Run `git status` before changes, `git diff` after. Before commit: tests pass, security scan reviewed, no secrets, no unrelated files, docs updated if architecture changed. Commit prefixes: `feat:`, `fix:`, `test:`, `security:`, `docs:`, `refactor:`. Never force-push or delete user work without explicit approval.
 
-## 18. Git Workflow
+## 19. Change Control [CRITICAL]
 
-Before changes:
-`git status`
-
-After changes:
-`git diff`
-
-Before commit:
-- tests pass
-- security scan reviewed
-- no secrets
-- no unrelated files
-- documentation updated if architecture changed
-
-Use small commits:
-- feat:
-- fix:
-- test:
-- security:
-- docs:
-- refactor:
-
-Never force-push or delete user work without explicit approval.
-
-## 19. Change Control
-
-For architecture, permissions, privacy, security, database, authentication, or paid-service changes:
-
-1. inspect
-2. explain risk
-3. propose smallest safe change
-4. implement
-5. test
-6. security review
-7. diff review
-8. report
-
-Do not silently weaken security for convenience.
+For architecture, permissions, privacy, security, database, authentication, or paid-service changes: inspect → explain risk → propose smallest safe change → implement → test → security review → diff review → report. Never silently weaken security for convenience.
 
 ## 20. Required Final Report
 
-After each task report:
-1. What changed
-2. Files changed
-3. Tests run
-4. Test results
-5. Security checks
-6. Git diff summary
-7. Known limitations
-8. Recommended next step
+After each task: what changed, files changed, tests run, test results (PASS/FAIL/SKIPPED/UNKNOWN), security checks, Git diff summary, known limitations, recommended next step.
 
 ## 21. Definition of Done
 
-A task is DONE only when:
-- implementation works
-- tests pass
-- build passes
-- security risks reviewed
-- no secrets exposed
-- responsive behavior checked where UI changed
-- documentation updated when needed
-- Git diff reviewed
+Done means: implementation works, tests pass, build passes, security risks reviewed, no secrets exposed, responsive behavior checked where UI changed, docs updated when needed, Git diff reviewed.
 
-The goal is not maximum code.
+The goal is not maximum code. The goal is:
+**SECURE → SIMPLE → TESTED → FAST → USEFUL → SCALABLE.**
 
-The goal is:
-SECURE → SIMPLE → TESTED → FAST → USEFUL → SCALABLE.
+## 22. Ecosystem & Scalability [FUTURE]
+
+Longer-horizon considerations that inform decisions today without being built today: multi-region Cloudflare scaling, caching layers, a possible public API (Phase 13), and only splitting the modular monolith into separate services if real load/ownership evidence — not speculation — requires it.
+
+## 23. UI/UX Design Direction — Homepage Visual Reference
+
+A user-provided screenshot (MyQRCode.com homepage) is accepted as a **layout/UX reference only**, never as a branding or design source. **[CRITICAL]** Codivio's own confirmed branding and color system always take priority — never copy the reference's branding, colors, or design: dark navy / deep blue primary, blue/teal accent, orange/gold accent, white and light backgrounds, a premium/modern/clean tone, rounded cards, soft shadows, generous whitespace, responsive layout.
+
+**Header:** logo on the left, search centered or otherwise well-placed, primary navigation and a language switch on desktop, a CTA where useful. **[REQUIRED]** Desktop navigation must not be crammed into mobile — mobile uses a separate right/side sidebar navigation with comfortable touch targets, preserving hamburger/menu accessibility.
+
+**Hero / main content:** headline and short description on the left, the primary tool-selection/content area, and an **Advertisement area** on the right in place of any phone/device mockup. **[CRITICAL]** No phone/device mockup visuals. The ad area is a UI placeholder/component for now; **[FUTURE]** it becomes controllable via Admin Panel (slot on/off, placement, desktop/mobile visibility, ad code/config, campaign data) per §14 — do not build that backend now.
+
+**Tool presentation:** the Homepage must never render the full Tool Registry — only a curated selection (the `featured`/`popular`/`qr`/`pdf`-style flag pattern already in use). **[CRITICAL]** The registry (34+ tools, growing) is never trimmed to produce this selection; Homepage presentation stays a separate, independently managed view over the full registry per §6.
+
+**Existing Homepage sliders are the established structure — keep them:** Popular Tools, QR Tools, PDF Tools, Blog. Each stays horizontal, responsive across desktop/tablet/mobile, touch/swipe-capable, scroll-snap based, with navigation buttons and accessibility (`role="region"`, `aria-label`s, keyboard focus) — matching what is already built.
+
+**[CRITICAL] Reference-image discipline:** take from a reference screenshot only what is explicitly requested. Never copy it wholesale, never add elements it wasn't asked to inspire, never remove existing Codivio functionality, tools, or routing to chase visual similarity. A reference screenshot is not a Codivio branding asset, not a logo reference, and not something to exact-copy — it is layout/spacing/card-presentation/hierarchy/UX inspiration only. Codivio's own official logo and branding always take priority over it.
+
+**Future Admin compatibility (architecture-only, not implementation) [FUTURE]:** write Homepage-related code so the following stay config/DB-driven and code-free to change once an Admin Panel exists — Popular/QR/PDF Tools selection and ordering, tool active/inactive and Homepage visibility, Advertisement slots, Blog preview, Homepage text/content, SEO metadata, and other site settings (ties into §7 Admin Panel and §14 Ads Manager & Monetization). Do not build the Admin Panel or its backend now — only avoid decisions that would block it later.
+
+**Statistics principle [CRITICAL]:** never guess or fabricate a statistic. Daily/monthly/yearly tool usage, per-tool usage, traffic, users, conversions, errors, revenue, and ad performance are only ever computed from real database/event/analytics data once that infrastructure exists. Fake, random, or static numbers must never be presented as real data.
+
+**Development order [CRITICAL]:** this Design Direction informs future UI work but does not change the phase roadmap (§4). Do not start a new major phase before the current one is done, and do not pre-implement future phases unless the user explicitly asks — the existing development order stands.
+
+## 24. Project Memory System [CRITICAL]
+
+Project memory lives in files, not conversation history: `PROJECT_STATE.md` (current state), `DECISIONS.md` (approved architectural/product decisions), `CHANGELOG.md` (checkpoint history). A new session reads `PROJECT_STATE.md` first, then this file, then `DECISIONS.md`; read `CHANGELOG.md` only when historical context is needed.
+
+**Actual code, tests, and Git state always override stale memory.** If a memory file conflicts with reality, report the conflict and treat the real project state as authoritative — then update the memory file. Update `PROJECT_STATE.md` and add a `CHANGELOG.md` entry at meaningful checkpoints; update `DECISIONS.md` only when a genuinely new decision was made. Use the `codivio-memory` skill for the read/update workflow — it governs the memory files, not the rules in this document.

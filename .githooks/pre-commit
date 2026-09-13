@@ -1,0 +1,6 @@
+#!/bin/sh
+# Codivio pre-commit gate: fast local validation (typecheck, lint if configured, tests).
+# Does not modify source files. See scripts/pre-commit-check.mjs for the checks themselves.
+hook_dir="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+node "$hook_dir/../scripts/pre-commit-check.mjs"
+exit $?

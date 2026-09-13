@@ -1,0 +1,7 @@
+#!/bin/sh
+# Codivio pre-push gate: stronger validation before publishing to GitHub
+# (production build, full test suite, offline lockfile check).
+# See scripts/pre-push-check.mjs for the checks themselves.
+hook_dir="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+node "$hook_dir/../scripts/pre-push-check.mjs"
+exit $?

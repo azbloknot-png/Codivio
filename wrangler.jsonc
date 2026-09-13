@@ -2,7 +2,20 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "codivio",
   "compatibility_date": "2026-09-12",
+  "main": "worker/index.ts",
   "assets": {
-    "not_found_handling": "single-page-application"
-  }
+    "not_found_handling": "single-page-application",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "codivio",
+      // No real D1 database has been provisioned yet — this checkpoint does
+      // not have Cloudflare account access to run `wrangler d1 create`.
+      // Replace this placeholder with the real database_id (from
+      // `wrangler d1 create codivio`) before any --remote dev or deploy.
+      "database_id": "REPLACE_WITH_REAL_D1_DATABASE_ID"
+    }
+  ]
 }

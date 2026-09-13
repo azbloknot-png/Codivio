@@ -5,6 +5,6 @@ import { cloudflare } from "@cloudflare/vite-plugin";
 export default defineConfig({
   plugins: [
     react(),
-    cloudflare(),
-  ],
+    process.env.NODE_ENV === "development" ? null : cloudflare(),
+  ].filter(Boolean),
 });
