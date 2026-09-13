@@ -37,7 +37,7 @@ import { auditLog } from "./audit";
 const SESSION_COOKIE_NAME = "codivio_session";
 const SESSION_DURATION_HOURS = 24;
 const PBKDF2_ITERATIONS = 100_000;
-const MAX_FAILED_ATTEMPTS = 5;
+const MAX_FAILED_ATTEMPTS = 25; // 5x the original 5, for normal admin use
 const FAILED_ATTEMPT_WINDOW_MINUTES = 15;
 
 // A fixed, non-secret PBKDF2 hash (of an arbitrary throwaway string, not any

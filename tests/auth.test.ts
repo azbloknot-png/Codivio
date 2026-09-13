@@ -123,12 +123,20 @@ describe("login, session, and logout", () => {
     expect(res.headers.get("Set-Cookie") ?? "").not.toContain("Secure");
   });
 
-  it("locks out further attempts after too many failures", async () => {
-    for (let i = 0; i < 5; i++) {
+  it("locks out further attempts after too many failures (25 — 5x the original 5)", async () => {
+    for (let i = 0; i < 25; i++) {
       await handleLogin(loginRequest("admin@codivio.online", "wrong-password"), env);
     }
     const res = await handleLogin(loginRequest("admin@codivio.online", "correct-password"), env);
     expect(res.status).toBe(429);
+  });
+
+  it("still allows a correct login at 24 prior failures — one below the new threshold", async () => {
+    for (let i = 0; i < 24; i++) {
+      await handleLogin(loginRequest("admin@codivio.online", "wrong-password"), env);
+    }
+    const res = await handleLogin(loginRequest("admin@codivio.online", "correct-password"), env);
+    expect(res.status).toBe(200);
   });
 
   it("rejects an inactive user even with the correct password", async () => {
