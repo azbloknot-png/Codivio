@@ -5,17 +5,22 @@
   "main": "worker/index.ts",
   "assets": {
     "not_found_handling": "single-page-application",
-    "binding": "ASSETS"
+    "binding": "ASSETS",
+    // Forces every request (including static assets) through the Worker's
+    // fetch() first, so worker/security-headers.ts's withSecurityHeaders()
+    // actually applies to HTML page responses too — without this, matching
+    // static assets are served directly from Cloudflare's edge cache,
+    // bypassing the Worker entirely (verified in production: /api/* had
+    // full security headers, but /, /tools, /admin etc. did not).
+    "run_worker_first": true
   },
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "codivio",
-      // No real D1 database has been provisioned yet — this checkpoint does
-      // not have Cloudflare account access to run `wrangler d1 create`.
-      // Replace this placeholder with the real database_id (from
-      // `wrangler d1 create codivio`) before any --remote dev or deploy.
-      "database_id": "REPLACE_WITH_REAL_D1_DATABASE_ID"
+      // Real D1 database, created via `wrangler d1 create codivio`
+      // (Phase 2 production deployment, region WEUR).
+      "database_id": "69291a30-4db3-41e9-b461-08bd4994e015"
     }
   ]
 }
