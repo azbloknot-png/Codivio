@@ -5,22 +5,20 @@ import { hasPermission } from "../../shared/rbac";
 import { useAdminUser } from "./AdminApp";
 
 /**
- * Phase 2.7 — Settings Foundation UI.
- *
- * Foundation-level only: renders the real settings that exist today
- * (general/system/security, editable; google/advertising/affiliate,
- * read-only "not configured" status) grouped the way the long-term
- * Settings area is planned (General/Branding/Integrations/Security/
- * System — see CLAUDE.md). Branding has no registered settings yet, so it
- * is shown as "Coming soon", honestly, rather than with placeholder
- * fields. No fake data, no fake connection status — every value shown
- * comes from a real GET /api/admin/settings response.
+ * Phase 2.7 Settings Foundation, redesigned in Phase 2.13 into a proper
+ * category-tab layout matching the long-term Settings architecture
+ * (CLAUDE.md §7 / this checkpoint's spec). Categories with a real,
+ * registered setting render it (editable if the setting is editable and
+ * the viewer has settings.manage; status-only otherwise). Categories with
+ * no registered setting yet render an honest "Coming soon" panel — never
+ * a fake toggle or fabricated status. No fake data, no fake connection
+ * status — every value shown comes from a real GET /api/admin/settings
+ * response.
  *
  * Editing is gated the same way the server gates it: only a role with
- * settings.manage sees editable controls at all (settings.view alone gets
- * a read-only view) — but this is a UX convenience, not the security
- * boundary; PATCH /api/admin/settings re-checks settings.manage
- * server-side regardless of what this component renders.
+ * settings.manage sees editable controls at all — but this is a UX
+ * convenience, not the security boundary; PATCH /api/admin/settings
+ * re-checks settings.manage server-side regardless of what this renders.
  */
 
 interface SettingItem {
@@ -37,6 +35,30 @@ type LoadState =
   | { status: "loading" }
   | { status: "error"; message: string }
   | { status: "ready"; settings: SettingItem[] };
+
+/** One tab per long-term Settings category. `keys` selects which real
+ * setting keys (if any) belong on that tab — a tab with an empty list
+ * renders as "Coming soon". Google's two "configured" flags are split
+ * across Analytics and Search Console here, matching the finer-grained
+ * category list this checkpoint asks for (the settings table itself still
+ * stores both under the single "google" category — see shared/settings.ts;
+ * this split is a presentation grouping only, not a schema change). */
+const SETTINGS_TABS: { id: string; label: string; keys: string[]; editable: boolean }[] = [
+  { id: "general", label: "General", keys: ["general.site_name", "general.site_description", "general.default_language"], editable: true },
+  { id: "branding", label: "Branding", keys: [], editable: false },
+  { id: "domain", label: "Domain", keys: [], editable: false },
+  { id: "email", label: "Email", keys: [], editable: false },
+  { id: "analytics", label: "Analytics", keys: ["google.analytics_configured"], editable: false },
+  { id: "search-console", label: "Search Console", keys: ["google.search_console_configured"], editable: false },
+  { id: "seo", label: "SEO", keys: [], editable: false },
+  { id: "advertising", label: "Advertising", keys: ["advertising.adsense_configured"], editable: false },
+  { id: "affiliate", label: "Affiliate", keys: ["affiliate.enabled"], editable: false },
+  { id: "social", label: "Social", keys: [], editable: false },
+  { id: "payments", label: "Payments", keys: [], editable: false },
+  { id: "security", label: "Security", keys: ["security.registration_enabled"], editable: true },
+  { id: "backups", label: "Backups", keys: [], editable: false },
+  { id: "system", label: "System", keys: ["system.maintenance_mode"], editable: true },
+];
 
 function describeLoadError(status: number): string {
   if (status === 401) return "Your session has expired. Please sign in again.";
@@ -57,6 +79,7 @@ export default function AdminSettingsPage() {
   const canManage = hasPermission(user.role, "settings.manage");
 
   const [state, setState] = useState<LoadState>({ status: "loading" });
+  const [activeTab, setActiveTab] = useState(SETTINGS_TABS[0].id);
   const [savingKey, setSavingKey] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
@@ -119,18 +142,18 @@ export default function AdminSettingsPage() {
     );
   }
 
-  const byCategory = (category: string) => state.settings.filter((s) => s.category === category);
-  const general = byCategory("general");
-  const system = byCategory("system");
-  const security = byCategory("security");
-  const integrations = [...byCategory("google"), ...byCategory("advertising"), ...byCategory("affiliate")];
+  const settingsByKey = new Map(state.settings.map((item) => [item.key, item]));
+  const currentTab = SETTINGS_TABS.find((tab) => tab.id === activeTab) ?? SETTINGS_TABS[0];
+  const currentItems = currentTab.keys
+    .map((key) => settingsByKey.get(key))
+    .filter((item): item is SettingItem => item !== undefined);
 
   return (
     <div className="admin-settings-page">
       <h1>Settings</h1>
       <p className="admin-settings-intro">
         {canManage
-          ? "Foundation-level configuration. More categories will appear here as later checkpoints add them."
+          ? "Foundation-level configuration, organized by the long-term Settings architecture. More categories become real as later checkpoints connect them."
           : "Read-only view — your role can view settings but not change them."}
       </p>
 
@@ -140,61 +163,44 @@ export default function AdminSettingsPage() {
         </div>
       )}
 
-      <section className="admin-settings-group">
-        <h2>General</h2>
-        {general.map((item) => (
-          <EditableSettingRow
-            key={item.key}
-            item={item}
-            canManage={canManage}
-            saving={savingKey === item.key}
-            draftValue={drafts[item.key]}
-            onDraftChange={(v) => setDrafts((d) => ({ ...d, [item.key]: v }))}
-            onSave={(value) => save(item.key, value)}
-          />
+      <div className="admin-settings-tabs" role="tablist" aria-label="Settings categories">
+        {SETTINGS_TABS.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            role="tab"
+            aria-selected={tab.id === activeTab}
+            className={`admin-settings-tab ${tab.id === activeTab ? "is-active" : ""}`}
+            onClick={() => setActiveTab(tab.id)}
+          >
+            {tab.label}
+          </button>
         ))}
-      </section>
+      </div>
 
-      <section className="admin-settings-group">
-        <h2>Branding</h2>
-        <p className="admin-settings-soon">Coming soon — no branding settings are registered yet.</p>
-      </section>
-
-      <section className="admin-settings-group">
-        <h2>Integrations</h2>
-        {integrations.map((item) => (
-          <StatusSettingRow key={item.key} item={item} />
-        ))}
-      </section>
-
-      <section className="admin-settings-group">
-        <h2>Security</h2>
-        {security.map((item) => (
-          <EditableSettingRow
-            key={item.key}
-            item={item}
-            canManage={canManage}
-            saving={savingKey === item.key}
-            draftValue={drafts[item.key]}
-            onDraftChange={(v) => setDrafts((d) => ({ ...d, [item.key]: v }))}
-            onSave={(value) => save(item.key, value)}
-          />
-        ))}
-      </section>
-
-      <section className="admin-settings-group">
-        <h2>System</h2>
-        {system.map((item) => (
-          <EditableSettingRow
-            key={item.key}
-            item={item}
-            canManage={canManage}
-            saving={savingKey === item.key}
-            draftValue={drafts[item.key]}
-            onDraftChange={(v) => setDrafts((d) => ({ ...d, [item.key]: v }))}
-            onSave={(value) => save(item.key, value)}
-          />
-        ))}
+      <section className="admin-settings-group" role="tabpanel">
+        <h2>{currentTab.label}</h2>
+        {currentTab.keys.length === 0 ? (
+          <p className="admin-settings-soon">Coming soon — no {currentTab.label.toLowerCase()} settings are registered yet.</p>
+        ) : currentItems.length === 0 ? (
+          <p className="admin-settings-soon">No settings found for this category.</p>
+        ) : (
+          currentItems.map((item) =>
+            currentTab.editable ? (
+              <EditableSettingRow
+                key={item.key}
+                item={item}
+                canManage={canManage}
+                saving={savingKey === item.key}
+                draftValue={drafts[item.key]}
+                onDraftChange={(v) => setDrafts((d) => ({ ...d, [item.key]: v }))}
+                onSave={(value) => save(item.key, value)}
+              />
+            ) : (
+              <StatusSettingRow key={item.key} item={item} />
+            )
+          )
+        )}
       </section>
     </div>
   );

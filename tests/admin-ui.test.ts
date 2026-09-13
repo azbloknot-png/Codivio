@@ -22,6 +22,7 @@ import fs from "node:fs";
 
 const appSource = fs.readFileSync(new URL("../src/App.tsx", import.meta.url), "utf8");
 const adminSource = fs.readFileSync(new URL("../src/admin/AdminApp.tsx", import.meta.url), "utf8");
+const styleSource = fs.readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
 
 describe("describeLoginError (pure)", () => {
   it("maps 401 to an invalid-credentials message", () => {
@@ -142,5 +143,190 @@ describe("protected-route behavior (structural — see file-level note)", () => 
     expect(adminSource).not.toMatch(/\blocalStorage\s*\./);
     expect(adminSource).not.toMatch(/\bsessionStorage\s*\./);
     expect(adminSource).not.toMatch(/URLSearchParams/);
+  });
+});
+
+// --- Phase 2.13 UI/UX redesign: nav architecture + branding ------------------
+
+describe("Admin navigation architecture (Phase 2.13)", () => {
+  it("declares all 16 requested Admin modules in NAV_ITEMS", () => {
+    const navBlock = adminSource.slice(
+      adminSource.indexOf("const NAV_ITEMS"),
+      adminSource.indexOf("function AdminNavLink")
+    );
+    const labels = [
+      "Dashboard",
+      "Pages",
+      "Tools",
+      "Users / CRM",
+      "Blog",
+      "Analytics",
+      "SEO",
+      "Search Console",
+      "Advertising",
+      "Affiliate",
+      "Monetization",
+      "Social",
+      "Reports",
+      "System Health",
+      "Settings",
+      "Audit Log",
+    ];
+    for (const label of labels) {
+      expect(navBlock).toContain(`label: "${label}"`);
+    }
+  });
+
+  it("every NAV_ITEMS entry has a real `to` — none rely on the old permission-less 'Soon' badge", () => {
+    const navBlock = adminSource.slice(
+      adminSource.indexOf("const NAV_ITEMS"),
+      adminSource.indexOf("function AdminNavLink")
+    );
+    // `label: "` (with the quote) matches only actual entries, not the
+    // array's own type annotation (`label: string`).
+    const entryCount = (navBlock.match(/label: "/g) ?? []).length;
+    const toCount = (navBlock.match(/to: "\/admin/g) ?? []).length;
+    expect(toCount).toBe(entryCount);
+  });
+});
+
+describe("official branding is used consistently (Phase 2.13)", () => {
+  it("public header/footer and Admin login/shell all use the official logo asset, not a generic icon mark", () => {
+    for (const source of [appSource, adminSource]) {
+      expect(source).not.toContain("Code2");
+    }
+    const logoOccurrences = (appSource.match(/\/assets\/branding\/codivio-logo\.png/g) ?? []).length;
+    // Public header + public footer = 2 usages in App.tsx.
+    expect(logoOccurrences).toBe(2);
+    const adminLogoOccurrences = (adminSource.match(/\/assets\/branding\/codivio-logo\.png/g) ?? []).length;
+    // Admin login card + Admin shell header = 2 usages in AdminApp.tsx.
+    expect(adminLogoOccurrences).toBe(2);
+  });
+
+  it("index.html declares a favicon using the official logo asset", () => {
+    const indexHtml = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
+    expect(indexHtml).toContain('rel="icon"');
+    expect(indexHtml).toContain("/assets/branding/codivio-logo.png");
+  });
+});
+
+describe("homepage hero has a real advertisement area, not a phone/device mockup (CLAUDE.md §23)", () => {
+  it("hero-ad-slot replaces the old decorative floating-card mockup", () => {
+    expect(appSource).toContain("hero-ad-slot");
+    expect(appSource).not.toContain("floating-card");
+  });
+});
+
+describe("homepage shows exactly the 12 specified main tools (Phase 2.13)", () => {
+  it("HOMEPAGE_FEATURED_TOOLS still resolves to exactly these 12 slugs", () => {
+    const expectedSlugs = [
+      "qr-code-generator",
+      "qr-code-scanner",
+      "url-to-qr",
+      "wifi-qr",
+      "vcard-qr",
+      "pdf-merge",
+      "pdf-split",
+      "pdf-compress",
+      "pdf-to-word",
+      "image-resize",
+      "image-compress",
+      "background-remover",
+    ];
+    for (const slug of expectedSlugs) {
+      const toolBlockStart = appSource.indexOf(`slug: "${slug}"`);
+      expect(toolBlockStart).toBeGreaterThan(-1);
+      // featured:true is declared a few lines after slug within the same
+      // object literal for every one of these 12 real registry entries.
+      const toolBlock = appSource.slice(toolBlockStart, toolBlockStart + 300);
+      expect(toolBlock).toContain("featured: true");
+    }
+  });
+});
+
+// --- Phase 2.14: homepage structure, responsive and accessibility polish ---
+
+describe("homepage section order (Phase 2.14)", () => {
+  it("Header, Hero, Ad, Popular, QR, PDF, Image & Other, Blog, Footer appear in that order", () => {
+    const homePageSource = appSource.slice(appSource.indexOf("function HomePage"), appSource.indexOf("function ToolsPage"));
+    const markers = [
+      'className="hero"',
+      "hero-ad-slot",
+      'id="popular-tools"',
+      "QR TOOLS",
+      "PDF TOOLS",
+      "IMAGE &amp; OTHER TOOLS",
+      "CODIVIO BLOG",
+    ];
+    let lastIndex = -1;
+    for (const marker of markers) {
+      const index = homePageSource.indexOf(marker);
+      expect(index).toBeGreaterThan(lastIndex);
+      lastIndex = index;
+    }
+    // SiteHeader/SiteFooter are rendered by PageShell around HomePage's own
+    // <main>, not inside it — confirmed separately below.
+  });
+
+  it("PageShell renders SiteHeader before children and SiteFooter after", () => {
+    const shellSource = appSource.slice(appSource.indexOf("function PageShell"), appSource.indexOf("function HomePage"));
+    const headerIndex = shellSource.indexOf("<SiteHeader");
+    const childrenIndex = shellSource.indexOf("{children}");
+    const footerIndex = shellSource.indexOf("<SiteFooter");
+    expect(headerIndex).toBeGreaterThan(-1);
+    expect(childrenIndex).toBeGreaterThan(headerIndex);
+    expect(footerIndex).toBeGreaterThan(childrenIndex);
+  });
+});
+
+describe("homepage responsive structure (Phase 2.14)", () => {
+  it("no fixed (non-max/min) pixel width ≥100px exists outside the Admin-only sidebar rule", () => {
+    const fixedWidths = styleSource.match(/(?<![a-z-])width:\d{3,}px/g) ?? [];
+    for (const match of fixedWidths) {
+      // .nav-search (165px/210px, hidden below 650px) and .admin-sidebar
+      // (220px, off-canvas below 900px) are the only known, already-handled
+      // fixed widths in the whole stylesheet — anything else would be new
+      // and needs its own responsive review.
+      const context = styleSource.slice(styleSource.indexOf(match) - 200, styleSource.indexOf(match));
+      expect(context.includes("nav-search") || context.includes("admin-sidebar") || context === "").toBe(true);
+    }
+  });
+
+  it("the hero advertisement area still collapses on tablet/mobile (≤900px)", () => {
+    expect(styleSource).toContain(".hero-ad-slot{display:none}");
+  });
+});
+
+describe("homepage accessibility structure (Phase 2.14)", () => {
+  it("has a skip-to-content link targeting HomePage's <main id=\"main-content\">", () => {
+    expect(appSource).toContain('href="#main-content"');
+    expect(appSource).toContain('<main id="main-content">');
+  });
+
+  it("decorative tool-card arrow icon is hidden from assistive tech", () => {
+    expect(appSource).toContain('<ArrowRight className="tool-arrow" size={18} aria-hidden="true" />');
+  });
+
+  it("search inputs that remove the default outline provide a visible :focus-within replacement", () => {
+    expect(styleSource).toContain("outline:0");
+    expect(styleSource).toContain(".nav-search:focus-within,.hero-search:focus-within{border-color");
+  });
+
+  it("interactive public-site elements (tool cards, slider controls, mobile menu, nav/footer links) have a branded :focus-visible style", () => {
+    for (const selector of [
+      ".tool-card:focus-visible",
+      ".tool-slider-actions button:focus-visible",
+      ".mobile-menu:focus-visible",
+      ".popular-tools-track:focus-visible",
+      ".nav-links a:focus-visible",
+    ]) {
+      expect(styleSource).toContain(selector);
+    }
+  });
+
+  it("HomePage renders exactly one <h1>", () => {
+    const homePageSource = appSource.slice(appSource.indexOf("function HomePage"), appSource.indexOf("function ToolsPage"));
+    const h1Count = (homePageSource.match(/<h1[\s>]/g) ?? []).length;
+    expect(h1Count).toBe(1);
   });
 });

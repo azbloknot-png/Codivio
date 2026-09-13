@@ -11,7 +11,6 @@ import {
   ChevronRight,
   CircleHelp,
   ClipboardList,
-  Code2,
   FileImage,
   FileOutput,
   FileText,
@@ -39,6 +38,7 @@ import { AdminDashboardPlaceholder, AdminLoginPage, ProtectedAdminRoute } from "
 import AdminSettingsPage from "./admin/AdminSettingsPage";
 import AdminPagesPage from "./admin/AdminPagesPage";
 import AdminToolsPage from "./admin/AdminToolsPage";
+import AdminComingSoonPage from "./admin/AdminComingSoonPage";
 
 /** Basic per-route SEO: sets document.title and the meta description tag.
  * Phase 1 scope only (no structured data/sitemap/canonical management here —
@@ -419,6 +419,14 @@ const QR_TOOLS = tools.filter((tool) => tool.qr);
  * QR_TOOLS). */
 const PDF_TOOLS = tools.filter((tool) => tool.pdf);
 
+/** Image/Other Tools carousel data — derived directly from the registry's
+ * existing `category` field (no new boolean flag needed, unlike the other
+ * three sliders) since every Image Tools and Other Tools entry belongs on
+ * this shared homepage section. */
+const IMAGE_OTHER_TOOLS = tools.filter(
+  (tool) => tool.category === "Image Tools" || tool.category === "Other Tools"
+);
+
 const categories = [
   "QR Tools",
   "PDF Tools",
@@ -564,9 +572,7 @@ function SiteHeader() {
     <header className="header">
       <div className="container nav">
         <Link className="brand" to="/" onClick={() => setMenuOpen(false)}>
-          <span className="brand-mark">
-            <Code2 size={19} />
-          </span>
+          <img className="brand-logo" src="/assets/branding/codivio-logo.png" alt="Codivio" />
           Codivio
         </Link>
 
@@ -619,9 +625,7 @@ function SiteFooter() {
         <div className="footer-grid">
           <div>
             <Link className="brand" to="/">
-              <span className="brand-mark">
-                <Code2 size={19} />
-              </span>
+              <img className="brand-logo" src="/assets/branding/codivio-logo.png" alt="Codivio" />
               Codivio
             </Link>
             <p>
@@ -682,6 +686,9 @@ function PageShell({
 }) {
   return (
     <div className="app">
+      <a className="skip-link" href="#main-content">
+        Skip to content
+      </a>
       <SiteHeader />
       {children}
       {showSlider && <ToolSlider />}
@@ -786,6 +793,31 @@ function HomePage() {
     track.scrollBy({ left: amount * direction, behavior: "smooth" });
   };
 
+  const imageOtherTrackRef = useRef<HTMLDivElement>(null);
+  const [imageOtherAtStart, setImageOtherAtStart] = useState(true);
+  const [imageOtherAtEnd, setImageOtherAtEnd] = useState(false);
+
+  const updateImageOtherEdges = () => {
+    const track = imageOtherTrackRef.current;
+    if (!track) return;
+    setImageOtherAtStart(track.scrollLeft <= 4);
+    setImageOtherAtEnd(
+      track.scrollLeft + track.clientWidth >= track.scrollWidth - 4
+    );
+  };
+
+  useLayoutEffect(() => {
+    updateImageOtherEdges();
+  }, []);
+
+  const scrollImageOther = (direction: 1 | -1) => {
+    const track = imageOtherTrackRef.current;
+    if (!track) return;
+    const card = track.querySelector<HTMLElement>(".tool-card");
+    const amount = (card?.offsetWidth ?? 260) + 16;
+    track.scrollBy({ left: amount * direction, behavior: "smooth" });
+  };
+
   const blogTrackRef = useRef<HTMLDivElement>(null);
   const [blogAtStart, setBlogAtStart] = useState(true);
   const [blogAtEnd, setBlogAtEnd] = useState(false);
@@ -813,7 +845,7 @@ function HomePage() {
 
   return (
     <PageShell showSlider={false}>
-      <main>
+      <main id="main-content">
         <section className="hero">
           <div className="container hero-grid">
             <div>
@@ -864,19 +896,9 @@ function HomePage() {
               </div>
             </div>
 
-            <div className="hero-art" aria-hidden="true">
-              <div className="floating-card qr-card">
-                <QrCode size={72} />
-                <strong>QR Tools</strong>
-              </div>
-              <div className="floating-card pdf-card">
-                <FileText size={55} />
-                <strong>PDF Tools</strong>
-              </div>
-              <div className="floating-card image-card">
-                <ImageIcon size={55} />
-                <strong>Image Tools</strong>
-              </div>
+            <div className="hero-ad-slot" role="complementary" aria-label="Advertisement">
+              <span className="hero-ad-label">ADVERTISEMENT</span>
+              <span className="hero-ad-note">Ad space available</span>
             </div>
           </div>
         </section>
@@ -1038,6 +1060,53 @@ function HomePage() {
           </div>
         </section>
 
+        <section className="section">
+          <div className="container">
+            <div className="section-heading">
+              <div>
+                <span className="eyebrow">IMAGE &amp; OTHER TOOLS</span>
+                <h2>Image &amp; Other Tools</h2>
+              </div>
+              <div className="popular-tools-heading-actions">
+                <Link to="/tools">
+                  View all <ArrowRight size={15} />
+                </Link>
+                <div className="tool-slider-actions">
+                  <button
+                    type="button"
+                    onClick={() => scrollImageOther(-1)}
+                    disabled={imageOtherAtStart}
+                    aria-label="Previous image and other tools"
+                  >
+                    <ChevronLeft size={18} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => scrollImageOther(1)}
+                    disabled={imageOtherAtEnd}
+                    aria-label="Next image and other tools"
+                  >
+                    <ChevronRight size={18} />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div
+              className="popular-tools-track"
+              ref={imageOtherTrackRef}
+              onScroll={updateImageOtherEdges}
+              role="region"
+              aria-label="Image and other tools"
+              tabIndex={0}
+            >
+              {IMAGE_OTHER_TOOLS.map((tool) => (
+                <ToolCard tool={tool} key={tool.slug} />
+              ))}
+            </div>
+          </div>
+        </section>
+
         <AdSlot label="ADVERTISEMENT" />
 
         <section className="section">
@@ -1126,7 +1195,7 @@ function ToolCard({ tool }: { tool: Tool }) {
       <div className="tool-category">{tool.category}</div>
       <h3>{tool.name}</h3>
       <p>{tool.description}</p>
-      <ArrowRight className="tool-arrow" size={18} />
+      <ArrowRight className="tool-arrow" size={18} aria-hidden="true" />
     </Link>
   );
 }
@@ -1755,6 +1824,126 @@ function App() {
         <Route path="settings" element={<AdminSettingsPage />} />
         <Route path="pages" element={<AdminPagesPage />} />
         <Route path="tools" element={<AdminToolsPage />} />
+        <Route
+          path="users"
+          element={
+            <AdminComingSoonPage
+              title="Users / CRM"
+              description="Manage admin and customer accounts, roles, and relationship history."
+              categories={["Total users", "Free / Pro / Business", "Active & retention", "Churn & conversion", "CRM history"]}
+            />
+          }
+        />
+        <Route
+          path="blog"
+          element={
+            <AdminComingSoonPage
+              title="Blog"
+              description="Plan, draft and publish Codivio articles with SEO and affiliate context."
+              categories={["Categories", "Articles", "Authors", "Draft / Published / Archived", "SEO", "Related tools", "Affiliate offers"]}
+            />
+          }
+        />
+        <Route
+          path="analytics"
+          element={
+            <AdminComingSoonPage
+              title="Analytics"
+              description="Real traffic, tool usage and audience insight once GA4/Search Console are connected."
+              categories={["Traffic", "Tool usage", "Audience", "Search performance", "Growth"]}
+            />
+          }
+        />
+        <Route
+          path="seo"
+          element={
+            <AdminComingSoonPage
+              title="SEO"
+              description="A complete SEO management center for the whole site, tools and blog."
+              categories={["Global SEO", "Technical SEO", "Page SEO", "Tool SEO", "Blog SEO", "Schema", "AI discoverability"]}
+            />
+          }
+        />
+        <Route
+          path="search-console"
+          element={
+            <AdminComingSoonPage
+              title="Search Console"
+              description="Connect Google Search Console for real query, click and indexing data."
+              categories={["Queries", "Clicks & impressions", "CTR & position", "Indexed pages", "Search appearance"]}
+            />
+          }
+        />
+        <Route
+          path="advertising"
+          element={
+            <AdminComingSoonPage
+              title="Advertising"
+              description="Manage ad slots, providers and campaigns across the site."
+              categories={["Slots", "Providers", "Campaigns", "Schedule & priority", "Performance"]}
+            />
+          }
+        />
+        <Route
+          path="affiliate"
+          element={
+            <AdminComingSoonPage
+              title="Affiliate"
+              description="Manage affiliate offers, tracking and disclosure — kept separate from Codivio's own premium services."
+              categories={["Providers", "Offers", "Tracking", "Disclosure", "Revenue"]}
+            />
+          }
+        />
+        <Route
+          path="monetization"
+          element={
+            <AdminComingSoonPage
+              title="Monetization"
+              description="A unified view of subscription, premium-service, affiliate and ad revenue."
+              categories={["Plans", "Subscription revenue", "Premium services", "Revenue per user", "Growth"]}
+            />
+          }
+        />
+        <Route
+          path="social"
+          element={
+            <AdminComingSoonPage
+              title="Social"
+              description="Manage Codivio's social presence and referral performance."
+              categories={["Instagram", "Facebook", "YouTube", "TikTok", "X", "LinkedIn"]}
+            />
+          }
+        />
+        <Route
+          path="reports"
+          element={
+            <AdminComingSoonPage
+              title="Reports"
+              description="Generate traffic, SEO, revenue and system reports on a schedule."
+              categories={["Daily / Weekly / Monthly", "Traffic", "SEO", "Revenue", "System health", "CSV / PDF export"]}
+            />
+          }
+        />
+        <Route
+          path="system"
+          element={
+            <AdminComingSoonPage
+              title="System Health"
+              description="Live status for the Worker, D1, storage and background jobs."
+              categories={["Worker health", "D1 health", "Storage & bandwidth", "Processing", "Backups", "API health"]}
+            />
+          }
+        />
+        <Route
+          path="audit-log"
+          element={
+            <AdminComingSoonPage
+              title="Audit Log"
+              description="A searchable read view over the existing audit_logs table."
+              categories={["Authentication events", "Authorization denials", "Settings changes", "Pages/Tools mutations", "Actor & timestamp"]}
+            />
+          }
+        />
       </Route>
       <Route path="/:slug" element={<CmsPageRoute />} />
       <Route path="*" element={<NotFoundPage />} />

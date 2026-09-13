@@ -1,16 +1,24 @@
 import { useCallback, useEffect, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import {
+  Activity,
   BarChart3,
+  BookOpen,
   Box,
   ClipboardList,
-  Code2,
+  DollarSign,
+  FileBarChart,
   FileText,
   LayoutDashboard,
+  Link2,
   Loader2,
   LogOut,
+  Megaphone,
   Menu,
+  Search,
   Settings,
+  Share2,
+  TrendingUp,
   Users,
   X,
 } from "lucide-react";
@@ -145,9 +153,7 @@ export function AdminLoginPage() {
     <div className="admin-auth-page">
       <div className="admin-auth-card">
         <Link className="brand" to="/">
-          <span className="brand-mark">
-            <Code2 size={19} />
-          </span>
+          <img className="brand-logo" src="/assets/branding/codivio-logo.png" alt="Codivio" />
           Codivio
         </Link>
 
@@ -204,21 +210,38 @@ function AdminLoadingScreen() {
 /**
  * Nav items derived from the shared permission matrix — not duplicated.
  * A role that lacks the permission entirely doesn't see the item at all
- * (no point advertising a feature it will never be allowed to use); a role
- * that has the permission but the feature isn't built yet sees it as
- * "Soon" (no `to`). This filtering is a UX convenience only — it has no
- * security effect on its own, since none of these areas have a real
- * route/endpoint yet; the actual boundary is the server (see
- * worker/rbac.ts#authorize).
+ * (no point advertising a feature it will never be allowed to use). This
+ * filtering is a UX convenience only — it has no security effect on its
+ * own; the actual boundary is the server (see worker/rbac.ts#authorize).
+ *
+ * `permission` is optional: several modules below (Blog/SEO/Search
+ * Console/Advertising/Affiliate/Monetization/Social/Reports/System
+ * Health) have no dedicated permission in shared/rbac.ts yet, because no
+ * real data or mutation exists behind them to protect — each is a
+ * "Coming soon" architecture placeholder (AdminComingSoonPage), not a
+ * functioning feature. Adding a fake permission for a page with nothing
+ * to protect would be RBAC theater; these are simply visible to any role
+ * that reached the Admin shell at all (already gated by `admin.access`).
+ * The day a placeholder gets a real backend, it gets a real permission
+ * here too — see DECISIONS.md.
  */
-const NAV_ITEMS: { permission: Permission; icon: ReactNode; label: string; to?: string }[] = [
+const NAV_ITEMS: { permission?: Permission; icon: ReactNode; label: string; to?: string }[] = [
   { permission: "dashboard.view", icon: <LayoutDashboard size={18} />, label: "Dashboard", to: "/admin" },
   { permission: "pages.view", icon: <FileText size={18} />, label: "Pages", to: "/admin/pages" },
   { permission: "tools.view", icon: <Box size={18} />, label: "Tools", to: "/admin/tools" },
-  { permission: "users.view", icon: <Users size={18} />, label: "Users" },
+  { permission: "users.view", icon: <Users size={18} />, label: "Users / CRM", to: "/admin/users" },
+  { icon: <BookOpen size={18} />, label: "Blog", to: "/admin/blog" },
+  { permission: "analytics.view", icon: <BarChart3 size={18} />, label: "Analytics", to: "/admin/analytics" },
+  { icon: <TrendingUp size={18} />, label: "SEO", to: "/admin/seo" },
+  { icon: <Search size={18} />, label: "Search Console", to: "/admin/search-console" },
+  { icon: <Megaphone size={18} />, label: "Advertising", to: "/admin/advertising" },
+  { icon: <Link2 size={18} />, label: "Affiliate", to: "/admin/affiliate" },
+  { icon: <DollarSign size={18} />, label: "Monetization", to: "/admin/monetization" },
+  { icon: <Share2 size={18} />, label: "Social", to: "/admin/social" },
+  { icon: <FileBarChart size={18} />, label: "Reports", to: "/admin/reports" },
+  { icon: <Activity size={18} />, label: "System Health", to: "/admin/system" },
   { permission: "settings.view", icon: <Settings size={18} />, label: "Settings", to: "/admin/settings" },
-  { permission: "analytics.view", icon: <BarChart3 size={18} />, label: "Analytics" },
-  { permission: "audit.view", icon: <ClipboardList size={18} />, label: "Audit Log" },
+  { permission: "audit.view", icon: <ClipboardList size={18} />, label: "Audit Log", to: "/admin/audit-log" },
 ];
 
 function AdminNavLink({
@@ -250,23 +273,86 @@ function AdminNavLink({
   );
 }
 
+/**
+ * Every metric here is a real, named future data point (matching CLAUDE.md
+ * §7's dashboard scope) with NO value wired up yet — every row renders the
+ * same honest "Not connected" state. Do not replace any of these with a
+ * number until a real analytics/revenue/system-health data source exists
+ * to back it; see CLAUDE.md §23's "Statistics principle".
+ */
+const DASHBOARD_SECTIONS: { title: string; metrics: string[] }[] = [
+  {
+    title: "Traffic",
+    metrics: [
+      "Visitors",
+      "Unique visitors",
+      "Pageviews",
+      "Sessions",
+      "New vs. returning",
+      "Top countries",
+      "Devices",
+    ],
+  },
+  {
+    title: "Tools",
+    metrics: ["Total usage", "Most used", "Least used", "Usage growth", "Errors", "Processing performance"],
+  },
+  {
+    title: "Users / CRM",
+    metrics: ["Total users", "New users", "Free / Pro / Business", "Active", "Retention", "Churn"],
+  },
+  {
+    title: "Revenue",
+    metrics: [
+      "Total revenue",
+      "Subscription revenue",
+      "Premium services",
+      "Affiliate revenue",
+      "Advertising revenue",
+      "Revenue per user",
+    ],
+  },
+  {
+    title: "Advertising",
+    metrics: ["Impressions", "Clicks", "CTR", "RPM", "Slot performance"],
+  },
+  {
+    title: "Affiliate",
+    metrics: ["Clicks", "Conversions", "Commission", "Revenue", "ROI"],
+  },
+  {
+    title: "System",
+    metrics: ["Worker health", "D1 health", "Storage", "Bandwidth", "Backups", "API health"],
+  },
+];
+
 export function AdminDashboardPlaceholder() {
   usePageMeta("Admin Dashboard", "Codivio admin dashboard.");
   const user = useAdminUser();
 
   return (
-    <div className="admin-dashboard-placeholder">
+    <div className="admin-dashboard">
       <h1>Welcome, {user.email}</h1>
       <span className="admin-role-badge">{displayName(user.role)}</span>
+      <p className="admin-dashboard-intro">
+        Every metric below is real and will populate once its data source is connected — nothing here is
+        estimated or fabricated.
+      </p>
 
-      <div className="empty-state">
-        <LayoutDashboard size={28} />
-        <h2>Dashboard coming soon</h2>
-        <p>
-          Live statistics (tool usage, traffic, revenue) will appear here once
-          real analytics are wired up in a later checkpoint — never estimated
-          or fabricated numbers.
-        </p>
+      <div className="admin-dashboard-grid">
+        {DASHBOARD_SECTIONS.map((section) => (
+          <section className="admin-dashboard-card" key={section.title}>
+            <h2>{section.title}</h2>
+            <ul className="admin-dashboard-metrics">
+              {section.metrics.map((metric) => (
+                <li key={metric}>
+                  <span>{metric}</span>
+                  <span className="admin-settings-status">Not connected</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
       </div>
     </div>
   );
@@ -303,9 +389,7 @@ function AdminShell({
         </button>
 
         <Link className="brand" to="/admin">
-          <span className="brand-mark">
-            <Code2 size={19} />
-          </span>
+          <img className="brand-logo" src="/assets/branding/codivio-logo.png" alt="Codivio" />
           Codivio Admin
         </Link>
 
@@ -320,7 +404,9 @@ function AdminShell({
 
       <div className="admin-body">
         <nav className={`admin-sidebar ${sidebarOpen ? "open" : ""}`} aria-label="Admin navigation">
-          {NAV_ITEMS.filter((item) => hasPermission(user.role, item.permission)).map((item) => (
+          {NAV_ITEMS.filter(
+            (item) => item.permission === undefined || hasPermission(user.role, item.permission)
+          ).map((item) => (
             <AdminNavLink
               key={item.label}
               to={item.to}
