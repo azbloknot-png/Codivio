@@ -148,45 +148,53 @@ describe("protected-route behavior (structural — see file-level note)", () => 
 
 // --- Phase 2.13 UI/UX redesign: nav architecture + branding ------------------
 
-describe("Admin navigation architecture (Phase 2.13)", () => {
-  it("declares all 16 requested Admin modules in NAV_ITEMS", () => {
+describe("Admin navigation architecture (Phase 2.13, translated in Phase 2.15)", () => {
+  it("declares all 16 requested Admin modules in getNavItems, each labeled from the translation dictionary", () => {
     const navBlock = adminSource.slice(
-      adminSource.indexOf("const NAV_ITEMS"),
+      adminSource.indexOf("function getNavItems"),
       adminSource.indexOf("function AdminNavLink")
     );
-    const labels = [
-      "Dashboard",
-      "Pages",
-      "Tools",
-      "Users / CRM",
-      "Blog",
-      "Analytics",
-      "SEO",
-      "Search Console",
-      "Advertising",
-      "Affiliate",
-      "Monetization",
-      "Social",
-      "Reports",
-      "System Health",
-      "Settings",
-      "Audit Log",
+    const navKeys = [
+      "dashboard",
+      "pages",
+      "tools",
+      "usersCrm",
+      "blog",
+      "analytics",
+      "seo",
+      "searchConsole",
+      "advertising",
+      "affiliate",
+      "monetization",
+      "social",
+      "reports",
+      "systemHealth",
+      "settings",
+      "auditLog",
     ];
-    for (const label of labels) {
-      expect(navBlock).toContain(`label: "${label}"`);
+    for (const key of navKeys) {
+      expect(navBlock).toContain(`label: t.nav.${key}`);
     }
   });
 
-  it("every NAV_ITEMS entry has a real `to` — none rely on the old permission-less 'Soon' badge", () => {
+  it("every getNavItems entry has a real `to` — none rely on the old permission-less 'Soon' badge", () => {
     const navBlock = adminSource.slice(
-      adminSource.indexOf("const NAV_ITEMS"),
+      adminSource.indexOf("function getNavItems"),
       adminSource.indexOf("function AdminNavLink")
     );
-    // `label: "` (with the quote) matches only actual entries, not the
-    // array's own type annotation (`label: string`).
-    const entryCount = (navBlock.match(/label: "/g) ?? []).length;
+    const entryCount = (navBlock.match(/label: t\.nav\./g) ?? []).length;
     const toCount = (navBlock.match(/to: "\/admin/g) ?? []).length;
+    expect(entryCount).toBe(16);
     expect(toCount).toBe(entryCount);
+  });
+
+  it("the EN dictionary provides real English text for all 16 nav labels (no missing/placeholder values)", async () => {
+    const { en } = await import("../shared/i18n/en");
+    for (const value of Object.values(en.nav)) {
+      expect(typeof value).toBe("string");
+      expect(value.length).toBeGreaterThan(0);
+    }
+    expect(Object.keys(en.nav).length).toBe(16);
   });
 });
 
@@ -253,10 +261,10 @@ describe("homepage section order (Phase 2.14)", () => {
       'className="hero"',
       "hero-ad-slot",
       'id="popular-tools"',
-      "QR TOOLS",
-      "PDF TOOLS",
-      "IMAGE &amp; OTHER TOOLS",
-      "CODIVIO BLOG",
+      "t.section.qrTools",
+      "t.section.pdfTools",
+      "t.section.imageOtherTools",
+      "t.section.blogEyebrow",
     ];
     let lastIndex = -1;
     for (const marker of markers) {

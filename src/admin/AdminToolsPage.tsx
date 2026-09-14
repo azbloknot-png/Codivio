@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { Box, Loader2 } from "lucide-react";
 import { usePageMeta } from "../App";
+import { useLanguage } from "../i18n/LanguageContext";
 import { hasPermission } from "../../shared/rbac";
 import { ICON_NAMES } from "../../shared/tools";
 import { useAdminUser } from "./AdminApp";
@@ -100,7 +101,8 @@ function describeError(status: number, fallback: string): string {
 }
 
 export default function AdminToolsPage() {
-  usePageMeta("Admin Tools", "Manage the Codivio tool registry.");
+  const { t } = useLanguage();
+  usePageMeta(t.nav.tools, "Manage the Codivio tool registry.");
   const user = useAdminUser();
   const canManage = hasPermission(user.role, "tools.manage");
 
@@ -227,7 +229,7 @@ export default function AdminToolsPage() {
     return (
       <div className="admin-settings-loading" role="status" aria-live="polite">
         <Loader2 className="admin-spinner" size={22} aria-hidden="true" />
-        <p>Loading tools…</p>
+        <p>{t.contentAdmin.loadingTools}</p>
       </div>
     );
   }
@@ -243,7 +245,7 @@ export default function AdminToolsPage() {
   if (view.mode === "editor") {
     return (
       <div className="admin-pages-page">
-        <h1>{view.tool ? "Edit tool" : "New tool"}</h1>
+        <h1>{view.tool ? t.contentAdmin.editTool : t.contentAdmin.newTool}</h1>
         <form className="contact-form admin-page-form" onSubmit={handleSubmit}>
           <label>
             Name
@@ -364,7 +366,7 @@ export default function AdminToolsPage() {
 
           <div className="admin-page-form-actions">
             <button className="primary-button" type="submit" disabled={saving}>
-              {saving ? "Saving…" : "Save"}
+              {saving ? t.common.saving : t.common.save}
             </button>
             <button
               className="admin-secondary-button"
@@ -372,7 +374,7 @@ export default function AdminToolsPage() {
               onClick={() => setView({ mode: "list" })}
               disabled={saving}
             >
-              Cancel
+              {t.common.cancel}
             </button>
           </div>
         </form>
@@ -383,10 +385,10 @@ export default function AdminToolsPage() {
   return (
     <div className="admin-pages-page">
       <div className="admin-pages-header">
-        <h1>Tools</h1>
+        <h1>{t.nav.tools}</h1>
         {canManage && (
           <button className="primary-button" type="button" onClick={openCreate}>
-            New tool
+            {t.contentAdmin.newTool}
           </button>
         )}
       </div>
@@ -400,7 +402,7 @@ export default function AdminToolsPage() {
       {state.tools.length === 0 ? (
         <div className="empty-state">
           <Box size={28} />
-          <h2>No tools yet</h2>
+          <h2>{t.contentAdmin.noToolsYet}</h2>
           <p>Tools created here appear alongside the existing tool registry.</p>
         </div>
       ) : (
@@ -428,10 +430,10 @@ export default function AdminToolsPage() {
                 <span className={`admin-pages-status status-${tool.status}`}>{tool.status}</span>
               </span>
               <span data-label="Featured" role="cell">
-                {tool.featured ? "Yes" : "No"}
+                {tool.featured ? t.common.yes : t.common.no}
               </span>
               <span data-label="Popular" role="cell">
-                {tool.isPopular ? "Yes" : "No"}
+                {tool.isPopular ? t.common.yes : t.common.no}
               </span>
               <span data-label="Order" role="cell">
                 {tool.sortOrder}
@@ -443,7 +445,7 @@ export default function AdminToolsPage() {
                 {canManage ? (
                   <>
                     <button type="button" onClick={() => openEdit(tool)} disabled={busyId === tool.id}>
-                      Edit
+                      {t.common.edit}
                     </button>
                     {tool.isActive ? (
                       <button
@@ -451,7 +453,7 @@ export default function AdminToolsPage() {
                         onClick={() => handleStatusChange(tool, "inactive")}
                         disabled={busyId === tool.id}
                       >
-                        Deactivate
+                        {t.common.deactivate}
                       </button>
                     ) : (
                       <button
@@ -459,7 +461,7 @@ export default function AdminToolsPage() {
                         onClick={() => handleStatusChange(tool, "active")}
                         disabled={busyId === tool.id}
                       >
-                        Activate
+                        {t.common.activate}
                       </button>
                     )}
                     <button
@@ -468,11 +470,11 @@ export default function AdminToolsPage() {
                       onClick={() => handleDelete(tool)}
                       disabled={busyId === tool.id}
                     >
-                      Delete
+                      {t.common.delete}
                     </button>
                   </>
                 ) : (
-                  <span className="admin-settings-status">View only</span>
+                  <span className="admin-settings-status">{t.common.viewOnly}</span>
                 )}
               </span>
             </div>

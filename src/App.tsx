@@ -39,6 +39,8 @@ import AdminSettingsPage from "./admin/AdminSettingsPage";
 import AdminPagesPage from "./admin/AdminPagesPage";
 import AdminToolsPage from "./admin/AdminToolsPage";
 import AdminComingSoonPage from "./admin/AdminComingSoonPage";
+import { useLanguage } from "./i18n/LanguageContext";
+import { LanguageSwitcher } from "./i18n/LanguageSwitcher";
 
 /** Basic per-route SEO: sets document.title and the meta description tag.
  * Phase 1 scope only (no structured data/sitemap/canonical management here —
@@ -567,6 +569,7 @@ function ToolSlider() {
 
 function SiteHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { t } = useLanguage();
 
   return (
     <header className="header">
@@ -578,36 +581,38 @@ function SiteHeader() {
 
         <nav className={`nav-links ${menuOpen ? "open" : ""}`}>
           <Link to="/" onClick={() => setMenuOpen(false)}>
-            Home
+            {t.site.navHome}
           </Link>
           <Link to="/tools" onClick={() => setMenuOpen(false)}>
-            Tools
+            {t.site.navTools}
           </Link>
           <Link to="/blog" onClick={() => setMenuOpen(false)}>
-            Blog
+            {t.site.navBlog}
           </Link>
           <Link to="/faq" onClick={() => setMenuOpen(false)}>
-            FAQ
+            {t.site.navFaq}
           </Link>
           <Link to="/about" onClick={() => setMenuOpen(false)}>
-            About
+            {t.site.navAbout}
           </Link>
           <Link to="/contact" onClick={() => setMenuOpen(false)}>
-            Contact
+            {t.site.navContact}
           </Link>
         </nav>
 
         <div className="nav-actions">
           <div className="nav-search">
             <Search size={15} />
-            <input aria-label="Search tools" placeholder="Search tools..." />
+            <input aria-label={t.site.searchPlaceholder} placeholder={t.site.searchPlaceholder} />
           </div>
+
+          <LanguageSwitcher className="language-switcher language-switcher-header" />
 
           <button
             className="mobile-menu"
             type="button"
             onClick={() => setMenuOpen((value) => !value)}
-            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            aria-label={menuOpen ? t.admin.closeMenu : t.admin.openMenu}
             aria-expanded={menuOpen}
           >
             {menuOpen ? <X size={22} /> : <Menu size={22} />}
@@ -619,6 +624,8 @@ function SiteHeader() {
 }
 
 function SiteFooter() {
+  const { t } = useLanguage();
+
   return (
     <footer className="footer">
       <div className="container">
@@ -628,50 +635,46 @@ function SiteFooter() {
               <img className="brand-logo" src="/assets/branding/codivio-logo.png" alt="Codivio" />
               Codivio
             </Link>
-            <p>
-              Free online tools for QR codes, PDF files, images and everyday
-              digital tasks.
-            </p>
+            <p>{t.site.siteDescription}</p>
           </div>
 
           <div>
-            <b>Tools</b>
-            <Link to="/tools">All Tools</Link>
-            <Link to="/tools/qr-code-generator">QR Tools</Link>
-            <Link to="/tools/pdf-merge">PDF Tools</Link>
-            <Link to="/tools/image-resize">Image Tools</Link>
+            <b>{t.site.navTools}</b>
+            <Link to="/tools">{t.footer.allTools}</Link>
+            <Link to="/tools/qr-code-generator">{t.section.qrTools}</Link>
+            <Link to="/tools/pdf-merge">{t.section.pdfTools}</Link>
+            <Link to="/tools/image-resize">{t.footer.imageToolsLink}</Link>
           </div>
 
           <div>
-            <b>Company</b>
-            <Link to="/about">About</Link>
-            <Link to="/blog">Blog</Link>
-            <Link to="/faq">FAQ</Link>
-            <Link to="/contact">Contact</Link>
+            <b>{t.footer.companyHeading}</b>
+            <Link to="/about">{t.site.navAbout}</Link>
+            <Link to="/blog">{t.site.navBlog}</Link>
+            <Link to="/faq">{t.site.navFaq}</Link>
+            <Link to="/contact">{t.site.navContact}</Link>
           </div>
 
           <div>
-            <b>Information</b>
-            <Link to="/privacy">Privacy</Link>
-            <Link to="/terms">Terms</Link>
-            <Link to="/cookies">Cookies</Link>
+            <b>{t.footer.informationHeading}</b>
+            <Link to="/privacy">{t.footer.privacy}</Link>
+            <Link to="/terms">{t.footer.terms}</Link>
+            <Link to="/cookies">{t.footer.cookies}</Link>
           </div>
         </div>
 
-        <div className="copyright">
-          © {new Date().getFullYear()} Codivio. All rights reserved.
-        </div>
+        <div className="copyright">{t.footer.copyright(new Date().getFullYear())}</div>
       </div>
     </footer>
   );
 }
 
-function AdSlot({ label = "ADVERTISEMENT" }: { label?: string }) {
+function AdSlot({ label }: { label?: string }) {
+  const { t } = useLanguage();
   return (
     <div className="container">
       <div className="ad-slot">
-        {label}
-        <span>Advertisement</span>
+        {label ?? t.hero.adLabel}
+        <span>{t.hero.adNote}</span>
       </div>
     </div>
   );
@@ -684,10 +687,11 @@ function PageShell({
   children: React.ReactNode;
   showSlider?: boolean;
 }) {
+  const { t } = useLanguage();
   return (
     <div className="app">
       <a className="skip-link" href="#main-content">
-        Skip to content
+        {t.site.skipLink}
       </a>
       <SiteHeader />
       {children}
@@ -698,10 +702,8 @@ function PageShell({
 }
 
 function HomePage() {
-  usePageMeta(
-    "Free Online Tools",
-    "Codivio - free online tools for QR codes, PDF files, images and everyday digital tasks."
-  );
+  const { t } = useLanguage();
+  usePageMeta(`${t.hero.headlineLine1} ${t.hero.headlineLine2}`, t.site.siteDescription);
   const [query, setQuery] = useState("");
   const [menuCategory, setMenuCategory] = useState<string>("All");
   const popularTrackRef = useRef<HTMLDivElement>(null);
@@ -849,24 +851,21 @@ function HomePage() {
         <section className="hero">
           <div className="container hero-grid">
             <div>
-              <span className="eyebrow">SIMPLE. FAST. USEFUL.</span>
+              <span className="eyebrow">{t.hero.eyebrow}</span>
               <h1>
-                Free online tools,
+                {t.hero.headlineLine1}
                 <br />
-                <span>made simple.</span>
+                <span>{t.hero.headlineLine2}</span>
               </h1>
-              <p>
-                Codivio brings together fast, practical tools for QR codes,
-                PDFs, images and everyday digital tasks.
-              </p>
+              <p>{t.hero.subtitle}</p>
 
               <div className="hero-search">
                 <Search size={18} />
                 <input
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder="What do you need to do?"
-                  aria-label="Search Codivio tools"
+                  placeholder={t.hero.searchPlaceholder}
+                  aria-label={t.hero.searchPlaceholder}
                 />
                 <button
                   type="button"
@@ -876,29 +875,29 @@ function HomePage() {
                       ?.scrollIntoView({ behavior: "smooth" })
                   }
                 >
-                  Search
+                  {t.common.search}
                 </button>
               </div>
 
               <div className="trust-row">
                 <span>
                   <CheckCircle2 size={15} />
-                  Free to use
+                  {t.hero.trustFree}
                 </span>
                 <span>
                   <ShieldCheck size={15} />
-                  Privacy-focused
+                  {t.hero.trustPrivacy}
                 </span>
                 <span>
                   <Zap size={15} />
-                  Fast tools
+                  {t.hero.trustFast}
                 </span>
               </div>
             </div>
 
-            <div className="hero-ad-slot" role="complementary" aria-label="Advertisement">
-              <span className="hero-ad-label">ADVERTISEMENT</span>
-              <span className="hero-ad-note">Ad space available</span>
+            <div className="hero-ad-slot" role="complementary" aria-label={t.hero.adLabel}>
+              <span className="hero-ad-label">{t.hero.adLabel}</span>
+              <span className="hero-ad-note">{t.hero.adNote}</span>
             </div>
           </div>
         </section>
@@ -909,12 +908,12 @@ function HomePage() {
           <div className="container">
             <div className="section-heading">
               <div>
-                <span className="eyebrow">START HERE</span>
-                <h2>Popular Tools</h2>
+                <span className="eyebrow">{t.section.popularToolsEyebrow}</span>
+                <h2>{t.section.popularTools}</h2>
               </div>
               <div className="popular-tools-heading-actions">
                 <Link to="/tools">
-                  View all <ArrowRight size={15} />
+                  {t.common.viewAll} <ArrowRight size={15} />
                 </Link>
                 <div className="tool-slider-actions">
                   <button
@@ -970,12 +969,12 @@ function HomePage() {
           <div className="container">
             <div className="section-heading">
               <div>
-                <span className="eyebrow">QR TOOLS</span>
-                <h2>QR Tools</h2>
+                <span className="eyebrow">{t.section.qrTools.toUpperCase()}</span>
+                <h2>{t.section.qrTools}</h2>
               </div>
               <div className="popular-tools-heading-actions">
                 <Link to="/tools">
-                  View all <ArrowRight size={15} />
+                  {t.common.viewAll} <ArrowRight size={15} />
                 </Link>
                 <div className="tool-slider-actions">
                   <button
@@ -1017,12 +1016,12 @@ function HomePage() {
           <div className="container">
             <div className="section-heading">
               <div>
-                <span className="eyebrow">PDF TOOLS</span>
-                <h2>PDF Tools</h2>
+                <span className="eyebrow">{t.section.pdfTools.toUpperCase()}</span>
+                <h2>{t.section.pdfTools}</h2>
               </div>
               <div className="popular-tools-heading-actions">
                 <Link to="/tools">
-                  View all <ArrowRight size={15} />
+                  {t.common.viewAll} <ArrowRight size={15} />
                 </Link>
                 <div className="tool-slider-actions">
                   <button
@@ -1064,12 +1063,12 @@ function HomePage() {
           <div className="container">
             <div className="section-heading">
               <div>
-                <span className="eyebrow">IMAGE &amp; OTHER TOOLS</span>
-                <h2>Image &amp; Other Tools</h2>
+                <span className="eyebrow">{t.section.imageOtherTools.toUpperCase()}</span>
+                <h2>{t.section.imageOtherTools}</h2>
               </div>
               <div className="popular-tools-heading-actions">
                 <Link to="/tools">
-                  View all <ArrowRight size={15} />
+                  {t.common.viewAll} <ArrowRight size={15} />
                 </Link>
                 <div className="tool-slider-actions">
                   <button
@@ -1113,12 +1112,12 @@ function HomePage() {
           <div className="container">
             <div className="section-heading">
               <div>
-                <span className="eyebrow">CODIVIO BLOG</span>
-                <h2>Guides, tips and useful ideas</h2>
+                <span className="eyebrow">{t.section.blogEyebrow}</span>
+                <h2>{t.section.blogHeading}</h2>
               </div>
               <div className="popular-tools-heading-actions">
                 <Link className="primary-text-link" to="/blog">
-                  Read the blog <ArrowRight size={15} />
+                  {t.section.readBlog} <ArrowRight size={15} />
                 </Link>
                 <div className="tool-slider-actions">
                   <button
@@ -1824,126 +1823,18 @@ function App() {
         <Route path="settings" element={<AdminSettingsPage />} />
         <Route path="pages" element={<AdminPagesPage />} />
         <Route path="tools" element={<AdminToolsPage />} />
-        <Route
-          path="users"
-          element={
-            <AdminComingSoonPage
-              title="Users / CRM"
-              description="Manage admin and customer accounts, roles, and relationship history."
-              categories={["Total users", "Free / Pro / Business", "Active & retention", "Churn & conversion", "CRM history"]}
-            />
-          }
-        />
-        <Route
-          path="blog"
-          element={
-            <AdminComingSoonPage
-              title="Blog"
-              description="Plan, draft and publish Codivio articles with SEO and affiliate context."
-              categories={["Categories", "Articles", "Authors", "Draft / Published / Archived", "SEO", "Related tools", "Affiliate offers"]}
-            />
-          }
-        />
-        <Route
-          path="analytics"
-          element={
-            <AdminComingSoonPage
-              title="Analytics"
-              description="Real traffic, tool usage and audience insight once GA4/Search Console are connected."
-              categories={["Traffic", "Tool usage", "Audience", "Search performance", "Growth"]}
-            />
-          }
-        />
-        <Route
-          path="seo"
-          element={
-            <AdminComingSoonPage
-              title="SEO"
-              description="A complete SEO management center for the whole site, tools and blog."
-              categories={["Global SEO", "Technical SEO", "Page SEO", "Tool SEO", "Blog SEO", "Schema", "AI discoverability"]}
-            />
-          }
-        />
-        <Route
-          path="search-console"
-          element={
-            <AdminComingSoonPage
-              title="Search Console"
-              description="Connect Google Search Console for real query, click and indexing data."
-              categories={["Queries", "Clicks & impressions", "CTR & position", "Indexed pages", "Search appearance"]}
-            />
-          }
-        />
-        <Route
-          path="advertising"
-          element={
-            <AdminComingSoonPage
-              title="Advertising"
-              description="Manage ad slots, providers and campaigns across the site."
-              categories={["Slots", "Providers", "Campaigns", "Schedule & priority", "Performance"]}
-            />
-          }
-        />
-        <Route
-          path="affiliate"
-          element={
-            <AdminComingSoonPage
-              title="Affiliate"
-              description="Manage affiliate offers, tracking and disclosure — kept separate from Codivio's own premium services."
-              categories={["Providers", "Offers", "Tracking", "Disclosure", "Revenue"]}
-            />
-          }
-        />
-        <Route
-          path="monetization"
-          element={
-            <AdminComingSoonPage
-              title="Monetization"
-              description="A unified view of subscription, premium-service, affiliate and ad revenue."
-              categories={["Plans", "Subscription revenue", "Premium services", "Revenue per user", "Growth"]}
-            />
-          }
-        />
-        <Route
-          path="social"
-          element={
-            <AdminComingSoonPage
-              title="Social"
-              description="Manage Codivio's social presence and referral performance."
-              categories={["Instagram", "Facebook", "YouTube", "TikTok", "X", "LinkedIn"]}
-            />
-          }
-        />
-        <Route
-          path="reports"
-          element={
-            <AdminComingSoonPage
-              title="Reports"
-              description="Generate traffic, SEO, revenue and system reports on a schedule."
-              categories={["Daily / Weekly / Monthly", "Traffic", "SEO", "Revenue", "System health", "CSV / PDF export"]}
-            />
-          }
-        />
-        <Route
-          path="system"
-          element={
-            <AdminComingSoonPage
-              title="System Health"
-              description="Live status for the Worker, D1, storage and background jobs."
-              categories={["Worker health", "D1 health", "Storage & bandwidth", "Processing", "Backups", "API health"]}
-            />
-          }
-        />
-        <Route
-          path="audit-log"
-          element={
-            <AdminComingSoonPage
-              title="Audit Log"
-              description="A searchable read view over the existing audit_logs table."
-              categories={["Authentication events", "Authorization denials", "Settings changes", "Pages/Tools mutations", "Actor & timestamp"]}
-            />
-          }
-        />
+        <Route path="users" element={<AdminComingSoonPage moduleKey="usersCrm" />} />
+        <Route path="blog" element={<AdminComingSoonPage moduleKey="blog" />} />
+        <Route path="analytics" element={<AdminComingSoonPage moduleKey="analytics" />} />
+        <Route path="seo" element={<AdminComingSoonPage moduleKey="seo" />} />
+        <Route path="search-console" element={<AdminComingSoonPage moduleKey="searchConsole" />} />
+        <Route path="advertising" element={<AdminComingSoonPage moduleKey="advertising" />} />
+        <Route path="affiliate" element={<AdminComingSoonPage moduleKey="affiliate" />} />
+        <Route path="monetization" element={<AdminComingSoonPage moduleKey="monetization" />} />
+        <Route path="social" element={<AdminComingSoonPage moduleKey="social" />} />
+        <Route path="reports" element={<AdminComingSoonPage moduleKey="reports" />} />
+        <Route path="system" element={<AdminComingSoonPage moduleKey="systemHealth" />} />
+        <Route path="audit-log" element={<AdminComingSoonPage moduleKey="auditLog" />} />
       </Route>
       <Route path="/:slug" element={<CmsPageRoute />} />
       <Route path="*" element={<NotFoundPage />} />

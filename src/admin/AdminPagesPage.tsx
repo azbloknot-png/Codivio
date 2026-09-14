@@ -4,6 +4,7 @@ import { FileText, Loader2 } from "lucide-react";
 import { usePageMeta } from "../App";
 import { hasPermission } from "../../shared/rbac";
 import { useAdminUser } from "./AdminApp";
+import { useLanguage } from "../i18n/LanguageContext";
 
 /**
  * Phase 2.9 — Pages Management foundation UI.
@@ -77,7 +78,8 @@ function describeError(status: number, fallback: string): string {
 }
 
 export default function AdminPagesPage() {
-  usePageMeta("Admin Pages", "Manage Codivio content pages.");
+  const { t } = useLanguage();
+  usePageMeta(t.nav.pages, "Manage Codivio content pages.");
   const user = useAdminUser();
   const canManage = hasPermission(user.role, "pages.manage");
 
@@ -200,7 +202,7 @@ export default function AdminPagesPage() {
     return (
       <div className="admin-settings-loading" role="status" aria-live="polite">
         <Loader2 className="admin-spinner" size={22} aria-hidden="true" />
-        <p>Loading pages…</p>
+        <p>{t.contentAdmin.loadingPages}</p>
       </div>
     );
   }
@@ -216,7 +218,7 @@ export default function AdminPagesPage() {
   if (view.mode === "editor") {
     return (
       <div className="admin-pages-page">
-        <h1>{view.page ? "Edit page" : "New page"}</h1>
+        <h1>{view.page ? t.contentAdmin.editPage : t.contentAdmin.newPage}</h1>
         <form className="contact-form admin-page-form" onSubmit={handleSubmit}>
           <label>
             Title
@@ -316,7 +318,7 @@ export default function AdminPagesPage() {
 
           <div className="admin-page-form-actions">
             <button className="primary-button" type="submit" disabled={saving}>
-              {saving ? "Saving…" : "Save"}
+              {saving ? t.common.saving : t.common.save}
             </button>
             <button
               className="admin-secondary-button"
@@ -324,7 +326,7 @@ export default function AdminPagesPage() {
               onClick={() => setView({ mode: "list" })}
               disabled={saving}
             >
-              Cancel
+              {t.common.cancel}
             </button>
           </div>
         </form>
@@ -335,10 +337,10 @@ export default function AdminPagesPage() {
   return (
     <div className="admin-pages-page">
       <div className="admin-pages-header">
-        <h1>Pages</h1>
+        <h1>{t.nav.pages}</h1>
         {canManage && (
           <button className="primary-button" type="button" onClick={openCreate}>
-            New page
+            {t.contentAdmin.newPage}
           </button>
         )}
       </div>
@@ -352,7 +354,7 @@ export default function AdminPagesPage() {
       {state.pages.length === 0 ? (
         <div className="empty-state">
           <FileText size={28} />
-          <h2>No pages yet</h2>
+          <h2>{t.contentAdmin.noPagesYet}</h2>
           <p>Create your first page to get started.</p>
         </div>
       ) : (
@@ -377,7 +379,7 @@ export default function AdminPagesPage() {
                 <span className={`admin-pages-status status-${page.status}`}>{page.status}</span>
               </span>
               <span data-label="Indexable" role="cell">
-                {page.isIndexable ? "Yes" : "No"}
+                {page.isIndexable ? t.common.yes : t.common.no}
               </span>
               <span data-label="Updated" role="cell">
                 {new Date(page.updatedAt).toLocaleDateString()}
@@ -386,7 +388,7 @@ export default function AdminPagesPage() {
                 {canManage ? (
                   <>
                     <button type="button" onClick={() => openEdit(page)} disabled={busyId === page.id}>
-                      Edit
+                      {t.common.edit}
                     </button>
                     {page.status !== "published" && (
                       <button
@@ -394,7 +396,7 @@ export default function AdminPagesPage() {
                         onClick={() => handleStatusChange(page, "published")}
                         disabled={busyId === page.id}
                       >
-                        Publish
+                        {t.common.publish}
                       </button>
                     )}
                     {page.status === "published" && (
@@ -403,7 +405,7 @@ export default function AdminPagesPage() {
                         onClick={() => handleStatusChange(page, "draft")}
                         disabled={busyId === page.id}
                       >
-                        Unpublish
+                        {t.common.unpublish}
                       </button>
                     )}
                     {page.status !== "archived" && (
@@ -412,7 +414,7 @@ export default function AdminPagesPage() {
                         onClick={() => handleStatusChange(page, "archived")}
                         disabled={busyId === page.id}
                       >
-                        Archive
+                        {t.common.archive}
                       </button>
                     )}
                     <button
@@ -421,11 +423,11 @@ export default function AdminPagesPage() {
                       onClick={() => handleDelete(page)}
                       disabled={busyId === page.id}
                     >
-                      Delete
+                      {t.common.delete}
                     </button>
                   </>
                 ) : (
-                  <span className="admin-settings-status">View only</span>
+                  <span className="admin-settings-status">{t.common.viewOnly}</span>
                 )}
               </span>
             </div>

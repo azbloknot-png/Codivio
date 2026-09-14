@@ -15,6 +15,8 @@
  * in a new migration) — never inventing an ad-hoc key at a call site.
  */
 
+import { LANGUAGES, isValidLanguage } from "./i18n/languages";
+
 export const SETTING_CATEGORIES = [
   "general",
   "branding",
@@ -178,6 +180,13 @@ export function validateSettingValue(key: string, rawValue: unknown): SettingVal
       }
       if (UNSAFE_STRING_PATTERN.test(rawValue)) {
         return { ok: false, error: "Value contains disallowed characters" };
+      }
+      // general.default_language is free-text at the column level, but
+      // Phase 2.15's i18n system only ever has 3 real dictionaries to
+      // render — fail closed rather than accept a code nothing can
+      // display, matching the same pattern as tools.category/icon.
+      if (key === "general.default_language" && !isValidLanguage(rawValue)) {
+        return { ok: false, error: "Language must be one of: " + LANGUAGES.join(", ") };
       }
       return { ok: true, stored: rawValue };
     }

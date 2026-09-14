@@ -25,6 +25,9 @@ import {
 import { Link, Navigate, Outlet, useNavigate, useOutletContext } from "react-router-dom";
 import { usePageMeta } from "../App";
 import { displayName, hasPermission, type Permission } from "../../shared/rbac";
+import type { Translations } from "../../shared/i18n";
+import { useLanguage } from "../i18n/LanguageContext";
+import { LanguageSwitcher } from "../i18n/LanguageSwitcher";
 
 /**
  * Phase 2.4 — Admin UI + Protected Route.
@@ -108,7 +111,8 @@ export function describeLoginError(status: number): string {
 }
 
 export function AdminLoginPage() {
-  usePageMeta("Admin Sign In", "Sign in to the Codivio admin area.");
+  const { t } = useLanguage();
+  usePageMeta(t.admin.adminSignIn, t.admin.signInSubtitle);
 
   const session = useSession();
   const navigate = useNavigate();
@@ -157,12 +161,12 @@ export function AdminLoginPage() {
           Codivio
         </Link>
 
-        <h1>Admin sign in</h1>
-        <p>Sign in with your Codivio admin account.</p>
+        <h1>{t.admin.adminSignIn}</h1>
+        <p>{t.admin.signInSubtitle}</p>
 
         <form className="contact-form" onSubmit={handleSubmit}>
           <label>
-            Email
+            {t.admin.email}
             <input
               type="email"
               value={email}
@@ -173,7 +177,7 @@ export function AdminLoginPage() {
           </label>
 
           <label>
-            Password
+            {t.admin.password}
             <input
               type="password"
               value={password}
@@ -190,7 +194,7 @@ export function AdminLoginPage() {
           )}
 
           <button className="primary-button" type="submit" disabled={submitting}>
-            {submitting ? "Signing in…" : "Sign in"}
+            {submitting ? t.admin.signingIn : t.admin.signIn}
           </button>
         </form>
       </div>
@@ -199,10 +203,11 @@ export function AdminLoginPage() {
 }
 
 function AdminLoadingScreen() {
+  const { t } = useLanguage();
   return (
     <div className="admin-loading-screen" role="status" aria-live="polite">
       <Loader2 className="admin-spinner" size={28} aria-hidden="true" />
-      <p>Checking your session…</p>
+      <p>{t.admin.checkingSession}</p>
     </div>
   );
 }
@@ -225,24 +230,26 @@ function AdminLoadingScreen() {
  * The day a placeholder gets a real backend, it gets a real permission
  * here too — see DECISIONS.md.
  */
-const NAV_ITEMS: { permission?: Permission; icon: ReactNode; label: string; to?: string }[] = [
-  { permission: "dashboard.view", icon: <LayoutDashboard size={18} />, label: "Dashboard", to: "/admin" },
-  { permission: "pages.view", icon: <FileText size={18} />, label: "Pages", to: "/admin/pages" },
-  { permission: "tools.view", icon: <Box size={18} />, label: "Tools", to: "/admin/tools" },
-  { permission: "users.view", icon: <Users size={18} />, label: "Users / CRM", to: "/admin/users" },
-  { icon: <BookOpen size={18} />, label: "Blog", to: "/admin/blog" },
-  { permission: "analytics.view", icon: <BarChart3 size={18} />, label: "Analytics", to: "/admin/analytics" },
-  { icon: <TrendingUp size={18} />, label: "SEO", to: "/admin/seo" },
-  { icon: <Search size={18} />, label: "Search Console", to: "/admin/search-console" },
-  { icon: <Megaphone size={18} />, label: "Advertising", to: "/admin/advertising" },
-  { icon: <Link2 size={18} />, label: "Affiliate", to: "/admin/affiliate" },
-  { icon: <DollarSign size={18} />, label: "Monetization", to: "/admin/monetization" },
-  { icon: <Share2 size={18} />, label: "Social", to: "/admin/social" },
-  { icon: <FileBarChart size={18} />, label: "Reports", to: "/admin/reports" },
-  { icon: <Activity size={18} />, label: "System Health", to: "/admin/system" },
-  { permission: "settings.view", icon: <Settings size={18} />, label: "Settings", to: "/admin/settings" },
-  { permission: "audit.view", icon: <ClipboardList size={18} />, label: "Audit Log", to: "/admin/audit-log" },
-];
+function getNavItems(t: Translations): { permission?: Permission; icon: ReactNode; label: string; to?: string }[] {
+  return [
+    { permission: "dashboard.view", icon: <LayoutDashboard size={18} />, label: t.nav.dashboard, to: "/admin" },
+    { permission: "pages.view", icon: <FileText size={18} />, label: t.nav.pages, to: "/admin/pages" },
+    { permission: "tools.view", icon: <Box size={18} />, label: t.nav.tools, to: "/admin/tools" },
+    { permission: "users.view", icon: <Users size={18} />, label: t.nav.usersCrm, to: "/admin/users" },
+    { icon: <BookOpen size={18} />, label: t.nav.blog, to: "/admin/blog" },
+    { permission: "analytics.view", icon: <BarChart3 size={18} />, label: t.nav.analytics, to: "/admin/analytics" },
+    { icon: <TrendingUp size={18} />, label: t.nav.seo, to: "/admin/seo" },
+    { icon: <Search size={18} />, label: t.nav.searchConsole, to: "/admin/search-console" },
+    { icon: <Megaphone size={18} />, label: t.nav.advertising, to: "/admin/advertising" },
+    { icon: <Link2 size={18} />, label: t.nav.affiliate, to: "/admin/affiliate" },
+    { icon: <DollarSign size={18} />, label: t.nav.monetization, to: "/admin/monetization" },
+    { icon: <Share2 size={18} />, label: t.nav.social, to: "/admin/social" },
+    { icon: <FileBarChart size={18} />, label: t.nav.reports, to: "/admin/reports" },
+    { icon: <Activity size={18} />, label: t.nav.systemHealth, to: "/admin/system" },
+    { permission: "settings.view", icon: <Settings size={18} />, label: t.nav.settings, to: "/admin/settings" },
+    { permission: "audit.view", icon: <ClipboardList size={18} />, label: t.nav.auditLog, to: "/admin/audit-log" },
+  ];
+}
 
 function AdminNavLink({
   to,
@@ -255,12 +262,13 @@ function AdminNavLink({
   label: string;
   onNavigate?: () => void;
 }) {
+  const { t } = useLanguage();
   if (!to) {
     return (
       <span className="admin-nav-link admin-nav-link-disabled" aria-disabled="true">
         {icon}
         {label}
-        <span className="admin-nav-badge">Soon</span>
+        <span className="admin-nav-badge">{t.common.comingSoon}</span>
       </span>
     );
   }
@@ -278,76 +286,42 @@ function AdminNavLink({
  * §7's dashboard scope) with NO value wired up yet — every row renders the
  * same honest "Not connected" state. Do not replace any of these with a
  * number until a real analytics/revenue/system-health data source exists
- * to back it; see CLAUDE.md §23's "Statistics principle".
+ * to back it; see CLAUDE.md §23's "Statistics principle". Titles/metrics
+ * come from the translation dictionaries (Phase 2.15), not literal English.
  */
-const DASHBOARD_SECTIONS: { title: string; metrics: string[] }[] = [
-  {
-    title: "Traffic",
-    metrics: [
-      "Visitors",
-      "Unique visitors",
-      "Pageviews",
-      "Sessions",
-      "New vs. returning",
-      "Top countries",
-      "Devices",
-    ],
-  },
-  {
-    title: "Tools",
-    metrics: ["Total usage", "Most used", "Least used", "Usage growth", "Errors", "Processing performance"],
-  },
-  {
-    title: "Users / CRM",
-    metrics: ["Total users", "New users", "Free / Pro / Business", "Active", "Retention", "Churn"],
-  },
-  {
-    title: "Revenue",
-    metrics: [
-      "Total revenue",
-      "Subscription revenue",
-      "Premium services",
-      "Affiliate revenue",
-      "Advertising revenue",
-      "Revenue per user",
-    ],
-  },
-  {
-    title: "Advertising",
-    metrics: ["Impressions", "Clicks", "CTR", "RPM", "Slot performance"],
-  },
-  {
-    title: "Affiliate",
-    metrics: ["Clicks", "Conversions", "Commission", "Revenue", "ROI"],
-  },
-  {
-    title: "System",
-    metrics: ["Worker health", "D1 health", "Storage", "Bandwidth", "Backups", "API health"],
-  },
-];
+function getDashboardSections(t: Translations): { title: string; metrics: string[] }[] {
+  const m = t.dashboard.metrics;
+  return [
+    { title: t.dashboard.traffic, metrics: [m.visitors, m.uniqueVisitors, m.pageviews, m.sessions, m.newVsReturning, m.topCountries, m.devices] },
+    { title: t.nav.tools, metrics: [m.totalUsage, m.mostUsed, m.leastUsed, m.usageGrowth, m.errors, m.processingPerformance] },
+    { title: t.nav.usersCrm, metrics: [m.totalUsers, m.newUsers, m.freeProBusiness, m.active, m.retention, m.churn] },
+    { title: t.dashboard.revenue, metrics: [m.totalRevenue, m.subscriptionRevenue, m.premiumServices, m.affiliateRevenue, m.advertisingRevenue, m.revenuePerUser] },
+    { title: t.nav.advertising, metrics: [m.impressions, m.clicks, m.ctr, m.rpm, m.slotPerformance] },
+    { title: t.nav.affiliate, metrics: [m.clicks, m.conversions, m.commission, m.totalRevenue, m.roi] },
+    { title: t.dashboard.system, metrics: [m.workerHealth, m.d1Health, m.storage, m.bandwidth, m.backups, m.apiHealth] },
+  ];
+}
 
 export function AdminDashboardPlaceholder() {
+  const { t } = useLanguage();
   usePageMeta("Admin Dashboard", "Codivio admin dashboard.");
   const user = useAdminUser();
 
   return (
     <div className="admin-dashboard">
-      <h1>Welcome, {user.email}</h1>
+      <h1>{t.admin.welcome(user.email)}</h1>
       <span className="admin-role-badge">{displayName(user.role)}</span>
-      <p className="admin-dashboard-intro">
-        Every metric below is real and will populate once its data source is connected — nothing here is
-        estimated or fabricated.
-      </p>
+      <p className="admin-dashboard-intro">{t.admin.dashboardIntro}</p>
 
       <div className="admin-dashboard-grid">
-        {DASHBOARD_SECTIONS.map((section) => (
+        {getDashboardSections(t).map((section) => (
           <section className="admin-dashboard-card" key={section.title}>
             <h2>{section.title}</h2>
             <ul className="admin-dashboard-metrics">
               {section.metrics.map((metric) => (
                 <li key={metric}>
                   <span>{metric}</span>
-                  <span className="admin-settings-status">Not connected</span>
+                  <span className="admin-settings-status">{t.common.notConnected}</span>
                 </li>
               ))}
             </ul>
@@ -367,6 +341,7 @@ function AdminShell({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   async function handleLogout() {
     await onLogout();
@@ -382,7 +357,7 @@ function AdminShell({
           className="admin-sidebar-toggle"
           type="button"
           onClick={() => setSidebarOpen((value) => !value)}
-          aria-label={sidebarOpen ? "Close admin menu" : "Open admin menu"}
+          aria-label={sidebarOpen ? t.admin.closeMenu : t.admin.openMenu}
           aria-expanded={sidebarOpen}
         >
           {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
@@ -394,19 +369,20 @@ function AdminShell({
         </Link>
 
         <div className="admin-header-user">
+          <LanguageSwitcher className="language-switcher language-switcher-admin" />
           <span className="admin-user-email">{user.email}</span>
           <button className="admin-logout-button" type="button" onClick={handleLogout}>
             <LogOut size={16} />
-            Log out
+            {t.common.logout}
           </button>
         </div>
       </header>
 
       <div className="admin-body">
         <nav className={`admin-sidebar ${sidebarOpen ? "open" : ""}`} aria-label="Admin navigation">
-          {NAV_ITEMS.filter(
-            (item) => item.permission === undefined || hasPermission(user.role, item.permission)
-          ).map((item) => (
+          {getNavItems(t)
+            .filter((item) => item.permission === undefined || hasPermission(user.role, item.permission))
+            .map((item) => (
             <AdminNavLink
               key={item.label}
               to={item.to}
