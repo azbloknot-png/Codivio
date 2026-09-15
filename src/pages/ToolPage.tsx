@@ -115,10 +115,10 @@ function ToolContentSections({ slug }: { slug: string }) {
         <section className="tool-content-section tool-faq">
           <h2>{t.toolPage.faqHeading}</h2>
           {blueprint.faq.map((item) => (
-            <div className="tool-faq-item" key={item.question}>
-              <h3>{item.question}</h3>
+            <details className="tool-faq-item" key={item.question}>
+              <summary>{item.question}</summary>
               <p>{item.answer}</p>
-            </div>
+            </details>
           ))}
         </section>
       )}

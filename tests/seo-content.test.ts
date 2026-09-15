@@ -26,7 +26,7 @@ describe("34/34 tools have a complete content blueprint", () => {
     expect(Object.keys(TOOL_CONTENT).length).toBe(34);
   });
 
-  it("every tool has a populated blueprint (intro, value prop, 3 benefits, 3 how-to steps, 3 use cases, 2 FAQ) in all 3 languages", () => {
+  it("every tool has a populated blueprint (intro, value prop, 3 benefits, 3 how-to steps, 3 use cases, 6 FAQ) in all 3 languages", () => {
     for (const [slug, byLang] of Object.entries(TOOL_CONTENT)) {
       for (const lang of LANGUAGES) {
         const blueprint = byLang[lang];
@@ -35,7 +35,13 @@ describe("34/34 tools have a complete content blueprint", () => {
         expect(blueprint.benefits.length, `${slug} [${lang}] benefits count`).toBe(3);
         expect(blueprint.howToSteps.length, `${slug} [${lang}] howToSteps count`).toBe(3);
         expect(blueprint.useCases.length, `${slug} [${lang}] useCases count`).toBe(3);
-        expect(blueprint.faq.length, `${slug} [${lang}] faq count`).toBe(2);
+        // Phase "FAQ Expansion + AI Discoverability" (pre-3.15) grew this
+        // from Phase 3.4's original 2 to 6 genuinely tool-specific
+        // questions per language — see DECISIONS.md for why 6 rather than
+        // the 8-12 upper end of that phase's own guidance (quality over a
+        // forced count, given how much can be honestly said about a tool
+        // with no live functionality yet).
+        expect(blueprint.faq.length, `${slug} [${lang}] faq count`).toBe(6);
         for (const item of blueprint.faq) {
           expect(item.question.trim().length, `${slug} [${lang}] faq question`).toBeGreaterThan(0);
           expect(item.answer.trim().length, `${slug} [${lang}] faq answer`).toBeGreaterThan(0);

@@ -17,7 +17,7 @@ Single React 19 + TypeScript + Vite SPA (`src/App.tsx`, `src/pages/ToolPage.tsx`
 - Phase 0 — **COMPLETE**
 - Phase 1 — **COMPLETE**
 - Phase 2 — **COMPLETE** (Final Checkpoint PASS, 2026-09-13 — see table below)
-- Phase 3 — **IN PROGRESS** — Checkpoints 3.1–3.12 are LIVE in production as of 2026-09-15 (commit `4c558a6`, Cloudflare Version ID `f8f48a76-be36-4cea-a80b-806a831691f5`) — see "Phase 3 SEO release status" below; 3.13 (SEO content expansion) and 3.14 (monetization funnel foundation + remediation of its own 4 findings) implemented and tested this session, **NOT yet committed/deployed** (development/testing only, explicit in every phase's own instructions); 3.15 not started
+- Phase 3 — **IN PROGRESS** — Checkpoints 3.1–3.14 (including Phase 3.14's own remediation) are LIVE in production as of 2026-09-15 (commit `84e656b`, Cloudflare Version ID `d6cbb2e1-05c0-498f-9062-03d9931634b5`) — see "Phase 3.13/3.14 release status" below; 3.15 (Professional SEO + AI SEO Master Audit) is NEXT, not started
 
 Phase-weighted progress: each complete phase ≈ 6.67%. Phase 0 + Phase 1 + Phase 2 complete = **20%** (the milestone-audit threshold per `codivio-test-gate` — reached and passed this checkpoint). Phase 3 is now underway but not complete, so overall progress stays reported as 20% plus one in-progress sub-checkpoint — not rounded up to the next milestone.
 
@@ -347,9 +347,32 @@ Phase 2 (Admin Foundation) through Phase 2.15 (multilingual system + homepage ca
 
 Also: checked 5 newly-added reference documents (`CODIVIO_MASTER_PLAN.md`, `ARCHITECTURE.md`, `SEO_STRATEGY.md`, `DATABASE_SCHEMA.md`, `DEPLOYMENT.md`) before any change — no conflict with actual code/state found.
 
+## Phase 3.13/3.14 release status (2026-09-15)
+
+**Committed, pushed, and deployed** with explicit user approval for this specific release task.
+
+- **Commit**: `84e656b` ("feat: release phase 3 seo and monetization foundation") — 38 files: all of Phase 3.13 (visible tool-page content/breadcrumbs, lazy-loaded), Phase 3.14 (`shared/monetization/`, `/pricing`, migrations 0007/0008), and Phase 3.14's remediation (`customer_accounts`, pricing i18n, funnel-events, `tsconfig.test.json`). Excluded: `tsconfig.tsbuildinfo`, the 4 pre-existing unrelated WIP files, and 5 newly-discovered reference documents (`CODIVIO_MASTER_PLAN.md`, `ARCHITECTURE.md`, `SEO_STRATEGY.md`, `DATABASE_SCHEMA.md`, `DEPLOYMENT.md`) left untracked — not part of this session's deliverables, not committed without being asked.
+- **Push**: `origin/main` advanced `4c558a6` → `84e656b`, verified.
+- **Deploy**: `wrangler deploy` — Cloudflare Version ID `d6cbb2e1-05c0-498f-9062-03d9931634b5`; 6 assets uploaded (index.html, sitemap.xml, llms.txt, main JS/CSS, new ToolPage lazy chunk).
+- **D1 migrations 0007/0008 have since been applied to production D1** (2026-09-15, same-day follow-up task): determined from `DATABASE_SCHEMA.md` §2 ("keep `database/schema.sql` synchronized with the migration end state") and this project's own established precedent (every prior migration 0001–0006 was applied as part of its own release) that production D1 is intended to stay synchronized with the committed migration chain, not left indefinitely pending. Applied via `wrangler d1 migrations apply codivio --remote` — both migrations verified purely additive/idempotent beforehand (no DROP/DELETE, `ALTER TABLE ADD COLUMN` with defaults only, `INSERT OR IGNORE`). **Production D1 is now synchronized through migration 0008** (`wrangler d1 migrations list codivio --remote` reports "No migrations to apply"). Post-migration read-only verification: all 3 new tables (`plans` — 4 rows, pricing NULL; `plan_entitlements` — 12 rows; `customer_accounts` — 0 rows) present and correctly seeded; `tools` table's 9 new columns present with honest values (e.g. `monetizable=0`, `required_plan='free'`, `policy_category` back-filled from the real category name); existing `tools` (34) and `users` (1) row counts unchanged; no unexpected table created. `/api/health` and one D1-tools-reading endpoint (`/api/admin/tools`, still correctly 401 unauthenticated) re-verified live post-migration — no regression. New deployment rule documented in `DEPLOYMENT.md` §7.1: production D1 migrations must be applied via the controlled Wrangler mechanism as an explicit step of every release that introduces one, never automatically at application startup.
+- **Live-verified**: `/`, `/tools`, `/pricing`, `/tools/qr-code-generator`, `/admin/login`, `/admin`, `/robots.txt`, `/sitemap.xml` all 200; `/api/health` connected; `/api/auth/session` and `/api/admin/pages` correctly 401 unauthenticated; all 4 security headers present; sitemap serves real XML with all 10 URLs (including `/pricing`, no admin/private URLs); robots.txt sitemap directive correct; the live JS bundle (byte-identical hash to the locally-reviewed build) confirmed to contain the EN/AZ/TR pricing headings, the honest "Coming soon"/"price to be announced" state in all 3 languages, and zero checkout/buy-now language.
+- GSC status unaffected by this deploy — still whatever Phase 3.12 last established.
+
+## FAQ Expansion + AI Discoverability status (pre-Phase-3.15)
+
+**Implemented, tested — not yet released as of this entry (see the release section below for the outcome).**
+
+- Every one of the 34 tools' FAQ arrays in `shared/seo/content.ts#TOOL_CONTENT` grew from Phase 3.4's original 2 questions to 6, in AZ/TR/EN — genuinely tool-specific content (not a template), covering a real technical/format detail, a real use case, an honest related-tool cross-reference, and an explicit availability-status question. No second FAQ dataset was created.
+- **Real content bug caught before release**: 16 cross-tool references used a shortened tool name that didn't match the real registered title (e.g. "Phone QR Code" vs. the real "Phone QR Code Generator") — found by a new test that checks every reference against `getToolDisplayName`, and corrected.
+- New `getToolFaqs(slug, lang)` accessor added to `shared/seo/content.ts` for the existing AI-answer architecture — no duplicate data.
+- FAQ display switched from plain stacked text to native `<details>/<summary>`, matching the existing homepage FAQ visual pattern — real keyboard accessibility for 6 items per tool.
+- **Bundle discipline confirmed by measurement**: main chunk stayed byte-identical (451.52 kB / 132.24 kB gzip) before and after — the expansion lives entirely inside the `ToolPage` lazy chunk (Phase 3.13's architecture), which grew from 92.88 kB / 22.66 kB gzip to 163.22 kB / 36.34 kB gzip.
+- No FAQPage schema added (Phase 3.7's deferral stands). No SEO strategy, Admin/RBAC, monetization, or D1 schema change — pure content + one accessor function + a UX/CSS change.
+- Test status: `npm run typecheck` — PASS. `npm test` — PASS, 270/270 (265 pre-existing + 5 new, including the corrected FAQ-count assertion). `npm run build` — PASS.
+
 ## Git status expectations
 
-`main` branch, tracks `origin/main` (`github.com/azbloknot-png/Codivio.git`), confirmed synchronized at `4c558a6` as of the 2026-09-15 Phase 3 SEO release. Phase 3.13's, 3.14's, and this remediation's changes (see above) are **uncommitted** in the working tree, per every phase's own explicit "do not deploy unless separately authorized" instructions.
+`main` branch, tracks `origin/main` (`github.com/azbloknot-png/Codivio.git`), confirmed synchronized at `84e656b` as of the 2026-09-15 Phase 3.13/3.14 release.
 
 ## Known limitations / blockers
 

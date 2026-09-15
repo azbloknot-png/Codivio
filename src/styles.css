@@ -48,9 +48,13 @@
 .tool-content-section li{margin:4px 0}
 .tool-status-note{margin-top:14px;font-size:13px;color:#8290a3;font-style:italic}
 
-.tool-faq-item{margin-top:16px}
-.tool-faq-item h3{margin:0 0 6px;color:#2a3c55;font-size:15px}
-.tool-faq-item p{margin:0;font-size:14px}
+.tool-faq-item{margin-top:10px;background:#fff;border:1px solid #e4eaf2;border-radius:12px;padding:14px 16px}
+.tool-faq-item summary{cursor:pointer;font-weight:700;color:#2a3c55;font-size:15px;list-style:none}
+.tool-faq-item summary::-webkit-details-marker{display:none}
+.tool-faq-item summary::after{content:"+";float:right;color:var(--color-primary);font-weight:800}
+.tool-faq-item[open] summary::after{content:"–"}
+.tool-faq-item summary:focus-visible{outline:2px solid var(--color-primary);outline-offset:3px;border-radius:6px}
+.tool-faq-item p{margin:10px 0 0;font-size:14px;color:var(--color-muted)}
 
 .tool-related-list{list-style:none;display:flex;flex-wrap:wrap;gap:10px;padding:0;margin:0}
 .tool-related-list a{display:inline-block;padding:9px 16px;border:1px solid #e1e8f2;border-radius:999px;background:#fff;color:var(--color-primary);text-decoration:none;font-weight:700;font-size:13px;transition:.18s ease}
