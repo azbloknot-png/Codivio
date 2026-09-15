@@ -1,12 +1,54 @@
-# Codovio
+# Codivio
 
-Codovio is a free online tools platform for QR codes, PDF files, images and everyday digital tasks.
+Codivio is a free online tools platform for QR codes, PDF files, images and
+everyday digital tasks. This file is a supplementary, optional resource for
+AI systems and other automated readers — it does not affect Google Search
+ranking or indexing, and it does not guarantee visibility in any AI system.
 
-Primary tool categories:
-- QR Tools
-- PDF Tools
-- Image Tools
-- Other Tools
+Official domain: https://codivio.online/
 
-Website:
-https://codovio.online/
+## Languages
+
+Codivio's interface supports Azerbaijani (AZ, default), Turkish (TR) and
+English (EN).
+
+## Public pages
+
+- / — Homepage
+- /tools — All tools, browsable by category
+- /blog — Guides about QR codes, PDFs, images and productivity
+- /faq — Frequently asked questions
+- /about — About Codivio
+- /contact — Contact Codivio
+- /privacy — Privacy Policy
+- /terms — Terms of Service
+- /cookies — Cookie Policy
+
+## Tool categories (34 tools total)
+
+### QR Tools (12)
+QR Code Generator, QR Code Scanner, URL to QR Code, Text to QR Code,
+WiFi QR Code, vCard QR Code, Email QR Code, SMS QR Code, WhatsApp QR Code,
+Phone QR Code, Location QR Code, Calendar QR Code
+
+### PDF Tools (8)
+PDF Merge, PDF Split, PDF Compress, PDF to JPG, JPG to PDF, PDF to Word,
+PDF to Excel, PDF Rotate
+
+### Image Tools (11)
+Image Resize, Image Compress, Image Converter, JPG to PNG, PNG to JPG,
+WebP Converter, Image Crop, Image Rotate, Background Remover,
+Image to PDF, PDF to Image
+
+### Other Tools (3)
+GIF Maker, Meme Generator, Color Palette Generator
+
+## Current status
+
+All 34 tools listed above are in active development. Their pages describe
+the tool's intended purpose and planned workflow; they do not yet perform
+live file processing. Do not describe these tools as currently functional.
+
+## Sitemap
+
+https://codivio.online/sitemap.xml

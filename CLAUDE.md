@@ -184,3 +184,78 @@ A user-provided screenshot (MyQRCode.com homepage) is accepted as a **layout/UX 
 Project memory lives in files, not conversation history: `PROJECT_STATE.md` (current state), `DECISIONS.md` (approved architectural/product decisions), `CHANGELOG.md` (checkpoint history). A new session reads `PROJECT_STATE.md` first, then this file, then `DECISIONS.md`; read `CHANGELOG.md` only when historical context is needed.
 
 **Actual code, tests, and Git state always override stale memory.** If a memory file conflicts with reality, report the conflict and treat the real project state as authoritative — then update the memory file. Update `PROJECT_STATE.md` and add a `CHANGELOG.md` entry at meaningful checkpoints; update `DECISIONS.md` only when a genuinely new decision was made. Use the `codivio-memory` skill for the read/update workflow — it governs the memory files, not the rules in this document.
+
+## Mandatory ChatGPT Phase Handoff Report
+
+**[CRITICAL]** At the end of every Phase or Subphase, produce a structured handoff report specifically for ChatGPT review, in addition to whatever other report format the task itself requested.
+
+**The report MUST contain**, in this order:
+- Phase identity
+- Current roadmap position
+- Previous completed phases
+- Work completed
+- Files created/modified/deleted
+- Database/data changes
+- Architecture changes
+- SEO results when relevant
+- AI/GEO results when relevant
+- Security/privacy/policy results
+- Test results
+- Typecheck
+- Build
+- Regression status
+- Performance/bundle impact when relevant
+- External/live verification
+- Environment limitations
+- Deferred work
+- New findings for future phases
+- Roadmap impact
+- Git/commit/push/deploy status
+- Acceptance criteria
+- Recommended next step
+- ChatGPT review notes
+
+**[CRITICAL] Never invent:** metrics, keyword volume, CPC, keyword difficulty, traffic, rankings, impressions, clicks, test results, deployment status, external verification, API results, or security results.
+
+- If information is unavailable, write exactly: `UNKNOWN — NOT VERIFIED`.
+- If something does not apply, write exactly: `N/A — NOT APPLICABLE`.
+- Clearly distinguish, per item, one of: `IMPLEMENTED`, `VERIFIED`, `DEFERRED`, `UNKNOWN`, `ENVIRONMENT LIMITATION`, `REAL PROJECT PROBLEM`.
+
+**[CRITICAL]** Do not silently move, reorder, skip, or merge Codivio roadmap phases.
+
+**New findings for future phases:** every new finding that may affect a future phase must be listed under a heading titled exactly `NEW FINDINGS FOR FUTURE PHASES`, and each finding must include:
+- Finding
+- Importance: HIGH / MEDIUM / LOW
+- Affected Phase
+- Recommended future action
+- Dependency
+
+**[CRITICAL]** Future-phase work must NOT be implemented early unless the current Phase explicitly requires it. Preserve previous Phase decisions and do not repeat completed work unnecessarily.
+
+**Testing rule (reaffirmed, see §17):** one appropriate test per topic; run a second only if the first fails or genuine uncertainty exists; never repeatedly run identical successful tests.
+
+**Copy-friendly block [CRITICAL]:** every report must end with exactly this block:
+
+```
+===== CHATGPT COPY START =====
+
+[COMPLETE HANDOFF REPORT]
+
+===== CHATGPT COPY END =====
+```
+
+**[CRITICAL]** Nothing may appear after `===== CHATGPT COPY END =====`. The block must contain the complete report, not merely a summary. The report must state the exact current Phase and the next Phase.
+
+**If the roadmap itself was changed**, explicitly report: what changed, why, the affected Phase, the dependency, and whether ChatGPT review/approval is recommended.
+
+**Git/release status** must always explicitly state, in exactly this form:
+```
+Commit created: YES / NO
+Commit hash: [hash or N/A]
+Push: YES / NO
+Deploy: YES / NO
+```
+
+**[CRITICAL]** Never claim PASS if an acceptance criterion failed.
+
+Before finalizing the report, cross-check it against the actual files, tests, Git state, and work actually performed.

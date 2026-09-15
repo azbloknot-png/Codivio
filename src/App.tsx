@@ -39,19 +39,18 @@ import AdminSettingsPage from "./admin/AdminSettingsPage";
 import AdminPagesPage from "./admin/AdminPagesPage";
 import AdminToolsPage from "./admin/AdminToolsPage";
 import AdminComingSoonPage from "./admin/AdminComingSoonPage";
+import AdminSeoPage from "./admin/AdminSeoPage";
 import { useLanguage } from "./i18n/LanguageContext";
 import { LanguageSwitcher } from "./i18n/LanguageSwitcher";
+import { usePageMeta } from "./seo/useSeo";
+import { getPageSeo, getToolSeo, ROBOTS_NOINDEX_NOFOLLOW } from "../shared/seo";
+import { buildStandardPageGraph, buildToolPageGraph } from "../shared/seo/schema";
 
-/** Basic per-route SEO: sets document.title and the meta description tag.
- * Phase 1 scope only (no structured data/sitemap/canonical management here —
- * that is Phase 3 SEO/AEO/GEO work). */
-export function usePageMeta(title: string, description: string) {
-  useEffect(() => {
-    document.title = `${title} | Codivio`;
-    const tag = document.querySelector('meta[name="description"]');
-    tag?.setAttribute("content", description);
-  }, [title, description]);
-}
+/** Phase 3.1 — usePageMeta now also sets canonical/robots/OG/Twitter/html
+ * lang; re-exported here (rather than re-pointing every existing import at
+ * "./seo/useSeo") so the 5 Admin files that already `import { usePageMeta }
+ * from "../App"` keep working unchanged. See src/seo/useSeo.ts. */
+export { usePageMeta };
 
 type Tool = {
   name: string;
@@ -702,8 +701,9 @@ function PageShell({
 }
 
 function HomePage() {
-  const { t } = useLanguage();
-  usePageMeta(`${t.hero.headlineLine1} ${t.hero.headlineLine2}`, t.site.siteDescription);
+  const { t, language } = useLanguage();
+  const homeSeo = getPageSeo("home", language).copy;
+  usePageMeta(homeSeo.title, homeSeo.description, { schemaGraph: buildStandardPageGraph("home", language) });
   const [query, setQuery] = useState("");
   const [menuCategory, setMenuCategory] = useState<string>("All");
   const popularTrackRef = useRef<HTMLDivElement>(null);
@@ -1200,10 +1200,9 @@ function ToolCard({ tool }: { tool: Tool }) {
 }
 
 function ToolsPage() {
-  usePageMeta(
-    "All Tools",
-    "Explore Codivio's growing collection of QR, PDF, image and productivity tools."
-  );
+  const { language } = useLanguage();
+  const seo = getPageSeo("tools", language).copy;
+  usePageMeta(seo.title, seo.description, { schemaGraph: buildStandardPageGraph("tools", language) });
   return (
     <PageShell>
       <main className="inner-page">
@@ -1242,10 +1241,9 @@ function ToolsPage() {
 }
 
 function BlogPage() {
-  usePageMeta(
-    "Blog",
-    "Helpful guides about QR codes, PDFs, images, productivity and using online tools safely."
-  );
+  const { language } = useLanguage();
+  const seo = getPageSeo("blog", language).copy;
+  usePageMeta(seo.title, seo.description, { schemaGraph: buildStandardPageGraph("blog", language) });
   return (
     <PageShell>
       <main className="inner-page">
@@ -1298,10 +1296,9 @@ function BlogPage() {
 }
 
 function FAQPage() {
-  usePageMeta(
-    "FAQ",
-    "Find answers about Codivio, our tools, privacy and how the platform works."
-  );
+  const { language } = useLanguage();
+  const seo = getPageSeo("faq", language).copy;
+  usePageMeta(seo.title, seo.description, { schemaGraph: buildStandardPageGraph("faq", language) });
   const [search, setSearch] = useState("");
 
   const filteredFaqs = faqs.filter((faq) =>
@@ -1372,10 +1369,9 @@ function FAQPage() {
 }
 
 function AboutPage() {
-  usePageMeta(
-    "About",
-    "Codivio is being built as a practical online toolkit for people who need to complete common digital tasks quickly."
-  );
+  const { language } = useLanguage();
+  const seo = getPageSeo("about", language).copy;
+  usePageMeta(seo.title, seo.description, { schemaGraph: buildStandardPageGraph("about", language) });
   return (
     <PageShell>
       <main className="inner-page">
@@ -1456,10 +1452,9 @@ function AboutPage() {
 }
 
 function ContactPage() {
-  usePageMeta(
-    "Contact",
-    "Send us your question, feedback, tool suggestion or report about a problem."
-  );
+  const { language } = useLanguage();
+  const seo = getPageSeo("contact", language).copy;
+  usePageMeta(seo.title, seo.description, { schemaGraph: buildStandardPageGraph("contact", language) });
   return (
     <PageShell>
       <main className="inner-page">
@@ -1548,14 +1543,24 @@ function ContactPage() {
 
 function LegalPage({
   title,
+  seoKey,
   eyebrow,
   children,
 }: {
   title: string;
+  seoKey: "privacy" | "terms" | "cookies";
   eyebrow: string;
   children: React.ReactNode;
 }) {
-  usePageMeta(title, "Information about using Codivio and its services.");
+  const { language } = useLanguage();
+  // The meta title/description are language-aware and unique per page
+  // (Phase 3.1 — fixes the three legal pages previously sharing one
+  // identical meta description). The visible H1/intro paragraph and body
+  // below stay English-only for now, same as every other legal-content
+  // page — translating full legal text is a separate, larger content task
+  // (see PROJECT_STATE.md's SEO Foundation section).
+  const seo = getPageSeo(seoKey, language).copy;
+  usePageMeta(seo.title, seo.description, { schemaGraph: buildStandardPageGraph(seoKey, language) });
   return (
     <PageShell>
       <main className="inner-page">
@@ -1575,7 +1580,7 @@ function LegalPage({
 
 function PrivacyPage() {
   return (
-    <LegalPage title="Privacy Policy" eyebrow="PRIVACY">
+    <LegalPage title="Privacy Policy" seoKey="privacy" eyebrow="PRIVACY">
       <h2>Privacy at Codivio</h2>
       <p>
         Codivio is designed with privacy and security in mind. We aim to
@@ -1604,7 +1609,7 @@ function PrivacyPage() {
 
 function TermsPage() {
   return (
-    <LegalPage title="Terms of Service" eyebrow="TERMS">
+    <LegalPage title="Terms of Service" seoKey="terms" eyebrow="TERMS">
       <h2>Using Codivio</h2>
       <p>
         Codivio provides online tools intended for lawful and legitimate
@@ -1630,7 +1635,7 @@ function TermsPage() {
 
 function CookiePolicyPage() {
   return (
-    <LegalPage title="Cookie Policy" eyebrow="COOKIES">
+    <LegalPage title="Cookie Policy" seoKey="cookies" eyebrow="COOKIES">
       <h2>How Codivio uses cookies</h2>
       <p>
         Codivio may use cookies or similar technologies for essential website
@@ -1663,7 +1668,7 @@ export function NotFoundPage({
   title?: string;
   message?: string;
 }) {
-  usePageMeta(title, message);
+  usePageMeta(title, message, { robots: ROBOTS_NOINDEX_NOFOLLOW });
 
   return (
     <PageShell showSlider={false}>
@@ -1700,7 +1705,15 @@ function ToolRoute() {
 }
 
 function ToolRouteContent({ tool }: { tool: Tool }) {
-  usePageMeta(tool.name, tool.description);
+  const { language } = useLanguage();
+  const toolSeo = getToolSeo(tool.slug, language);
+  // Falls back to the on-page name/description only if a tool is ever
+  // added to the registry without a shared/seo/tools.ts entry yet —
+  // tests/seo.test.ts asserts this never happens for a real tool.
+  usePageMeta(toolSeo?.copy.title ?? tool.name, toolSeo?.copy.description ?? tool.description, {
+    robots: toolSeo?.entity.robots ?? ROBOTS_NOINDEX_NOFOLLOW,
+    schemaGraph: buildToolPageGraph(tool.slug, language),
+  });
 
   return (
     <div className="app">
@@ -1734,6 +1747,7 @@ type PublicCmsPage = {
   metaTitle: string;
   metaDescription: string;
   canonicalUrl: string;
+  isIndexable: boolean;
 };
 
 type CmsPageLoadState =
@@ -1742,7 +1756,16 @@ type CmsPageLoadState =
   | { status: "ready"; page: PublicCmsPage };
 
 function CmsPageContent({ page }: { page: PublicCmsPage }) {
-  usePageMeta(page.metaTitle || page.title, page.metaDescription || page.description || page.title);
+  // The Admin-set isIndexable flag (shared/pages.ts) already exists and is
+  // already returned by GET /api/pages/:slug (worker/pages.ts) — this was
+  // previously never read on the frontend, so a page an editor marked
+  // "not indexable" still had no robots directive at all. A custom
+  // canonicalUrl is honored only if it's a valid absolute https:// URL
+  // (see isSafeAbsoluteHttpsUrl); otherwise the real page path is used.
+  usePageMeta(page.metaTitle || page.title, page.metaDescription || page.description || page.title, {
+    robots: page.isIndexable ? undefined : ROBOTS_NOINDEX_NOFOLLOW,
+    canonicalOverride: page.canonicalUrl || undefined,
+  });
 
   return (
     <PageShell showSlider={false}>
@@ -1826,7 +1849,7 @@ function App() {
         <Route path="users" element={<AdminComingSoonPage moduleKey="usersCrm" />} />
         <Route path="blog" element={<AdminComingSoonPage moduleKey="blog" />} />
         <Route path="analytics" element={<AdminComingSoonPage moduleKey="analytics" />} />
-        <Route path="seo" element={<AdminComingSoonPage moduleKey="seo" />} />
+        <Route path="seo" element={<AdminSeoPage />} />
         <Route path="search-console" element={<AdminComingSoonPage moduleKey="searchConsole" />} />
         <Route path="advertising" element={<AdminComingSoonPage moduleKey="advertising" />} />
         <Route path="affiliate" element={<AdminComingSoonPage moduleKey="affiliate" />} />

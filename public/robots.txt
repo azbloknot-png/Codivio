@@ -1,13 +1,59 @@
+# Codivio crawler policy (reviewed Phase 3.5).
+#
+# Classification (see DECISIONS.md's Phase 3.5 entry for the full review):
+#   A. Search/indexing crawlers   — covered by the "*" group below.
+#   B. AI answer/retrieval crawlers — explicitly allowed: being discoverable
+#      and cited by AI answer engines is a legitimate, stated Codivio goal.
+#   C. AI training crawlers — no explicit rule; they fall under the general
+#      "*" allow below. This is a deliberate non-decision (not an
+#      oversight): Codivio has not made a business decision to opt content
+#      out of third-party AI training. Revisit explicitly if that changes.
+#   D. Unknown/undeclared crawlers — robots.txt is a voluntary policy
+#      mechanism, not a security boundary, and cannot guarantee every
+#      crawler identifies itself honestly or respects these rules. Admin
+#      and private routes are protected by real application authorization
+#      and noindex directives, never by robots.txt alone.
+#
+# Every Disallow below is repeated per named group on purpose: a crawler
+# that matches a specific User-agent group follows ONLY that group's own
+# rules, not the "*" group — there is no fallback/inheritance in robots.txt.
+# (A prior version of this file put the Disallow lines only after the last
+# named group, so they applied only to that one bot and never actually
+# reached "*" or any other named crawler — fixed here.)
+
 User-agent: *
 Allow: /
-
-User-agent: OAI-SearchBot
-Allow: /
-
-User-agent: OAI-AdsBot
-Allow: /
-
 Disallow: /admin/
 Disallow: /api/private/
 
-Sitemap: https://codovio.online/sitemap.xml
+# Class B — OpenAI (search/answer retrieval; GPTBot, OpenAI's separate
+# training crawler, is intentionally not listed here — see Class C above).
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /admin/
+Disallow: /api/private/
+
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /admin/
+Disallow: /api/private/
+
+# Class B — Anthropic (search/answer retrieval; ClaudeBot, Anthropic's
+# separate training crawler, is intentionally not listed here).
+User-agent: Claude-SearchBot
+Allow: /
+Disallow: /admin/
+Disallow: /api/private/
+
+User-agent: Claude-User
+Allow: /
+Disallow: /admin/
+Disallow: /api/private/
+
+# Class B — Perplexity (answer retrieval with citations).
+User-agent: PerplexityBot
+Allow: /
+Disallow: /admin/
+Disallow: /api/private/
+
+Sitemap: https://codivio.online/sitemap.xml

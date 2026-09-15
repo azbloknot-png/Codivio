@@ -46,7 +46,12 @@ function ToolPage({ name, description, category }: ToolPageProps) {
 
           <div>
             <Zap size={18} />
-            <span>Fast in-browser tools</span>
+            {/* Phase 3.9 — the previous label asserted a working
+                performance/architecture claim no tool can back up yet (none
+                are implemented). This states the real, verifiable thing:
+                it's the intended architecture, not a claim about how fast
+                anything currently runs. */}
+            <span>In-browser by design</span>
           </div>
         </section>
       </div>
