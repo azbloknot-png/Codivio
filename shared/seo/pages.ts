@@ -13,7 +13,7 @@ import { ROBOTS_INDEX_FOLLOW, type SeoEntity } from "./types";
  * naturally (`PAGE_SEO.home`, not `PAGE_SEO["/"]`).
  */
 export const PAGE_SEO: Record<
-  "home" | "tools" | "blog" | "faq" | "about" | "contact" | "privacy" | "terms" | "cookies",
+  "home" | "tools" | "blog" | "faq" | "about" | "contact" | "privacy" | "terms" | "cookies" | "pricing",
   SeoEntity
 > = {
   home: {
@@ -210,6 +210,28 @@ export const PAGE_SEO: Record<
         title: "Çerez Politikası",
         description:
           "Codivio'nun temel işlevsellik, analitik ve reklam için çerezleri nasıl kullandığı ve tercihlerinizi nasıl yönetebileceğiniz.",
+      },
+    },
+  },
+
+  pricing: {
+    path: "/pricing",
+    robots: ROBOTS_INDEX_FOLLOW,
+    localized: {
+      en: {
+        title: "Pricing – Free, Pro, Business & API Plans",
+        description:
+          "See Codivio's planned Free, Pro, Business and API plans and what each is intended to include as tools become available.",
+      },
+      az: {
+        title: "Qiymətlər – Free, Pro, Business və API Planları",
+        description:
+          "Codivio-nun planlaşdırılan Free, Pro, Business və API planlarına və alətlər aktivləşdikcə hər birinin nə təklif edəcəyinə baxın.",
+      },
+      tr: {
+        title: "Fiyatlandırma – Free, Pro, Business ve API Planları",
+        description:
+          "Codivio'nun planlanan Free, Pro, Business ve API planlarını ve araçlar kullanıma sunuldukça her birinin neler sunacağını görün.",
       },
     },
   },

@@ -38,7 +38,7 @@ describe("SEO metadata coverage matches the real route/tool inventory", () => {
     expect(seoSlugs).toEqual([...registryMatches].sort());
   });
 
-  it("all 9 real static public pages have a shared/seo/pages.ts entry with the correct path", () => {
+  it("all 10 real static public pages have a shared/seo/pages.ts entry with the correct path", () => {
     const expected: Record<string, string> = {
       home: "/",
       tools: "/tools",
@@ -49,6 +49,7 @@ describe("SEO metadata coverage matches the real route/tool inventory", () => {
       privacy: "/privacy",
       terms: "/terms",
       cookies: "/cookies",
+      pricing: "/pricing",
     };
     expect(Object.keys(PAGE_SEO).sort()).toEqual(Object.keys(expected).sort());
     for (const [key, path] of Object.entries(expected)) {
@@ -170,10 +171,10 @@ describe("technical SEO files", () => {
     expect(llmsTxt).not.toContain("codovio.online");
   });
 
-  it("sitemap.xml lists only the 9 real indexable pages, and no noindex tool URL", () => {
+  it("sitemap.xml lists only the 10 real indexable pages, and no noindex tool URL", () => {
     const sitemap = fs.readFileSync(new URL("../public/sitemap.xml", import.meta.url), "utf8");
     const locs = [...sitemap.matchAll(/<loc>(.*?)<\/loc>/g)].map((m) => m[1]);
-    expect(locs.length).toBe(9);
+    expect(locs.length).toBe(10);
     for (const path of Object.values(PAGE_SEO).map((entity) => entity.path)) {
       expect(locs).toContain(buildCanonicalUrl(path));
     }

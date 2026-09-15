@@ -23,6 +23,7 @@ English (EN).
 - /privacy — Privacy Policy
 - /terms — Terms of Service
 - /cookies — Cookie Policy
+- /pricing — Planned Free, Pro, Business and API plans (informational; no plan is purchasable yet)
 
 ## Tool categories (34 tools total)
 

@@ -4,8 +4,6 @@ import { LANGUAGES } from "../shared/i18n";
 import { TOOL_SEO } from "../shared/seo";
 import {
   SITE_IDENTITY,
-  getAiToolProfile,
-  getAiCategoryProfile,
   getToolCategory,
   getRelatedTools,
   getToolsInCategory,
@@ -13,11 +11,16 @@ import {
   getAllCategories,
   answerWhatIsCodivio,
   answerWhatToolsDoesCodivioProvide,
-  answerWhatIsTool,
   answerToolCategory,
   answerSupportedLanguages,
   answerRelatedTools,
 } from "../shared/seo/ai";
+// Phase 3.13 — getAiToolProfile/getAiCategoryProfile/answerWhatIsTool moved
+// to content.ts (see DECISIONS.md's Phase 3.13 entry: keeping any reference
+// to the heavy content dataset out of ai.ts, which is imported eagerly by
+// every page, is what lets the bundler tree-shake it out of the main chunk
+// now that content.ts also has a genuine lazy caller, ToolPage.tsx).
+import { getAiToolProfile, getAiCategoryProfile, answerWhatIsTool } from "../shared/seo/content";
 
 /**
  * Phase 3.5 — AI-structured content / AI discoverability / GEO.

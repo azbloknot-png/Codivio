@@ -30,9 +30,67 @@ CREATE TABLE IF NOT EXISTS tools (
   seo_description TEXT NOT NULL DEFAULT '',
   created_by INTEGER,
   updated_by INTEGER,
+  -- monetizable/ads_allowed/affiliate_allowed/policy_category/
+  -- requires_review/user_generated_content/risk_level/required_plan/
+  -- monetization_enforced added in migration 0007 (Phase 3.14 —
+  -- monetization foundation). See shared/monetization/tool-monetization.ts
+  -- for what these mean; every existing tool defaults to the same honest,
+  -- unenforced values (nothing is monetizable or plan-gated yet).
+  monetizable INTEGER NOT NULL DEFAULT 0,
+  ads_allowed INTEGER NOT NULL DEFAULT 1,
+  affiliate_allowed INTEGER NOT NULL DEFAULT 0,
+  policy_category TEXT NOT NULL DEFAULT '',
+  requires_review INTEGER NOT NULL DEFAULT 0,
+  user_generated_content INTEGER NOT NULL DEFAULT 0,
+  risk_level TEXT NOT NULL DEFAULT 'low',
+  required_plan TEXT NOT NULL DEFAULT 'free',
+  monetization_enforced INTEGER NOT NULL DEFAULT 0,
   FOREIGN KEY (category_id) REFERENCES categories(id),
   FOREIGN KEY (created_by) REFERENCES users(id),
   FOREIGN KEY (updated_by) REFERENCES users(id)
+);
+
+-- Added in migration 0007 (Phase 3.14 — Free Tool -> Premium Monetization
+-- Funnel). See migrations/0007_monetization_foundation.sql for the full
+-- reasoning, including why there is deliberately no user_entitlements or
+-- subscriptions table yet (no public/customer account system exists).
+CREATE TABLE IF NOT EXISTS plans (
+  plan_key TEXT PRIMARY KEY,
+  display_name TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'planned',
+  description TEXT NOT NULL DEFAULT '',
+  pricing_amount REAL,
+  pricing_currency TEXT,
+  pricing_period TEXT,
+  priority INTEGER NOT NULL DEFAULT 0,
+  visible INTEGER NOT NULL DEFAULT 1,
+  upgrade_target TEXT REFERENCES plans(plan_key),
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS plan_entitlements (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  plan_key TEXT NOT NULL REFERENCES plans(plan_key),
+  entitlement_key TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'not_available',
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE (plan_key, entitlement_key)
+);
+
+-- Added in migration 0008 (Phase 3.14 remediation -- Finding #1: Customer
+-- Accounts). Deliberately separate from `users` (the Admin account table)
+-- -- no foreign key to/from `users`, no shared session mechanism, no
+-- plan/entitlement link yet. See migrations/0008_customer_accounts.sql
+-- for the full reasoning, including why there is deliberately no
+-- customer_plan_assignments/subscriptions table yet (no registration
+-- mechanism exists to populate real customer rows).
+CREATE TABLE IF NOT EXISTS customer_accounts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  email TEXT NOT NULL UNIQUE,
+  status TEXT NOT NULL DEFAULT 'active',
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- description/meta_title/meta_description/canonical_url/is_indexable/
@@ -258,3 +316,31 @@ INSERT OR IGNORE INTO tools (category_id, name, slug, description, component, st
   (4, 'GIF Maker', 'gif-maker', 'Create animated GIFs from images or frames.', 'ToolPage', 'active', 0, 0, 'Sparkles', 0),
   (4, 'Meme Generator', 'meme-generator', 'Create simple memes with images and text.', 'ToolPage', 'active', 0, 0, 'MessageSquare', 1),
   (4, 'Color Palette Generator', 'color-palette-generator', 'Generate useful color palettes from images or ideas.', 'ToolPage', 'active', 0, 0, 'Sparkles', 2);
+
+-- policy_category mirrors each tool's existing category name -- real
+-- data already in this table via category_id, not a fabricated value.
+UPDATE tools
+SET policy_category = (SELECT categories.name FROM categories WHERE categories.id = tools.category_id)
+WHERE policy_category = '';
+
+-- pricing_amount/currency/period intentionally NULL for all four --
+-- undecided, not zero and not a placeholder figure.
+INSERT OR IGNORE INTO plans (plan_key, display_name, status, description, priority, visible, upgrade_target) VALUES
+  ('free', 'Free', 'planned', 'Access to Codivio''s tools as they become available, at no cost.', 0, 1, 'pro'),
+  ('pro', 'Pro', 'planned', 'Planned for individuals who need higher limits and faster processing once tools are live.', 1, 1, 'business'),
+  ('business', 'Business', 'planned', 'Planned for teams that need advanced limits and priority processing once tools are live.', 2, 1, 'api'),
+  ('api', 'API', 'planned', 'Planned programmatic access to Codivio''s tools for developers and integrations.', 3, 1, NULL);
+
+INSERT OR IGNORE INTO plan_entitlements (plan_key, entitlement_key, status) VALUES
+  ('free', 'basic_tool_access', 'planned'),
+  ('pro', 'advanced_tool_access', 'not_available'),
+  ('pro', 'batch_processing', 'not_available'),
+  ('pro', 'larger_file_size', 'not_available'),
+  ('pro', 'faster_processing', 'not_available'),
+  ('pro', 'storage', 'not_available'),
+  ('pro', 'premium_tools', 'not_available'),
+  ('pro', 'reduced_ads', 'not_available'),
+  ('pro', 'higher_usage_limits', 'not_available'),
+  ('business', 'priority_processing', 'not_available'),
+  ('business', 'analytics', 'not_available'),
+  ('api', 'api_access', 'not_available');

@@ -1,5 +1,7 @@
-import type { Language } from "../i18n/languages";
+import { LANGUAGES, type Language } from "../i18n/languages";
 import { TOOL_KEYWORDS, getToolKeywordProfile } from "./keywords";
+import { TOOL_SEO } from "./tools";
+import { getToolDisplayName, type ToolCategory } from "./ai";
 
 /**
  * Codivio SEO — structured tool content architecture (Phase 3.4).
@@ -1389,3 +1391,86 @@ export const CONTENT_RELATIONSHIP_MAP = {
 // resolve each one back to its own category without importing keywords.ts
 // separately for that one field.
 export { TOOL_KEYWORDS };
+
+// --- AI-readable tool/category profiles (Phase 3.5, moved here Phase 3.13) -
+//
+// These originally lived in shared/seo/ai.ts, but ai.ts is imported eagerly
+// by every page (via schema.ts/internal-links.ts for lightweight
+// name/breadcrumb lookups), while this file (content.ts) now also has a
+// genuine, lazy-loaded caller (src/pages/ToolPage.tsx). Keeping any
+// reference to this file's heavy TOOL_CONTENT dataset out of ai.ts
+// entirely — not just unused — is what lets the bundler place TOOL_CONTENT
+// only in ToolPage's own lazy chunk instead of the main bundle; with the
+// functions still defined in ai.ts (even if nothing called them), the
+// bundler was not reliably eliminating this file's data from the eager
+// chunk. See DECISIONS.md's Phase 3.13 entry for the measured before/after.
+
+export interface AiToolProfile {
+  slug: string;
+  category: ToolCategory;
+  name: string;
+  purpose: string;
+  description: string;
+  primarySearchIntent: string;
+  status: "coming-soon";
+  supportedLanguages: readonly Language[];
+  benefits: string[];
+  generalWorkflow: string[];
+  useCases: string[];
+  relatedTools: string[];
+  futureContentOpportunity: string;
+}
+
+/** Reads a tool's AI-readable profile from the already-audited Phase 3.1
+ * (title/description), 3.3 (keywords/related tools) and 3.4 (content)
+ * data. Returns null for any slug not in the real registry — never
+ * fabricates a profile for a tool that doesn't exist. */
+export function getAiToolProfile(slug: string, lang: Language): AiToolProfile | null {
+  const seoEntity = TOOL_SEO[slug];
+  const blueprint = getContentBlueprint(slug, lang);
+  if (!seoEntity || !blueprint) return null;
+
+  return {
+    slug,
+    category: blueprint.category,
+    name: getToolDisplayName(slug, lang) ?? "",
+    purpose: blueprint.valueProposition,
+    description: blueprint.introduction,
+    primarySearchIntent: blueprint.primaryKeyword,
+    status: "coming-soon",
+    supportedLanguages: LANGUAGES,
+    benefits: blueprint.benefits,
+    generalWorkflow: blueprint.howToSteps,
+    useCases: blueprint.useCases,
+    relatedTools: blueprint.relatedToolOpportunity,
+    futureContentOpportunity: blueprint.futureContentOpportunity,
+  };
+}
+
+export interface AiCategoryProfile {
+  category: ToolCategory;
+  purpose: string;
+  toolSlugs: string[];
+  supportingTopics: string[];
+}
+
+export function getAiCategoryProfile(category: ToolCategory, lang: Language): AiCategoryProfile {
+  const blueprint = CATEGORY_CONTENT_BLUEPRINT[category];
+  const toolSlugs = Object.entries(TOOL_KEYWORDS)
+    .filter(([, entry]) => entry.category === category)
+    .map(([slug]) => slug);
+  return {
+    category,
+    purpose: blueprint.purpose[lang],
+    toolSlugs,
+    supportingTopics: blueprint.supportingTopics,
+  };
+}
+
+/** Moved from ai.ts alongside getAiToolProfile (same reason: it depends on
+ * the heavy content blueprint). Behavior is unchanged from Phase 3.5. */
+export function answerWhatIsTool(slug: string, lang: Language): string | null {
+  const profile = getAiToolProfile(slug, lang);
+  if (!profile) return null;
+  return `${profile.name} is a ${profile.category} tool on Codivio. ${profile.description} Status: ${profile.status === "coming-soon" ? "in development, not yet processing files" : profile.status}.`;
+}

@@ -55,7 +55,6 @@ describe("standard page graphs cover all 9 real static pages + homepage, AZ/TR/E
       for (const lang of LANGUAGES) {
         const graph = buildStandardPageGraph(key as keyof typeof PAGE_SEO, lang);
         expect(graph["@context"]).toBe("https://schema.org");
-        const webPage = graph["@graph"].find((node) => "url" in node && !("publisher" in node && "@type" in node && node["@type"] === "Organization"));
         const page = graph["@graph"][2] as { "@type": string; url: string; name: string; description: string };
         expect(page["@type"], key).toBe(expectedType);
         expect(page.url).toBe(`${CANONICAL_DOMAIN}${PAGE_SEO[key as keyof typeof PAGE_SEO].path === "/" ? "/" : PAGE_SEO[key as keyof typeof PAGE_SEO].path}`);
@@ -71,7 +70,7 @@ describe("tool page graphs use plain WebPage (never WebApplication/SoftwareAppli
       for (const lang of LANGUAGES) {
         const graph = buildToolPageGraph(slug, lang);
         expect(graph, `${slug} [${lang}]`).not.toBeNull();
-        const webPage = graph!["@graph"][2] as Record<string, unknown>;
+        const webPage = graph!["@graph"][2] as unknown as Record<string, unknown>;
         expect(webPage["@type"]).toBe("WebPage");
         expect(webPage).not.toHaveProperty("offers");
         expect(webPage).not.toHaveProperty("aggregateRating");

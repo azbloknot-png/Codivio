@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRight,
   BarChart3,
@@ -33,7 +33,15 @@ import {
   Zap,
 } from "lucide-react";
 import { Link, Route, Routes, useParams } from "react-router-dom";
-import ToolPage from "./pages/ToolPage";
+/** Phase 3.13 — lazy-loaded, not a plain import. ToolPage now renders the
+ * full Phase 3.4 content blueprint (intro/benefits/steps/FAQ across 34
+ * tools x 3 languages, ~1,400 lines of data) via shared/seo/content.ts.
+ * Splitting it into its own chunk keeps that dataset out of every other
+ * route's bundle (home/admin/etc.) — the same bundle-discipline principle
+ * Phase 3.8 established, applied here via code-splitting instead of a
+ * lightweight/heavy function split, since this data is now genuinely
+ * needed, just only on this one route. See tests/technical-seo-3.13.test.ts. */
+const ToolPage = lazy(() => import("./pages/ToolPage"));
 import { AdminDashboardPlaceholder, AdminLoginPage, ProtectedAdminRoute } from "./admin/AdminApp";
 import AdminSettingsPage from "./admin/AdminSettingsPage";
 import AdminPagesPage from "./admin/AdminPagesPage";
@@ -45,6 +53,8 @@ import { LanguageSwitcher } from "./i18n/LanguageSwitcher";
 import { usePageMeta } from "./seo/useSeo";
 import { getPageSeo, getToolSeo, ROBOTS_NOINDEX_NOFOLLOW } from "../shared/seo";
 import { buildStandardPageGraph, buildToolPageGraph } from "../shared/seo/schema";
+import { getVisiblePlansByPriority } from "../shared/monetization/plans";
+import { ENTITLEMENTS, getPlanEntitlementKeys } from "../shared/monetization/entitlements";
 
 /** Phase 3.1 — usePageMeta now also sets canonical/robots/OG/Twitter/html
  * lang; re-exported here (rather than re-pointing every existing import at
@@ -651,6 +661,7 @@ function SiteFooter() {
             <Link to="/blog">{t.site.navBlog}</Link>
             <Link to="/faq">{t.site.navFaq}</Link>
             <Link to="/contact">{t.site.navContact}</Link>
+            <Link to="/pricing">{t.footer.pricing}</Link>
           </div>
 
           <div>
@@ -1451,6 +1462,85 @@ function AboutPage() {
   );
 }
 
+/**
+ * Phase 3.14 — planned Free/Pro/Business/API plan information. Informational
+ * only: no plan is purchasable (no payment integration exists anywhere in
+ * this codebase), so every "Upgrade" affordance is a disabled, honestly
+ * labeled "Coming soon" state — it never simulates completing a purchase.
+ * Data comes entirely from shared/monetization/{plans,entitlements}.ts —
+ * no price, limit, or feature availability is invented here.
+ */
+const ENTITLEMENT_STATUS_LABEL_KEY = {
+  AVAILABLE: "statusAvailable",
+  PLANNED: "statusPlanned",
+  NOT_AVAILABLE: "statusNotAvailable",
+} as const;
+
+function PricingPage() {
+  const { language, t } = useLanguage();
+  const seo = getPageSeo("pricing", language).copy;
+  usePageMeta(seo.title, seo.description, { schemaGraph: buildStandardPageGraph("pricing", language) });
+  const plans = getVisiblePlansByPriority();
+
+  return (
+    <PageShell>
+      <main className="inner-page">
+        <div className="container">
+          <section className="page-intro">
+            <span className="eyebrow">{t.pricing.eyebrow}</span>
+            <h1>{t.pricing.heading}</h1>
+            <p>{t.pricing.intro}</p>
+          </section>
+
+          <section className="pricing-grid">
+            {plans.map((plan) => (
+              <article className="pricing-card" key={plan.key}>
+                <span className="pricing-plan-status">
+                  {plan.status === "available" ? t.pricing.statusAvailable : t.pricing.statusPlanned}
+                </span>
+                <h2>{plan.displayName}</h2>
+                <p className="pricing-amount">
+                  {plan.pricing.amount === null ? t.pricing.priceAnnounced : `${plan.pricing.amount} ${plan.pricing.currency ?? ""}`}
+                </p>
+                <p>{t.pricing.planDescriptions[plan.key]}</p>
+                <ul className="pricing-entitlement-list">
+                  {getPlanEntitlementKeys(plan.key).map((key) => (
+                    <li key={key}>
+                      {t.pricing.entitlementLabels[key]}
+                      <span className="pricing-entitlement-status"> — {t.pricing[ENTITLEMENT_STATUS_LABEL_KEY[ENTITLEMENTS[key].status]]}</span>
+                    </li>
+                  ))}
+                </ul>
+                <button type="button" className="pricing-upgrade-button" disabled aria-disabled="true">
+                  {t.pricing.upgradeButton}
+                </button>
+              </article>
+            ))}
+          </section>
+
+          <section className="page-intro" style={{ marginTop: 40 }}>
+            <h2>{t.pricing.faqHeading}</h2>
+          </section>
+          <section className="pricing-faq">
+            <div>
+              <h3>{t.pricing.faqBuyQuestion}</h3>
+              <p>{t.pricing.faqBuyAnswer}</p>
+            </div>
+            <div>
+              <h3>{t.pricing.faqPriceQuestion}</h3>
+              <p>{t.pricing.faqPriceAnswer}</p>
+            </div>
+            <div>
+              <h3>{t.pricing.faqFreeQuestion}</h3>
+              <p>{t.pricing.faqFreeAnswer}</p>
+            </div>
+          </section>
+        </div>
+      </main>
+    </PageShell>
+  );
+}
+
 function ContactPage() {
   const { language } = useLanguage();
   const seo = getPageSeo("contact", language).copy;
@@ -1718,11 +1808,14 @@ function ToolRouteContent({ tool }: { tool: Tool }) {
   return (
     <div className="app">
       <SiteHeader />
-      <ToolPage
-        name={tool.name}
-        description={tool.description}
-        category={tool.category}
-      />
+      <Suspense fallback={null}>
+        <ToolPage
+          name={tool.name}
+          description={tool.description}
+          category={tool.category}
+          slug={tool.slug}
+        />
+      </Suspense>
       <ToolSlider />
       <SiteFooter />
     </div>
@@ -1840,6 +1933,7 @@ function App() {
       <Route path="/privacy" element={<PrivacyPage />} />
       <Route path="/terms" element={<TermsPage />} />
       <Route path="/cookies" element={<CookiePolicyPage />} />
+      <Route path="/pricing" element={<PricingPage />} />
       <Route path="/admin/login" element={<AdminLoginPage />} />
       <Route path="/admin" element={<ProtectedAdminRoute />}>
         <Route index element={<AdminDashboardPlaceholder />} />

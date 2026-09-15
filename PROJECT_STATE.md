@@ -17,7 +17,7 @@ Single React 19 + TypeScript + Vite SPA (`src/App.tsx`, `src/pages/ToolPage.tsx`
 - Phase 0 — **COMPLETE**
 - Phase 1 — **COMPLETE**
 - Phase 2 — **COMPLETE** (Final Checkpoint PASS, 2026-09-13 — see table below)
-- Phase 3 — **IN PROGRESS** — Checkpoints 3.1–3.11 done; 3.12 (Google Search Console + search performance, audit/access-status result — GSC itself BLOCKED, real production/repo divergence found) done, 2026-09-15; 3.13 onward (content expansion, monetization funnel, master audit) not started (see "Google Search Console + Search Performance status (Phase 3.12)" below)
+- Phase 3 — **IN PROGRESS** — Checkpoints 3.1–3.12 are LIVE in production as of 2026-09-15 (commit `4c558a6`, Cloudflare Version ID `f8f48a76-be36-4cea-a80b-806a831691f5`) — see "Phase 3 SEO release status" below; 3.13 (SEO content expansion) and 3.14 (monetization funnel foundation + remediation of its own 4 findings) implemented and tested this session, **NOT yet committed/deployed** (development/testing only, explicit in every phase's own instructions); 3.15 not started
 
 Phase-weighted progress: each complete phase ≈ 6.67%. Phase 0 + Phase 1 + Phase 2 complete = **20%** (the milestone-audit threshold per `codivio-test-gate` — reached and passed this checkpoint). Phase 3 is now underway but not complete, so overall progress stays reported as 20% plus one in-progress sub-checkpoint — not rounded up to the next milestone.
 
@@ -298,9 +298,58 @@ Phase 2 (Admin Foundation) through Phase 2.15 (multilingual system + homepage ca
 - No GSC data — real or fabricated — was used to make any decision this phase.
 - Findings mapped to existing Phase 3.13–3.15 slots or marked FUTURE / CHANGE CONTROL — no roadmap reordering.
 
+## Phase 3 SEO release status (2026-09-15)
+
+**Committed, pushed, and deployed** with explicit user approval for this specific release task (a controlled release request, separate from the individual audit-only SEO checkpoints).
+
+- **Commit**: `4c558a6` ("feat: release phase 3 seo foundation") — 34 files, all Phase 3.1–3.12 SEO/AI-discoverability work (`shared/seo/*`, `src/seo/useSeo.ts`, `src/admin/AdminSeoPage.tsx`, `index.html`, `src/App.tsx`, `src/pages/ToolPage.tsx`, `src/styles.css`, `public/llms.txt`/`robots.txt`/`sitemap.xml`, 9 Phase 3 test files, and the SEO-track's `CHANGELOG.md`/`DECISIONS.md`/`PROJECT_STATE.md`/`CLAUDE.md` doc updates). Excluded: `tsconfig.tsbuildinfo` (build cache, no functional effect) and all 4 pre-existing unrelated WIP files.
+- **Push**: `origin/main` advanced `6a6eb69` → `4c558a6`, verified.
+- **Deploy**: `wrangler deploy` against the existing, unchanged `wrangler.jsonc` config — Cloudflare Version ID `f8f48a76-be36-4cea-a80b-806a831691f5`; 6 assets uploaded (`index.html`, `robots.txt`, `sitemap.xml`, `llms.txt`, new JS/CSS bundle). No DNS, binding, or secret changed.
+- **Live-verified** (real HTTP checks, post-propagation): homepage 200 with the new metadata/OG block; `robots.txt` 200 with the corrected `Sitemap: https://codivio.online/sitemap.xml` (no `codovio` typo); `sitemap.xml` 200, `Content-Type: application/xml`, all 9 correct URLs (briefly served a stale cached HTML response immediately post-deploy — resolved within seconds, confirmed edge-cache propagation lag via `CF-Cache-Status`, not a real defect); `/tools` and `/tools/qr-code-generator` both 200; `/api/health` returns `{"status":"ok","database":"connected"}`; deployed JS bundle confirmed to contain `codivio-jsonld` and the Phase 3.9 trust copy ("In-browser by design") — the real SEO code is live, not just the static files.
+- **Both Phase 3.12 production defects are now resolved**: the sitemap-domain typo and the missing-sitemap.xml problem no longer exist in production.
+- **Security**: spot-checked `/`, `/.env`, `/wrangler.jsonc`, `/.git/config` — all non-asset paths correctly fall through to the SPA shell (`not_found_handling: single-page-application`), no real file content exposed; all 6 security headers still present post-deploy.
+- GSC status is unchanged by this deploy — still `BLOCKED — GSC ACCESS NOT AVAILABLE` in this environment; no indexing/ranking claim is made.
+
+## SEO Content Expansion + Topical Authority status (Phase 3.13)
+
+**Implemented and tested — NOT committed/deployed** (this phase's own instruction: development/testing only; production stays on `4c558a6`).
+
+- **Phase 3.4's content blueprint and Phase 3.6's internal-link/breadcrumb data are now genuinely rendered on all 34 tool pages** — resolves the single biggest carried-forward finding from Phase 3.10/3.11 (data architecture ready but invisible). Each tool page now shows: a visible breadcrumb (Home → Tools → Category → Tool, category non-linkable, sharing the exact same `getToolBreadcrumb` call the JSON-LD `BreadcrumbList` already used), an "About this tool" section (introduction + honestly-worded value proposition), Benefits, How it will work (with an explicit in-development status note), Use cases, a visible FAQ (no FAQPage schema added — see DECISIONS.md), and Related tools (real links only, self-link- and duplicate-free by construction and by test).
+- **Content stays honest about "coming soon" status** — every "How it will work" section is followed by `TOOL_STATUS_NOTE`, and the existing "Tool coming soon" placeholder/trust row (Phase 3.9) is unchanged. No banned overclaiming phrase was introduced (existing `tests/eeat-trust-3.9.test.ts` regression-checks `ToolPage.tsx`'s source, unchanged and still passing).
+- **New i18n namespace `toolPage`** (7 keys: breadcrumb aria-label + 5 section headings) added to `shared/i18n/{types,en,az,tr}.ts` for the new UI chrome — the per-tool content itself was already fully localized in `shared/seo/content.ts` since Phase 3.4.
+- **Real bundle-size investigation and fix, not just a lazy-import and hope**: naively lazy-loading `ToolPage.tsx` alone did NOT keep the main bundle small (measured 527.55 kB — the original Phase 3.7 regression size) because `shared/seo/ai.ts` (imported eagerly by every page) still had a static import edge into the heavy `shared/seo/content.ts`, even for functions nothing eager called. Moved `getAiToolProfile`/`getAiCategoryProfile`/`answerWhatIsTool` into `content.ts` itself, removing that edge entirely — remeasured main chunk: **438.05 kB / 128.20 kB gzip** (Phase 3.8 baseline was 424.97 kB / 125.42 kB gzip; a modest +13 kB raw / +2.8 kB gzip increase from the new breadcrumb/Suspense code and 3-language UI-chrome strings, not a significant regression). The tool-content dataset itself now ships only in its own lazy chunk (92.88 kB / 22.66 kB gzip), loaded only when a user visits a tool page — verified directly by grepping the built chunks for a content-only phrase.
+- **Category display labels remain English-only** (breadcrumb's category segment and the pre-existing eyebrow) — a pre-existing, already-shipped limitation surfaced in a new place, not newly introduced; see DECISIONS.md.
+- **No route was invented** — no category landing pages exist or were created; `getToolBreadcrumb`'s category segment stays non-linkable text, matching Phase 3.6's own rule.
+- **`npm run preview` (the Cloudflare Vite plugin's local Workers runtime) could not be used to verify live-served rendering** — hit the same pre-existing, documented `workerd` access-violation crash from Phase 2 (native runtime issue on this machine, not a code defect). Real browser/visual rendering verification is therefore **DEGRADED — browser automation unavailable**; verification relied instead on: a clean build, 250/250 tests passing (243 pre-existing + 7 new, covering self-link/duplicate-link/route-safety/breadcrumb-consistency/content-completeness/i18n-completeness/lazy-loading-wiring), and direct inspection of the built JS chunks.
+
+## Free Tool → Premium Monetization Funnel status (Phase 3.14)
+
+**Implemented and tested — NOT committed/deployed** (this phase's own instruction; production stays on `4c558a6`).
+
+- **New `shared/monetization/` module** (types, plans, entitlements, tool-monetization, access decision engine, usage/quota foundation) — the single authoritative source for plan/entitlement logic, replacing what would otherwise be scattered `if (plan === "pro")` checks.
+- **FREE/PRO/BUSINESS/API plan catalog defined with honest, undecided pricing** (`amount: null` on every plan — never a placeholder number); none is currently purchasable (`status: "planned"` on all four, matching the real absence of any payment integration).
+- **12-entitlement catalog, every one currently `NOT_AVAILABLE` or `PLANNED`** — none is `AVAILABLE`, because nothing is actually gated/enforced anywhere in the product today (no tool has real processing yet). Verified by a test that calls the central `canUseFeature()` decision function with the highest plan and `authenticated: true` for all 12 entitlements and confirms none returns `ALLOWED`.
+- **Central, server-authoritative-by-design access decision engine** (`canUseFeature`) returning one of `ALLOWED`/`LIMIT_REACHED`/`PLAN_REQUIRED`/`FEATURE_UNAVAILABLE`/`TOOL_UNAVAILABLE`/`AUTH_REQUIRED` — never a boolean. **No self-upgrade attack surface exists to secure yet**: grepped the whole codebase and confirmed no request handler, query-param/cookie/localStorage reader anywhere reads a client-supplied `plan` value; there is no live caller of this function outside tests today.
+- **Tool monetization metadata** (`getToolMonetization`) reuses the existing tool registry (`shared/seo/tools.ts`) rather than a parallel one — every one of the 34 tools gets the same honest, uniform metadata today (`active: false`, `monetizable: false`, `requiredPlan: "free"`, `enforced: false`), since none has any real functionality yet to distinguish one tool's policy from another's.
+- **D1 migration 0007** adds `plans` and `plan_entitlements` tables (seeded, pricing NULL) and extends the existing `tools` table with 9 monetization columns (all honestly defaulted, `policy_category` back-filled from the real existing category name) — verified structurally against a real SQLite engine (`node:sqlite`), both as a standalone incremental migration and as the updated `database/schema.sql` snapshot. **Deliberately NOT created**: `user_entitlements`/`subscriptions`/`usage_events` tables — see the "NEW FINDING" below; no customer/public-user account system exists yet to attach real entitlements or usage to.
+- **New `/pricing` page** (10th real static page) — informational plan comparison, reuses the existing SEO/schema architecture exactly (plain `WebPage` JSON-LD, `index,follow`, no `Product`/`Offer`/`AggregateRating` schema, verified by a regression test), a disabled "Coming soon" button on every plan (never a real or simulated purchase flow).
+- **No admin UI built for plan management** — `/admin/monetization`'s existing "Coming soon" placeholder (Phase 2.13) is unchanged and remains accurate.
+- **Major, HIGH-importance finding**: Codivio has no public/customer account system at all (only Admin accounts exist). Real per-user entitlements/subscriptions are impossible to model meaningfully until that's built — this is a genuine prerequisite gap, not a Phase 3.14 omission.
+
+## Phase 3.14 remediation status (2026-09-15)
+
+**Implemented and tested — NOT committed/deployed.** Fixed all 4 findings from the original Phase 3.14 handoff:
+
+1. **Customer accounts**: new `customer_accounts` D1 table (migration 0008) — minimal identity anchor (`id`/`email`/`status`/timestamps only), structurally and test-verified to have zero connection to `users`/`sessions`/`audit_logs` or `worker/auth.ts`/`worker/rbac.ts`. Deliberately no `customer_plan_assignments`/`subscriptions` yet (no registration mechanism exists to populate real rows) — same reasoning as migration 0007's own deferred tables.
+2. **Pricing localization**: `/pricing`'s entire body (headings, plan descriptions, entitlement labels, status labels, button, FAQ) now reads from a new `pricing` namespace in `shared/i18n` — verified non-empty and genuinely distinct per language, with plan/entitlement key parity against `shared/monetization` enforced by a test.
+3. **Funnel analytics foundation**: `shared/monetization/funnel-events.ts` defines the 4 event names as a type-only catalog — nothing fires, records, or fabricates an event anywhere (no analytics sink exists to send them to).
+4. **Test typecheck**: new `tsconfig.test.json` + `npm run typecheck:tests` script (kept fully separate from `npm run build`'s `tsc -b` step, so a test-file type error can never break the production build). Required adding `@types/node` (dev-only) and fixing 2 small, genuine, pre-existing type errors in `tests/seo-schema.test.ts`.
+
+Also: checked 5 newly-added reference documents (`CODIVIO_MASTER_PLAN.md`, `ARCHITECTURE.md`, `SEO_STRATEGY.md`, `DATABASE_SCHEMA.md`, `DEPLOYMENT.md`) before any change — no conflict with actual code/state found.
+
 ## Git status expectations
 
-`main` branch, tracks `origin/main` (`github.com/azbloknot-png/Codivio.git`), confirmed synchronized at `6a6eb69` as of the 2026-09-14 release — see "Git checkpoint status" above for the full commit list. Phase 3.1's SEO metadata foundation (this checkpoint) is **uncommitted** in the working tree — expected, since commits require explicit user approval per `CLAUDE.md` §18/§19, which (for this specific work) has not been given yet.
+`main` branch, tracks `origin/main` (`github.com/azbloknot-png/Codivio.git`), confirmed synchronized at `4c558a6` as of the 2026-09-15 Phase 3 SEO release. Phase 3.13's, 3.14's, and this remediation's changes (see above) are **uncommitted** in the working tree, per every phase's own explicit "do not deploy unless separately authorized" instructions.
 
 ## Known limitations / blockers
 

@@ -1,11 +1,5 @@
 import { LANGUAGES, LANGUAGE_NATIVE_NAMES, type Language } from "../i18n/languages";
 import { TOOL_SEO, PAGE_SEO } from "./index";
-import {
-  TOOL_CONTENT,
-  CATEGORY_CONTENT_BLUEPRINT,
-  getContentBlueprint,
-  type ToolContentBlueprint,
-} from "./content";
 import { TOOL_KEYWORDS, type ToolKeywordEntry } from "./keywords";
 
 /**
@@ -61,90 +55,29 @@ export const SITE_IDENTITY: SiteIdentity = {
   verifiedSocialProfiles: [],
 };
 
-// --- AI-readable tool/category profiles (reuse, not duplication) -----------
-
-export interface AiToolProfile {
-  slug: string;
-  category: ToolCategory;
-  name: string;
-  purpose: string;
-  description: string;
-  primarySearchIntent: string;
-  status: "coming-soon";
-  supportedLanguages: readonly Language[];
-  benefits: string[];
-  generalWorkflow: string[];
-  useCases: string[];
-  relatedTools: string[];
-  futureContentOpportunity: string;
-}
+// --- AI-readable tool/category profiles ------------------------------------
+// getAiToolProfile/getAiCategoryProfile/answerWhatIsTool live in content.ts,
+// not here (Phase 3.13) — they need the full Phase 3.4 content blueprint,
+// and this file (ai.ts) is imported eagerly by every page via
+// schema.ts/internal-links.ts. Keeping that heavy accessor out of ai.ts
+// entirely (not just unused) is what lets the bundler tree-shake the ~1,400
+// line content dataset out of the main bundle now that content.ts also has
+// a genuine, lazy-loaded caller (src/pages/ToolPage.tsx) — see
+// DECISIONS.md's Phase 3.13 entry for the measured before/after.
 
 /**
  * Lightweight tool display name (Phase 3.8) — reads ONLY the already-loaded
  * TOOL_SEO title, never TOOL_CONTENT. Extracted so callers that just need a
  * name/label (breadcrumbs, JSON-LD) don't have to pull in the entire Phase
  * 3.4 content dataset (~1,400 lines, 34 tools × 3 languages of intro/
- * benefits/how-to/use-cases/FAQ) the way getAiToolProfile does. See
- * DECISIONS.md's Phase 3.8 entry — this is the fix for the bundle-size
+ * benefits/how-to/use-cases/FAQ) the way content.ts#getAiToolProfile does.
+ * See DECISIONS.md's Phase 3.8 entry — this is the fix for the bundle-size
  * finding recorded in Phase 3.7.
  */
 export function getToolDisplayName(slug: string, lang: Language): string | null {
   const seoEntity = TOOL_SEO[slug];
   if (!seoEntity) return null;
   return seoEntity.localized[lang].title.split("–")[0].trim();
-}
-
-/** Reads a tool's AI-readable profile from the already-audited Phase 3.1
- * (title/description), 3.3 (keywords/related tools) and 3.4 (content)
- * data. Returns null for any slug not in the real registry — never
- * fabricates a profile for a tool that doesn't exist.
- *
- * Deliberately heavier than getToolDisplayName above — this pulls in the
- * full Phase 3.4 content blueprint (benefits/how-to/use-cases/FAQ/etc.),
- * which is correct for genuine "AI profile" consumers (tests, future rich
- * content rendering) but wrong for anything that only needs a name or a
- * one-line description (see getToolDisplayName, and schema.ts/
- * internal-links.ts, which no longer call this function for that reason). */
-export function getAiToolProfile(slug: string, lang: Language): AiToolProfile | null {
-  const seoEntity = TOOL_SEO[slug];
-  const blueprint = getContentBlueprint(slug, lang);
-  if (!seoEntity || !blueprint) return null;
-
-  return {
-    slug,
-    category: blueprint.category,
-    name: getToolDisplayName(slug, lang) ?? "",
-    purpose: blueprint.valueProposition,
-    description: blueprint.introduction,
-    primarySearchIntent: blueprint.primaryKeyword,
-    status: "coming-soon",
-    supportedLanguages: LANGUAGES,
-    benefits: blueprint.benefits,
-    generalWorkflow: blueprint.howToSteps,
-    useCases: blueprint.useCases,
-    relatedTools: blueprint.relatedToolOpportunity,
-    futureContentOpportunity: blueprint.futureContentOpportunity,
-  };
-}
-
-export interface AiCategoryProfile {
-  category: ToolCategory;
-  purpose: string;
-  toolSlugs: string[];
-  supportingTopics: string[];
-}
-
-export function getAiCategoryProfile(category: ToolCategory, lang: Language): AiCategoryProfile {
-  const blueprint = CATEGORY_CONTENT_BLUEPRINT[category];
-  const toolSlugs = Object.entries(TOOL_KEYWORDS)
-    .filter(([, entry]) => entry.category === category)
-    .map(([slug]) => slug);
-  return {
-    category,
-    purpose: blueprint.purpose[lang],
-    toolSlugs,
-    supportingTopics: blueprint.supportingTopics,
-  };
 }
 
 // --- Relationship queries (data only — the full internal-linking ENGINE ---
@@ -191,11 +124,9 @@ export function answerWhatToolsDoesCodivioProvide(lang: Language): string {
   return `${SITE_IDENTITY.name} provides ${SITE_IDENTITY.toolCount} tools across ${TOOL_CATEGORIES.length} categories: ${perCategory.join(", ")}.`;
 }
 
-export function answerWhatIsTool(slug: string, lang: Language): string | null {
-  const profile = getAiToolProfile(slug, lang);
-  if (!profile) return null;
-  return `${profile.name} is a ${profile.category} tool on Codivio. ${profile.description} Status: ${profile.status === "coming-soon" ? "in development, not yet processing files" : profile.status}.`;
-}
+// answerWhatIsTool lives in content.ts (Phase 3.13) — it calls
+// getAiToolProfile, which needs the heavy content blueprint; see the note
+// above the AI-readable profiles section.
 
 export function answerToolCategory(slug: string): string | null {
   const category = getToolCategory(slug);
@@ -213,5 +144,3 @@ export function answerRelatedTools(slug: string): string | null {
   if (related.length === 0) return null;
   return `Tools related to ${slug}: ${related.join(", ")}.`;
 }
-
-export type { ToolContentBlueprint };

@@ -19,33 +19,52 @@ import { buildToolPageGraph } from "../shared/seo/schema";
 
 const DIST_CLIENT_DIR = fileURLToPath(new URL("../dist/client/assets/", import.meta.url));
 
-function readBuiltBundle(): string {
+/**
+ * Phase 3.13 note: the build now intentionally produces TWO client JS
+ * chunks, not one — src/pages/ToolPage.tsx is lazy-loaded (React.lazy) so
+ * that Phase 3.4's ~1,400-line TOOL_CONTENT dataset, now genuinely
+ * rendered on tool pages, ships in its own chunk instead of inflating
+ * every other route's bundle. The "main" chunk is identified by containing
+ * "application/ld+json" (emitted by src/seo/useSeo.ts, which every page
+ * calls) — the lazy ToolPage chunk does not call usePageMeta itself.
+ */
+function readBuiltChunks(): { main: string; all: string[] } {
   const files = fs.readdirSync(DIST_CLIENT_DIR).filter((f) => f.endsWith(".js"));
-  expect(files.length, "expected exactly one client JS bundle").toBe(1);
-  return fs.readFileSync(path.join(DIST_CLIENT_DIR, files[0]), "utf8");
+  expect(files.length, "expected at least one client JS chunk").toBeGreaterThan(0);
+  const contents = files.map((f) => fs.readFileSync(path.join(DIST_CLIENT_DIR, f), "utf8"));
+  const mainIndex = contents.findIndex((c) => c.includes("application/ld+json"));
+  expect(mainIndex, "expected exactly one chunk to be the main entry (containing the JSON-LD injector)").not.toBe(-1);
+  return { main: contents[mainIndex], all: contents };
 }
 
 describe("Phase 3.7 bundle regression is actually fixed in the shipped build", () => {
-  it("the built client bundle no longer contains Phase 3.4 content-blueprint text that has no business being in a lightweight schema/breadcrumb build", () => {
-    const bundle = readBuiltBundle();
+  it("the main client chunk no longer contains Phase 3.4 content-blueprint text that has no business being in a lightweight schema/breadcrumb build", () => {
+    const { main } = readBuiltChunks();
     // Distinctive phrases that only exist inside TOOL_CONTENT (Phase 3.4's
     // full 34-tool content blueprints) — if the dependency chain were still
-    // pulling that dataset in, at least one of these would appear literally
-    // in the minified output (string literals survive minification).
+    // pulling that dataset into the MAIN chunk, at least one of these would
+    // appear literally in the minified output (string literals survive
+    // minification). They are expected to exist in the separate, lazy
+    // ToolPage chunk instead (Phase 3.13) — see the next test.
     const contentOnlyPhrases = [
       "Combine multiple PDF files into a single document online",
       "A QR code generator turns information like a link or text",
       "This tool is currently in development and does not yet process files",
     ];
     for (const phrase of contentOnlyPhrases) {
-      expect(bundle, `bundle should not contain: "${phrase}"`).not.toContain(phrase);
+      expect(main, `main chunk should not contain: "${phrase}"`).not.toContain(phrase);
     }
   });
 
-  it("the built client bundle still contains real Phase 3.1 tool titles used by schema/JSON-LD (proves schema still works, this isn't a false-negative from an empty/broken bundle)", () => {
-    const bundle = readBuiltBundle();
-    expect(bundle).toContain("PDF Merge");
-    expect(bundle).toContain("application/ld+json");
+  it("the Phase 3.4 content-blueprint text DOES exist somewhere in the build (proves Phase 3.13's rendering shipped, this isn't a false negative from broken content)", () => {
+    const { all } = readBuiltChunks();
+    expect(all.some((chunk) => chunk.includes("A QR code generator turns information like a link or text"))).toBe(true);
+  });
+
+  it("the main client chunk still contains real Phase 3.1 tool titles used by schema/JSON-LD (proves schema still works, this isn't a false-negative from an empty/broken bundle)", () => {
+    const { main } = readBuiltChunks();
+    expect(main).toContain("PDF Merge");
+    expect(main).toContain("application/ld+json");
   });
 });
 

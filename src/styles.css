@@ -15,8 +15,6 @@
 @media(max-width:650px){.container{width:min(100% - 24px,1180px)}.nav{height:64px}.nav-links{display:none;position:absolute;left:12px;right:12px;top:70px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px;box-shadow:0 20px 45px rgba(30,50,80,.12);flex-direction:column}.nav-links.open{display:flex}.nav-search{display:none}.mobile-menu{display:grid;place-items:center;width:44px;height:44px}.hero-grid{min-height:550px}.hero h1{font-size:40px}.hero p{font-size:15px}.trust-row{gap:10px;flex-wrap:wrap}.tool-grid{grid-template-columns:1fr}.article-list{grid-template-columns:1fr}.section-heading h2,.content-section h2,.faq h2{font-size:25px}.footer-grid{grid-template-columns:1fr 1fr}.footer-grid>div:first-child{grid-column:1/-1}.tool-slider{grid-template-columns:1fr}.category-filter{justify-content:flex-start;gap:7px}.category-filter button{min-height:35px;padding:0 12px;font-size:12px}.blog-page-grid{grid-template-columns:1fr;gap:14px}.about-grid{grid-template-columns:1fr;gap:14px}.page-intro h1{font-size:32px}.page-intro p{font-size:14px}.inner-page{min-height:calc(100vh - 64px);padding:30px 0 45px}}
 /* Phase 1F-A: Tool Page UI */
 .tool-page{min-height:calc(100vh - 72px);padding:42px 0 70px;background:#f7f9fc}
-.tool-back{display:inline-flex;align-items:center;gap:7px;color:#52627a;text-decoration:none;font-size:13px;font-weight:700;margin-bottom:28px;transition:color .18s ease}
-.tool-back:hover{color:#1769e0}
 .tool-page-header{max-width:760px;margin-bottom:30px}
 .tool-page-header .eyebrow{display:inline-block;margin-bottom:8px}
 .tool-page-header h1{margin:0 0 12px;color:#172b49;font-size:44px;line-height:1.1;letter-spacing:-.035em}
@@ -30,6 +28,37 @@
 .tool-trust>div{display:flex;align-items:center;gap:7px}
 .tool-trust svg{color:#20a466}
 
+/* Phase 3.13: Tool Page Content Architecture (breadcrumb, content
+   blueprint, FAQ, related tools) — reuses the color/radius design tokens
+   rather than raw hex, since these are new rules (see codivio-ui skill:
+   retrofit old rules only when touching them, adopt tokens in new ones). */
+.tool-breadcrumb{margin-bottom:22px}
+.tool-breadcrumb ol{display:flex;flex-wrap:wrap;align-items:center;gap:6px;list-style:none;margin:0;padding:0;font-size:13px;color:var(--color-muted)}
+.tool-breadcrumb li{display:flex;align-items:center;gap:6px}
+.tool-breadcrumb li:not(:last-child)::after{content:"/";color:#c3cddb}
+.tool-breadcrumb a{color:var(--color-muted);text-decoration:none;font-weight:600}
+.tool-breadcrumb a:hover{color:var(--color-primary)}
+.tool-breadcrumb a:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px;border-radius:4px}
+.tool-breadcrumb span[aria-current="page"]{color:var(--color-ink);font-weight:700}
+
+.tool-content-section{max-width:760px;margin:36px 0 0}
+.tool-content-section h2{margin:0 0 14px;color:var(--color-ink);font-size:22px;line-height:1.2;letter-spacing:-.02em}
+.tool-content-section p{margin:0 0 10px;color:var(--color-muted);font-size:15px;line-height:1.65}
+.tool-content-section ul,.tool-content-section ol{margin:0;padding-left:20px;color:var(--color-muted);font-size:15px;line-height:1.7}
+.tool-content-section li{margin:4px 0}
+.tool-status-note{margin-top:14px;font-size:13px;color:#8290a3;font-style:italic}
+
+.tool-faq-item{margin-top:16px}
+.tool-faq-item h3{margin:0 0 6px;color:#2a3c55;font-size:15px}
+.tool-faq-item p{margin:0;font-size:14px}
+
+.tool-related-list{list-style:none;display:flex;flex-wrap:wrap;gap:10px;padding:0;margin:0}
+.tool-related-list a{display:inline-block;padding:9px 16px;border:1px solid #e1e8f2;border-radius:999px;background:#fff;color:var(--color-primary);text-decoration:none;font-weight:700;font-size:13px;transition:.18s ease}
+.tool-related-list a:hover{border-color:#bfd3ef;background:#f3f8ff}
+.tool-related-list a:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px}
+
+.tool-trust-note{max-width:760px;margin:36px 0 0;color:#8290a3;font-size:13px;line-height:1.6}
+
 @media(max-width:900px){
 .tool-page{padding-top:34px}
 .tool-page-header h1{font-size:40px}
@@ -37,7 +66,7 @@
 
 @media(max-width:650px){
 .tool-page{min-height:calc(100vh - 64px);padding:28px 0 50px}
-.tool-back{margin-bottom:22px}
+.tool-breadcrumb{margin-bottom:18px}
 .tool-page-header{margin-bottom:22px}
 .tool-page-header h1{font-size:34px;letter-spacing:-.025em}
 .tool-page-header p{font-size:14px}
@@ -47,6 +76,8 @@
 .tool-workspace-placeholder h2{font-size:21px}
 .tool-workspace-placeholder p{font-size:13px}
 .tool-trust{flex-direction:column;gap:10px;margin-top:18px}
+.tool-content-section{margin-top:26px}
+.tool-content-section h2{font-size:19px}
 }
 
 @media(max-width:420px){
@@ -322,4 +353,27 @@
 
 @media(max-width:650px){
 .admin-seo-row{grid-template-columns:1fr}
+}
+
+/* Phase 3.14: Pricing page (informational plan comparison, no checkout) */
+.pricing-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-top:8px}
+.pricing-card{background:#fff;border:1px solid #e4eaf2;border-radius:16px;padding:22px;display:flex;flex-direction:column;box-shadow:0 7px 25px rgba(26,52,84,.035)}
+.pricing-plan-status{align-self:flex-start;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8290a3;background:#f1f4f9;border-radius:999px;padding:4px 10px;margin-bottom:10px}
+.pricing-card h2{margin:0 0 6px;color:var(--color-ink);font-size:20px}
+.pricing-amount{margin:0 0 10px;color:var(--color-primary);font-weight:800;font-size:15px}
+.pricing-card>p{color:var(--color-muted);font-size:13px;line-height:1.6}
+.pricing-entitlement-list{list-style:none;margin:14px 0;padding:0;flex:1;display:flex;flex-direction:column;gap:8px}
+.pricing-entitlement-list li{font-size:12px;color:#52627a;line-height:1.5}
+.pricing-entitlement-status{color:#9aa5b5;font-style:italic}
+.pricing-upgrade-button{margin-top:auto;min-height:42px;border:1px solid #e1e8f2;border-radius:11px;background:#f4f6f9;color:#8290a3;font:inherit;font-size:13px;font-weight:700;cursor:not-allowed}
+.pricing-faq{max-width:760px;margin:20px auto 0;display:flex;flex-direction:column;gap:16px}
+.pricing-faq h3{margin:0 0 4px;color:#2a3c55;font-size:15px}
+.pricing-faq p{margin:0;color:var(--color-muted);font-size:14px;line-height:1.6}
+
+@media(max-width:900px){
+.pricing-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+@media(max-width:650px){
+.pricing-grid{grid-template-columns:1fr}
 }

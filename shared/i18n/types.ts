@@ -227,6 +227,63 @@ export interface Translations {
     privacy: string;
     terms: string;
     cookies: string;
+    pricing: string;
     copyright: (year: number) => string;
+  };
+  /** Phase 3.13 — UI chrome labels for the tool-page content sections that
+   * render Phase 3.4's content blueprint/Phase 3.6's internal-link data.
+   * Per-tool content itself (intro/benefits/steps/FAQ) lives in
+   * shared/seo/content.ts, already localized there — these are only the
+   * section headings/aria-labels around it. */
+  toolPage: {
+    breadcrumbAriaLabel: string;
+    aboutHeading: string;
+    benefitsHeading: string;
+    howItWorksHeading: string;
+    useCasesHeading: string;
+    faqHeading: string;
+    relatedToolsHeading: string;
+  };
+  /** Phase 3.14 remediation (Finding #2) — all user-visible /pricing body
+   * copy. Plan keys/entitlement keys are hardcoded literal unions here
+   * (matching shared/monetization/types.ts's PLAN_KEYS/ENTITLEMENT_KEYS
+   * exactly, verified by a test) rather than importing those types —
+   * shared/i18n stays dependency-free of shared/monetization, matching its
+   * existing role as the most foundational shared module. Plan
+   * identifiers themselves (Free/Pro/Business/API) are intentionally NOT
+   * translated — they stay as product-tier names in every language,
+   * matching how they're used as literal `PlanKey`s elsewhere. */
+  pricing: {
+    eyebrow: string;
+    heading: string;
+    intro: string;
+    priceAnnounced: string;
+    upgradeButton: string;
+    statusAvailable: string;
+    statusPlanned: string;
+    statusNotAvailable: string;
+    planDescriptions: Record<"free" | "pro" | "business" | "api", string>;
+    entitlementLabels: Record<
+      | "basic_tool_access"
+      | "advanced_tool_access"
+      | "batch_processing"
+      | "larger_file_size"
+      | "faster_processing"
+      | "priority_processing"
+      | "storage"
+      | "api_access"
+      | "analytics"
+      | "premium_tools"
+      | "reduced_ads"
+      | "higher_usage_limits",
+      string
+    >;
+    faqHeading: string;
+    faqBuyQuestion: string;
+    faqBuyAnswer: string;
+    faqPriceQuestion: string;
+    faqPriceAnswer: string;
+    faqFreeQuestion: string;
+    faqFreeAnswer: string;
   };
 }

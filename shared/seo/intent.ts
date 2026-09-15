@@ -248,4 +248,9 @@ export const PAGE_INTENT: Record<string, Record<Language, PageIntent>> = {
     az: { primary: "codivio kuki siyasəti" },
     tr: { primary: "codivio çerez politikası" },
   },
+  pricing: {
+    en: { primary: "codivio pricing and plans" },
+    az: { primary: "codivio qiymətləri və planları" },
+    tr: { primary: "codivio fiyatlandırma ve planları" },
+  },
 };
