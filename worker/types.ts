@@ -8,6 +8,14 @@
 export interface D1Result<T = unknown> {
   results: T[];
   success: boolean;
+  /** Present on a real D1 `run()` result (e.g. after an INSERT); not
+   * meaningful on `all()`. Added for worker/faq.ts's create handler, which
+   * needs the new row's id without a natural unique key to look it up by —
+   * extending here as real usage grows, per this file's own stated policy. */
+  meta: {
+    last_row_id: number;
+    changes: number;
+  };
 }
 
 export interface D1PreparedStatement {

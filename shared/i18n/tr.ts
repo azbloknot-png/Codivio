@@ -40,6 +40,7 @@ export const tr: Translations = {
     dashboard: "Kontrol paneli",
     pages: "Sayfalar",
     tools: "Araçlar",
+    faq: "SSS",
     usersCrm: "Kullanıcılar / CRM",
     blog: "Blog",
     analytics: "Analitik",
@@ -216,6 +217,10 @@ export const tr: Translations = {
     editTool: "Aracı düzenle",
     noToolsYet: "Henüz araç yok",
     loadingTools: "Araçlar yükleniyor…",
+    newFaq: "Yeni SSS",
+    editFaq: "SSS'yi düzenle",
+    noFaqsYet: "Henüz SSS yok",
+    loadingFaqs: "SSS yükleniyor…",
   },
   site: {
     navHome: "Ana sayfa",

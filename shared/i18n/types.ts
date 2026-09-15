@@ -45,6 +45,7 @@ export interface Translations {
     dashboard: string;
     pages: string;
     tools: string;
+    faq: string;
     usersCrm: string;
     blog: string;
     analytics: string;
@@ -185,6 +186,10 @@ export interface Translations {
     editTool: string;
     noToolsYet: string;
     loadingTools: string;
+    newFaq: string;
+    editFaq: string;
+    noFaqsYet: string;
+    loadingFaqs: string;
   };
   site: {
     navHome: string;

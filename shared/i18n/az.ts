@@ -41,6 +41,7 @@ export const az: Translations = {
     dashboard: "İdarə paneli",
     pages: "Səhifələr",
     tools: "Alətlər",
+    faq: "FAQ",
     usersCrm: "İstifadəçilər / CRM",
     blog: "Bloq",
     analytics: "Analitika",
@@ -217,6 +218,10 @@ export const az: Translations = {
     editTool: "Aləti redaktə et",
     noToolsYet: "Hələ alət yoxdur",
     loadingTools: "Alətlər yüklənir…",
+    newFaq: "Yeni FAQ",
+    editFaq: "FAQ-nı redaktə et",
+    noFaqsYet: "Hələ FAQ yoxdur",
+    loadingFaqs: "FAQ yüklənir…",
   },
   site: {
     navHome: "Ana səhifə",

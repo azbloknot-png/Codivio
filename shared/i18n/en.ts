@@ -37,6 +37,7 @@ export const en: Translations = {
     dashboard: "Dashboard",
     pages: "Pages",
     tools: "Tools",
+    faq: "FAQ",
     usersCrm: "Users / CRM",
     blog: "Blog",
     analytics: "Analytics",
@@ -213,6 +214,10 @@ export const en: Translations = {
     editTool: "Edit tool",
     noToolsYet: "No tools yet",
     loadingTools: "Loading tools…",
+    newFaq: "New FAQ",
+    editFaq: "Edit FAQ",
+    noFaqsYet: "No FAQ entries yet",
+    loadingFaqs: "Loading FAQ entries…",
   },
   site: {
     navHome: "Home",

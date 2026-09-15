@@ -148,8 +148,8 @@ describe("protected-route behavior (structural — see file-level note)", () => 
 
 // --- Phase 2.13 UI/UX redesign: nav architecture + branding ------------------
 
-describe("Admin navigation architecture (Phase 2.13, translated in Phase 2.15)", () => {
-  it("declares all 16 requested Admin modules in getNavItems, each labeled from the translation dictionary", () => {
+describe("Admin navigation architecture (Phase 2.13, translated in Phase 2.15; FAQ added in Phase 3 Finalization)", () => {
+  it("declares all 17 requested Admin modules in getNavItems, each labeled from the translation dictionary", () => {
     const navBlock = adminSource.slice(
       adminSource.indexOf("function getNavItems"),
       adminSource.indexOf("function AdminNavLink")
@@ -158,6 +158,7 @@ describe("Admin navigation architecture (Phase 2.13, translated in Phase 2.15)",
       "dashboard",
       "pages",
       "tools",
+      "faq",
       "usersCrm",
       "blog",
       "analytics",
@@ -184,17 +185,17 @@ describe("Admin navigation architecture (Phase 2.13, translated in Phase 2.15)",
     );
     const entryCount = (navBlock.match(/label: t\.nav\./g) ?? []).length;
     const toCount = (navBlock.match(/to: "\/admin/g) ?? []).length;
-    expect(entryCount).toBe(16);
+    expect(entryCount).toBe(17);
     expect(toCount).toBe(entryCount);
   });
 
-  it("the EN dictionary provides real English text for all 16 nav labels (no missing/placeholder values)", async () => {
+  it("the EN dictionary provides real English text for all 17 nav labels (no missing/placeholder values)", async () => {
     const { en } = await import("../shared/i18n/en");
     for (const value of Object.values(en.nav)) {
       expect(typeof value).toBe("string");
       expect(value.length).toBeGreaterThan(0);
     }
-    expect(Object.keys(en.nav).length).toBe(16);
+    expect(Object.keys(en.nav).length).toBe(17);
   });
 });
 

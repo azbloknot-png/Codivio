@@ -39,6 +39,9 @@ export const AUDIT_ACTIONS = [
   "TOOL_ACTIVATED",
   "TOOL_DEACTIVATED",
   "TOOL_DELETED",
+  "FAQ_CREATED",
+  "FAQ_UPDATED",
+  "FAQ_DELETED",
 ] as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
 

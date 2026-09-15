@@ -34,6 +34,13 @@ import {
   handleListTools,
   handleUpdateTool,
 } from "./tools";
+import {
+  handleCreateFaq,
+  handleDeleteFaq,
+  handleGetFaq,
+  handleListFaqs,
+  handleUpdateFaq,
+} from "./faq";
 import { withSecurityHeaders } from "./security-headers";
 
 export type { Env };
@@ -124,6 +131,21 @@ async function route(request: Request, env: Env): Promise<Response> {
       if (request.method === "GET") return handleGetTool(request, env, id);
       if (request.method === "PATCH") return handleUpdateTool(request, env, id);
       if (request.method === "DELETE") return handleDeleteTool(request, env, id);
+      return methodNotAllowed(["GET", "PATCH", "DELETE"]);
+    }
+
+    if (url.pathname === "/api/admin/faqs") {
+      if (request.method === "GET") return handleListFaqs(request, env);
+      if (request.method === "POST") return handleCreateFaq(request, env);
+      return methodNotAllowed(["GET", "POST"]);
+    }
+
+    const adminFaqMatch = url.pathname.match(/^\/api\/admin\/faqs\/([^/]+)$/);
+    if (adminFaqMatch) {
+      const id = adminFaqMatch[1];
+      if (request.method === "GET") return handleGetFaq(request, env, id);
+      if (request.method === "PATCH") return handleUpdateFaq(request, env, id);
+      if (request.method === "DELETE") return handleDeleteFaq(request, env, id);
       return methodNotAllowed(["GET", "PATCH", "DELETE"]);
     }
 

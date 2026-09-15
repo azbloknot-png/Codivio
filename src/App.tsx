@@ -32,7 +32,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
-import { Link, Route, Routes, useParams } from "react-router-dom";
+import { Link, Route, Routes, useLocation, useNavigationType, useParams } from "react-router-dom";
 /** Phase 3.13 — lazy-loaded, not a plain import. ToolPage now renders the
  * full Phase 3.4 content blueprint (intro/benefits/steps/FAQ across 34
  * tools x 3 languages, ~1,400 lines of data) via shared/seo/content.ts.
@@ -46,6 +46,7 @@ import { AdminDashboardPlaceholder, AdminLoginPage, ProtectedAdminRoute } from "
 import AdminSettingsPage from "./admin/AdminSettingsPage";
 import AdminPagesPage from "./admin/AdminPagesPage";
 import AdminToolsPage from "./admin/AdminToolsPage";
+import AdminFaqPage from "./admin/AdminFaqPage";
 import AdminComingSoonPage from "./admin/AdminComingSoonPage";
 import AdminSeoPage from "./admin/AdminSeoPage";
 import { useLanguage } from "./i18n/LanguageContext";
@@ -55,6 +56,7 @@ import { getPageSeo, getToolSeo, ROBOTS_NOINDEX_NOFOLLOW } from "../shared/seo";
 import { buildStandardPageGraph, buildToolPageGraph } from "../shared/seo/schema";
 import { getVisiblePlansByPriority } from "../shared/monetization/plans";
 import { ENTITLEMENTS, getPlanEntitlementKeys } from "../shared/monetization/entitlements";
+import { getGlobalFaqs } from "../shared/seo/global-faq";
 
 /** Phase 3.1 — usePageMeta now also sets canonical/robots/OG/Twitter/html
  * lang; re-exported here (rather than re-pointing every existing import at
@@ -475,39 +477,6 @@ const blogPosts = [
     category: "QR Codes",
     title: "QR Codes for Business and Marketing",
     text: "Ideas for using QR codes on menus, packaging, printed materials and more.",
-  },
-];
-
-const faqs = [
-  {
-    question: "What is Codivio?",
-    answer:
-      "Codivio is a collection of free online tools for QR codes, PDFs, images and other everyday digital tasks.",
-  },
-  {
-    question: "Are Codivio tools free?",
-    answer:
-      "The Codivio platform is designed around free online tools. Individual tools may have their own limits when they become available.",
-  },
-  {
-    question: "Do I need to install software?",
-    answer:
-      "No. Codivio is designed to provide useful tools directly in your web browser whenever technically possible.",
-  },
-  {
-    question: "Are my files uploaded to a server?",
-    answer:
-      "Codivio aims to process suitable tools directly in the browser whenever possible. Tool-specific processing details will be clearly explained when each tool launches.",
-  },
-  {
-    question: "Can I use Codivio on my phone?",
-    answer:
-      "Yes. The website is designed to work across desktop, tablet and mobile screen sizes.",
-  },
-  {
-    question: "Will more tools be added?",
-    answer:
-      "Yes. Codivio is being developed as a growing collection of QR, PDF, image and productivity tools.",
   },
 ];
 
@@ -1178,7 +1147,7 @@ function HomePage() {
             <span className="eyebrow">HELP CENTER</span>
             <h2>Frequently Asked Questions</h2>
 
-            {faqs.slice(0, 5).map((faq) => (
+            {getGlobalFaqs(language).slice(0, 5).map((faq) => (
               <details key={faq.question}>
                 <summary>
                   {faq.question}
@@ -1311,6 +1280,7 @@ function FAQPage() {
   const seo = getPageSeo("faq", language).copy;
   usePageMeta(seo.title, seo.description, { schemaGraph: buildStandardPageGraph("faq", language) });
   const [search, setSearch] = useState("");
+  const faqs = getGlobalFaqs(language);
 
   const filteredFaqs = faqs.filter((faq) =>
     `${faq.question} ${faq.answer}`
@@ -1920,9 +1890,72 @@ function CmsPageRoute() {
   );
 }
 
+/**
+ * Phase 3 Finalization — route scroll restoration.
+ *
+ * react-router-dom's plain <BrowserRouter>/<Routes> (used here, not the data
+ * router APIs) does not reset or restore scroll position on navigation by
+ * itself. Without this, a route change (e.g. a footer link) left the new
+ * page scrolled to wherever the previous page happened to be, and Back/
+ * Forward did not return to the previous scroll position either.
+ *
+ * Behavior: a normal navigation (PUSH/REPLACE — clicking a link) scrolls to
+ * the top of the new page, matching standard multi-page-site behavior. A
+ * Back/Forward navigation (POP) restores the scroll position that page had
+ * when the user left it. A location with a hash (e.g. "/pricing#faq")
+ * scrolls the matching element into view instead of the top, when that
+ * element exists on the page.
+ *
+ * The browser's own scrollRestoration is set to "manual" so it does not
+ * fight with this — otherwise Chrome/Firefox's native Back/Forward scroll
+ * restoration can run before or after this effect and produce a visible
+ * double-jump.
+ */
+function ScrollRestoration() {
+  const location = useLocation();
+  const navigationType = useNavigationType();
+  const savedPositions = useRef<Map<string, number>>(new Map());
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !("scrollRestoration" in window.history)) return;
+    const previous = window.history.scrollRestoration;
+    window.history.scrollRestoration = "manual";
+    return () => {
+      window.history.scrollRestoration = previous;
+    };
+  }, []);
+
+  useEffect(() => {
+    const key = location.key;
+    return () => {
+      savedPositions.current.set(key, window.scrollY);
+    };
+  }, [location]);
+
+  useEffect(() => {
+    if (location.hash) {
+      const target = document.getElementById(location.hash.slice(1));
+      if (target) {
+        target.scrollIntoView();
+        return;
+      }
+    }
+
+    if (navigationType === "POP") {
+      window.scrollTo(0, savedPositions.current.get(location.key) ?? 0);
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }, [location, navigationType]);
+
+  return null;
+}
+
 function App() {
   return (
-    <Routes>
+    <>
+      <ScrollRestoration />
+      <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/tools" element={<ToolsPage />} />
       <Route path="/tools/:slug" element={<ToolRoute />} />
@@ -1940,6 +1973,7 @@ function App() {
         <Route path="settings" element={<AdminSettingsPage />} />
         <Route path="pages" element={<AdminPagesPage />} />
         <Route path="tools" element={<AdminToolsPage />} />
+        <Route path="faq" element={<AdminFaqPage />} />
         <Route path="users" element={<AdminComingSoonPage moduleKey="usersCrm" />} />
         <Route path="blog" element={<AdminComingSoonPage moduleKey="blog" />} />
         <Route path="analytics" element={<AdminComingSoonPage moduleKey="analytics" />} />
@@ -1955,7 +1989,8 @@ function App() {
       </Route>
       <Route path="/:slug" element={<CmsPageRoute />} />
       <Route path="*" element={<NotFoundPage />} />
-    </Routes>
+      </Routes>
+    </>
   );
 }
 
