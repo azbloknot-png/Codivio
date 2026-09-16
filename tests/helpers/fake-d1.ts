@@ -402,6 +402,10 @@ export class FakeD1 implements D1Database {
       const row = this.tools.find((t) => t.slug === v[0]) ?? null;
       return { first: row ? { id: row.id } : null, all: row ? [{ id: row.id }] : [] };
     }
+    if (q.startsWith("SELECT id FROM pages WHERE slug = ? AND status = 'published'")) {
+      const row = this.pages.find((p) => p.slug === v[0] && p.status === "published") ?? null;
+      return { first: row ? { id: row.id } : null, all: row ? [{ id: row.id }] : [] };
+    }
     if (q.startsWith("SELECT id, scope, tool_slug, language, question, answer, status, sort_order, created_at, updated_at, created_by, updated_by FROM site_faqs")) {
       if (q.includes("WHERE id = ?")) {
         const row = this.siteFaqs.find((f) => f.id === v[0]) ?? null;

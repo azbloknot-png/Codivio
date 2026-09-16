@@ -16,8 +16,10 @@ import {
   handleLogin,
   handleLogout,
   handleSession,
+  jsonError,
   methodNotAllowed,
 } from "./auth";
+import { isKnownPublicRoute, isPageNavigationCandidate, normalizePathname } from "./route-guard";
 import { handleGetSettings, handlePatchSettings, handlePublicSettings } from "./settings";
 import {
   handleCreatePage,
@@ -154,7 +156,35 @@ async function route(request: Request, env: Env): Promise<Response> {
       return methodNotAllowed(["GET", "PATCH", "DELETE"]);
     }
 
-    return env.ASSETS.fetch(request);
+    // Every specific /api/* route above has already had its chance to
+    // match — an unmatched /api/* path is a genuine 404, not the SPA shell
+    // (previously this fell through to env.ASSETS.fetch() below and
+    // returned index.html with 200, a real Phase 3.15-audit finding: no
+    // caller legitimately depends on an unknown API path returning HTML).
+    if (url.pathname.startsWith("/api/")) {
+      return jsonError("Not found", 404);
+    }
+
+    const assetsResponse = await env.ASSETS.fetch(request);
+
+    // Phase 3.15 SEO Remediation — soft-404 fix (see ./route-guard.ts for
+    // the full reasoning). Only reconsider the status for a page-shaped GET
+    // request that the SPA-fallback config served as 200; a genuinely
+    // unknown page gets its status corrected to 404 while the exact same
+    // SPA-shell body is still served, so client-side rendering is
+    // unaffected — only the transport-layer status code changes.
+    if (assetsResponse.status === 200 && isPageNavigationCandidate(request, url.pathname)) {
+      const known = await isKnownPublicRoute(normalizePathname(url.pathname), env);
+      if (!known) {
+        return new Response(assetsResponse.body, {
+          status: 404,
+          statusText: "Not Found",
+          headers: assetsResponse.headers,
+        });
+      }
+    }
+
+    return assetsResponse;
 }
 
 async function handleHealth(env: Env): Promise<Response> {
