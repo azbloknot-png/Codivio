@@ -20,6 +20,7 @@ import {
   methodNotAllowed,
 } from "./auth";
 import { isKnownPublicRoute, isPageNavigationCandidate, normalizePathname } from "./route-guard";
+import { injectStaticSeoMetadata } from "./seo-rewrite";
 import { handleGetSettings, handlePatchSettings, handlePublicSettings } from "./settings";
 import {
   handleCreatePage,
@@ -174,7 +175,8 @@ async function route(request: Request, env: Env): Promise<Response> {
     // SPA-shell body is still served, so client-side rendering is
     // unaffected — only the transport-layer status code changes.
     if (assetsResponse.status === 200 && isPageNavigationCandidate(request, url.pathname)) {
-      const known = await isKnownPublicRoute(normalizePathname(url.pathname), env);
+      const normalizedPath = normalizePathname(url.pathname);
+      const known = await isKnownPublicRoute(normalizedPath, env);
       if (!known) {
         return new Response(assetsResponse.body, {
           status: 404,
@@ -182,6 +184,13 @@ async function route(request: Request, env: Env): Promise<Response> {
           headers: assetsResponse.headers,
         });
       }
+
+      // Phase 3.15 SEO Remediation — HTMLRewriter prototype (see
+      // ./seo-rewrite.ts). Narrowly rewrites title/description/canonical/
+      // robots/OG-title/OG-description for a known static page or tool
+      // route; a no-op everywhere else (unknown routes never reach this
+      // line — they returned 404 above).
+      return injectStaticSeoMetadata(assetsResponse, normalizedPath);
     }
 
     return assetsResponse;
