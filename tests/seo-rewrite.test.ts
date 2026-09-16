@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import worker from "../worker/index";
-import { injectStaticSeoMetadata, resolveStaticSeoEntity } from "../worker/seo-rewrite";
+import { injectStaticSeoMetadata, resolveJsonLdGraph, resolveStaticSeoEntity } from "../worker/seo-rewrite";
+import { buildCanonicalUrl } from "../shared/seo/site";
+import { serializeJsonLdGraph } from "../shared/seo/schema";
 import { makeEnv } from "./helpers/fake-d1";
 
 /**
@@ -31,6 +33,41 @@ describe("resolveStaticSeoEntity", () => {
     expect(resolveStaticSeoEntity("/tools/not-a-real-tool")).toBeNull();
     expect(resolveStaticSeoEntity("/some-cms-page")).toBeNull();
     expect(resolveStaticSeoEntity("/this-page-does-not-exist")).toBeNull();
+  });
+});
+
+describe("resolveJsonLdGraph", () => {
+  it("builds a valid, parseable JSON-LD graph for a static page, with the correct route-specific canonical URL", () => {
+    const graph = resolveJsonLdGraph("/faq");
+    expect(graph).not.toBeNull();
+
+    // Must survive the same escaping used before embedding in a <script>
+    // tag, then parse back to valid JSON (Step: "valid JSON-LD parsing").
+    const serialized = serializeJsonLdGraph(graph!);
+    const parsed = JSON.parse(serialized.replace(/\\u003c/g, "<"));
+    expect(parsed["@context"]).toBe("https://schema.org");
+
+    const types = parsed["@graph"].map((node: { "@type": string }) => node["@type"]);
+    expect(types).toContain("Organization");
+    expect(types).toContain("WebSite");
+
+    const webPage = parsed["@graph"].find((node: { "@type": string }) => node["@type"] !== "Organization" && node["@type"] !== "WebSite");
+    expect(webPage.url).toBe(buildCanonicalUrl("/faq"));
+  });
+
+  it("builds a JSON-LD graph (with BreadcrumbList) for a real tool page even though it is noindex,follow", () => {
+    const graph = resolveJsonLdGraph("/tools/qr-code-generator");
+    expect(graph).not.toBeNull();
+
+    const webPage = graph!["@graph"].find((node) => "breadcrumb" in node) as { breadcrumb?: unknown; url: string };
+    expect(webPage.url).toBe(buildCanonicalUrl("/tools/qr-code-generator"));
+    expect(webPage.breadcrumb).toBeDefined();
+  });
+
+  it("returns null for a fake tool, a CMS-shaped path, and a genuinely unknown path (no JSON-LD on invalid routes)", () => {
+    expect(resolveJsonLdGraph("/tools/not-a-real-tool")).toBeNull();
+    expect(resolveJsonLdGraph("/some-cms-page")).toBeNull();
+    expect(resolveJsonLdGraph("/this-page-does-not-exist")).toBeNull();
   });
 });
 

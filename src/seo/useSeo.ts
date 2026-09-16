@@ -13,7 +13,7 @@ import {
   SITE_NAME,
   type SeoRobots,
 } from "../../shared/seo";
-import type { JsonLdGraph } from "../../shared/seo/schema";
+import { JSON_LD_SCRIPT_ID, serializeJsonLdGraph, type JsonLdGraph } from "../../shared/seo/schema";
 
 /**
  * Codivio SEO — page-level <head> effect (Phase 3.1).
@@ -68,8 +68,6 @@ function computeDefaultRobots(pathname: string): SeoRobots {
   return ROBOTS_INDEX_FOLLOW;
 }
 
-const JSON_LD_SCRIPT_ID = "codivio-jsonld";
-
 /**
  * Safely injects/updates/removes the page's JSON-LD script tag.
  *
@@ -79,9 +77,12 @@ const JSON_LD_SCRIPT_ID = "codivio-jsonld";
  * an element already attached via the DOM API writes the text node's data
  * directly; it is not re-parsed as HTML, so a literal "</script>" inside a
  * JSON value cannot prematurely close the tag the way it could if this
- * were built via an HTML string. The escape below is an extra, cheap
- * defensive layer on top of that (belt-and-suspenders), not a requirement
- * for correctness.
+ * were built via an HTML string. `serializeJsonLdGraph`'s `<`-escaping is
+ * an extra, cheap defensive layer on top of that (belt-and-suspenders), not
+ * a requirement for correctness here — it matters more for
+ * `worker/seo-rewrite.ts` (Phase 3.15 Change Control), which DOES build a
+ * `<script>` tag via an HTML string server-side and shares this exact
+ * function for that reason.
  */
 function upsertJsonLd(graph: JsonLdGraph | null | undefined, pathname: string) {
   const existing = document.head.querySelector<HTMLScriptElement>(`script#${JSON_LD_SCRIPT_ID}`);
@@ -93,7 +94,7 @@ function upsertJsonLd(graph: JsonLdGraph | null | undefined, pathname: string) {
     return;
   }
 
-  const json = JSON.stringify(graph).replace(/</g, "\\u003c");
+  const json = serializeJsonLdGraph(graph);
   let script = existing;
   if (!script) {
     script = document.createElement("script");

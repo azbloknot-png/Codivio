@@ -97,6 +97,25 @@ export interface JsonLdGraph {
   "@graph": JsonLdGraphNode[];
 }
 
+/** The DOM id for the page's JSON-LD `<script>` tag, shared between the
+ * client (`src/seo/useSeo.ts`) and the server-side Worker rewrite
+ * (`worker/seo-rewrite.ts`, Phase 3.15 Change Control). Using the SAME id
+ * in both places lets `useSeo.ts`'s `upsertJsonLd` find and update the tag
+ * the Worker already rendered server-side, instead of creating a second,
+ * duplicate script element once client-side hydration runs. */
+export const JSON_LD_SCRIPT_ID = "codivio-jsonld";
+
+/** Serializes a JSON-LD graph for safe embedding inside a
+ * `<script type="application/ld+json">` tag. Escaping every `<` prevents a
+ * literal `</script>` sequence from ever appearing in the output (wherever
+ * it would fall inside the JSON string content), which would otherwise
+ * prematurely close the script element. Shared by both the client
+ * (`useSeo.ts`) and the Worker so there is exactly one implementation of
+ * this escape, not two independently-maintained copies. */
+export function serializeJsonLdGraph(graph: JsonLdGraph): string {
+  return JSON.stringify(graph).replace(/</g, "\\u003c");
+}
+
 const ORGANIZATION_ID = `${CANONICAL_DOMAIN}#organization`;
 const WEBSITE_ID = `${CANONICAL_DOMAIN}#website`;
 

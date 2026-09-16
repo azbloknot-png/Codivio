@@ -19,6 +19,7 @@ declare global {
   interface HTMLRewriterElement {
     setAttribute(name: string, value: string): HTMLRewriterElement;
     setInnerContent(content: string): HTMLRewriterElement;
+    append(content: string, options?: { html?: boolean }): HTMLRewriterElement;
   }
 
   interface HTMLRewriterElementContentHandlers {
