@@ -2,6 +2,7 @@ import { LANGUAGES, type Language } from "../i18n/languages";
 import { TOOL_KEYWORDS, getToolKeywordProfile } from "./keywords";
 import { TOOL_SEO } from "./tools";
 import { getToolDisplayName, type ToolCategory } from "./ai";
+import { TOOL_INTRODUCTIONS } from "./tool-intro";
 
 /**
  * Codivio SEO — structured tool content architecture (Phase 3.4).
@@ -66,7 +67,7 @@ export const SHARED_TRUST_MESSAGE: Record<Language, string> = {
 export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
   "qr-code-generator": {
     en: {
-      introduction: "A QR code generator turns information like a link or text into a scannable square code.",
+      introduction: TOOL_INTRODUCTIONS["qr-code-generator"].en,
       valueProposition: "Create a QR code for any purpose in seconds, once the tool is live.",
       benefits: ["Works for links, text and more", "No design skills needed", "Free to use"],
       howToSteps: ["Choose what the QR code should contain", "Customize the code if needed", "Download the finished QR code"],
@@ -81,7 +82,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     az: {
-      introduction: "QR kod generatoru link və ya mətn kimi məlumatı skan edilə bilən kvadrat koda çevirir.",
+      introduction: TOOL_INTRODUCTIONS["qr-code-generator"].az,
       valueProposition: "Alət aktiv olduqdan sonra istənilən məqsəd üçün saniyələr ərzində QR kod yaradın.",
       benefits: ["Link, mətn və s. üçün işləyir", "Dizayn bacarığı tələb etmir", "Pulsuz istifadə"],
       howToSteps: ["QR kodun nə saxlayacağını seçin", "Lazım olsa kodu fərdiləşdirin", "Hazır QR kodu yükləyin"],
@@ -96,7 +97,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     tr: {
-      introduction: "QR kod oluşturucu, bir bağlantı veya metin gibi bilgiyi taranabilir kare bir koda dönüştürür.",
+      introduction: TOOL_INTRODUCTIONS["qr-code-generator"].tr,
       valueProposition: "Araç yayına girdiğinde herhangi bir amaç için saniyeler içinde QR kod oluşturun.",
       benefits: ["Bağlantı, metin ve daha fazlası için çalışır", "Tasarım bilgisi gerektirmez", "Ücretsiz kullanım"],
       howToSteps: ["QR kodun neyi içereceğini seçin", "Gerekirse kodu özelleştirin", "Hazır QR kodu indirin"],
@@ -114,7 +115,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
 
   "qr-code-scanner": {
     en: {
-      introduction: "A QR code scanner reads a QR code using a camera or an uploaded image and reveals what it contains.",
+      introduction: TOOL_INTRODUCTIONS["qr-code-scanner"].en,
       valueProposition: "Scan any QR code instantly once the tool is live, no extra app needed.",
       benefits: ["Works with camera or an image file", "No app installation needed", "Free to use"],
       howToSteps: ["Point the camera at a QR code or upload an image", "Let the scanner read the code", "View the decoded content"],
@@ -129,7 +130,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     az: {
-      introduction: "QR kod skaneri kamera və ya yüklənmiş şəkil vasitəsilə QR kodu oxuyur və içindəkiləri göstərir.",
+      introduction: TOOL_INTRODUCTIONS["qr-code-scanner"].az,
       valueProposition: "Alət aktiv olduqda əlavə tətbiqə ehtiyac olmadan istənilən QR kodu anında skan edin.",
       benefits: ["Kamera və ya şəkil faylı ilə işləyir", "Tətbiq quraşdırmaq lazım deyil", "Pulsuz istifadə"],
       howToSteps: ["Kameranı QR koda yönəldin və ya şəkil yükləyin", "Skanerin kodu oxumasına icazə verin", "Deşifr edilmiş məzmuna baxın"],
@@ -144,7 +145,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     tr: {
-      introduction: "QR kod okuyucu, bir kamera veya yüklenen görsel aracılığıyla QR kodu okur ve içeriğini gösterir.",
+      introduction: TOOL_INTRODUCTIONS["qr-code-scanner"].tr,
       valueProposition: "Araç yayına girdiğinde ek bir uygulamaya gerek kalmadan herhangi bir QR kodu anında okutun.",
       benefits: ["Kamera veya görsel dosyasıyla çalışır", "Uygulama kurmaya gerek yok", "Ücretsiz kullanım"],
       howToSteps: ["Kamerayı QR koda yöneltin veya bir görsel yükleyin", "Okuyucunun kodu okumasına izin verin", "Çözülen içeriği görüntüleyin"],
@@ -162,7 +163,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
 
   "url-to-qr": {
     en: {
-      introduction: "This tool turns a website link into a QR code that opens the page when scanned.",
+      introduction: TOOL_INTRODUCTIONS["url-to-qr"].en,
       valueProposition: "Give any URL a scannable form once the tool is live.",
       benefits: ["Works with any website link", "Good for print materials", "Free to use"],
       howToSteps: ["Paste the website link", "Generate the QR code", "Download and use it on your material"],
@@ -177,7 +178,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     az: {
-      introduction: "Bu alət veb sayt linkini skan edildikdə səhifəni açan QR koda çevirir.",
+      introduction: TOOL_INTRODUCTIONS["url-to-qr"].az,
       valueProposition: "Alət aktiv olduqda istənilən URL-i skan edilə bilən formaya salın.",
       benefits: ["İstənilən veb sayt linki ilə işləyir", "Çap materialları üçün əlverişlidir", "Pulsuz istifadə"],
       howToSteps: ["Veb sayt linkini yapışdırın", "QR kodu yaradın", "Yükləyin və materialınızda istifadə edin"],
@@ -192,7 +193,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     tr: {
-      introduction: "Bu araç, bir web sitesi bağlantısını taratıldığında sayfayı açan bir QR koda dönüştürür.",
+      introduction: TOOL_INTRODUCTIONS["url-to-qr"].tr,
       valueProposition: "Araç yayına girdiğinde herhangi bir URL'yi taranabilir hale getirin.",
       benefits: ["Herhangi bir web sitesi bağlantısıyla çalışır", "Basılı materyaller için uygundur", "Ücretsiz kullanım"],
       howToSteps: ["Web sitesi bağlantısını yapıştırın", "QR kodu oluşturun", "İndirin ve materyalinizde kullanın"],
@@ -210,7 +211,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
 
   "text-to-qr": {
     en: {
-      introduction: "This tool encodes plain text directly into a QR code, without needing a link.",
+      introduction: TOOL_INTRODUCTIONS["text-to-qr"].en,
       valueProposition: "Share a short message as a scannable code once the tool is live.",
       benefits: ["No link required", "Good for short notes or instructions", "Free to use"],
       howToSteps: ["Type or paste the text", "Generate the QR code", "Share or print the code"],
@@ -225,7 +226,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     az: {
-      introduction: "Bu alət sadə mətni link tələb etmədən birbaşa QR koda kodlaşdırır.",
+      introduction: TOOL_INTRODUCTIONS["text-to-qr"].az,
       valueProposition: "Alət aktiv olduqda qısa mesajı skan edilə bilən koda çevirin.",
       benefits: ["Link tələb olunmur", "Qısa qeyd və ya təlimat üçün əlverişlidir", "Pulsuz istifadə"],
       howToSteps: ["Mətni yazın və ya yapışdırın", "QR kodu yaradın", "Kodu paylaşın və ya çap edin"],
@@ -240,7 +241,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     tr: {
-      introduction: "Bu araç, düz metni bir bağlantıya gerek kalmadan doğrudan bir QR koda kodlar.",
+      introduction: TOOL_INTRODUCTIONS["text-to-qr"].tr,
       valueProposition: "Araç yayına girdiğinde kısa bir mesajı taranabilir bir koda dönüştürün.",
       benefits: ["Bağlantı gerekmez", "Kısa notlar veya talimatlar için uygundur", "Ücretsiz kullanım"],
       howToSteps: ["Metni yazın veya yapıştırın", "QR kodu oluşturun", "Kodu paylaşın veya yazdırın"],
@@ -258,7 +259,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
 
   "wifi-qr": {
     en: {
-      introduction: "This tool creates a QR code that lets a phone join a WiFi network without typing the password.",
+      introduction: TOOL_INTRODUCTIONS["wifi-qr"].en,
       valueProposition: "Let guests connect to your WiFi with a scan once the tool is live.",
       benefits: ["No password typing needed", "Good for guests and visitors", "Free to use"],
       howToSteps: ["Enter the network name and password", "Generate the QR code", "Display or print it for guests to scan"],
@@ -273,7 +274,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     az: {
-      introduction: "Bu alət telefonun şifrəni yazmadan WiFi şəbəkəsinə qoşulmasını təmin edən QR kod yaradır.",
+      introduction: TOOL_INTRODUCTIONS["wifi-qr"].az,
       valueProposition: "Alət aktiv olduqda qonaqların bir skanla WiFi-a qoşulmasını təmin edin.",
       benefits: ["Şifrə yazmağa ehtiyac yoxdur", "Qonaqlar üçün əlverişlidir", "Pulsuz istifadə"],
       howToSteps: ["Şəbəkə adını və şifrəni daxil edin", "QR kodu yaradın", "Qonaqların skan etməsi üçün göstərin və ya çap edin"],
@@ -288,7 +289,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     tr: {
-      introduction: "Bu araç, bir telefonun şifreyi yazmadan WiFi ağına bağlanmasını sağlayan bir QR kod oluşturur.",
+      introduction: TOOL_INTRODUCTIONS["wifi-qr"].tr,
       valueProposition: "Araç yayına girdiğinde misafirlerin tek bir taramayla WiFi'nize bağlanmasını sağlayın.",
       benefits: ["Şifre yazmaya gerek yok", "Misafirler için uygundur", "Ücretsiz kullanım"],
       howToSteps: ["Ağ adını ve şifresini girin", "QR kodu oluşturun", "Misafirlerin taraması için gösterin veya yazdırın"],
@@ -306,7 +307,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
 
   "vcard-qr": {
     en: {
-      introduction: "This tool turns your contact details into a QR code that saves them to someone's phone in one scan.",
+      introduction: TOOL_INTRODUCTIONS["vcard-qr"].en,
       valueProposition: "Share your contact card without printing or typing once the tool is live.",
       benefits: ["Saves name, phone and email at once", "No manual typing needed", "Free to use"],
       howToSteps: ["Enter your contact details", "Generate the QR code", "Share it on a card, badge or signature"],
@@ -321,7 +322,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     az: {
-      introduction: "Bu alət əlaqə məlumatlarınızı bir skanla telefona yadda saxlanılan QR koda çevirir.",
+      introduction: TOOL_INTRODUCTIONS["vcard-qr"].az,
       valueProposition: "Alət aktiv olduqda əlaqə kartınızı çap etmədən və yazmadan paylaşın.",
       benefits: ["Ad, telefon və e-poçtu birlikdə saxlayır", "Əl ilə yazmağa ehtiyac yoxdur", "Pulsuz istifadə"],
       howToSteps: ["Əlaqə məlumatlarınızı daxil edin", "QR kodu yaradın", "Kartda, nişanda və ya imzada paylaşın"],
@@ -336,7 +337,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     tr: {
-      introduction: "Bu araç, iletişim bilgilerinizi tek bir taramayla telefona kaydedilen bir QR koda dönüştürür.",
+      introduction: TOOL_INTRODUCTIONS["vcard-qr"].tr,
       valueProposition: "Araç yayına girdiğinde iletişim kartınızı yazdırmadan veya yazmadan paylaşın.",
       benefits: ["Ad, telefon ve e-postayı birlikte kaydeder", "Elle yazmaya gerek yok", "Ücretsiz kullanım"],
       howToSteps: ["İletişim bilgilerinizi girin", "QR kodu oluşturun", "Kartvizitte, yaka kartında veya imzada paylaşın"],
@@ -354,7 +355,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
 
   "email-qr": {
     en: {
-      introduction: "This tool creates a QR code that opens a new email already addressed to you, with a subject if you choose.",
+      introduction: TOOL_INTRODUCTIONS["email-qr"].en,
       valueProposition: "Make it easier for people to email you once the tool is live.",
       benefits: ["Recipient and subject pre-filled", "Saves the sender typing", "Free to use"],
       howToSteps: ["Enter the email address and optional subject", "Generate the QR code", "Display it wherever people should contact you"],
@@ -369,7 +370,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     az: {
-      introduction: "Bu alət sizə ünvanlanmış, istəyə görə mövzulu yeni e-poçt açan QR kod yaradır.",
+      introduction: TOOL_INTRODUCTIONS["email-qr"].az,
       valueProposition: "Alət aktiv olduqda insanların sizə e-poçt yazmasını asanlaşdırın.",
       benefits: ["Alıcı və mövzu əvvəlcədən doldurulur", "Göndərənin yazmasına ehtiyac qalmır", "Pulsuz istifadə"],
       howToSteps: ["E-poçt ünvanını və istəyə görə mövzunu daxil edin", "QR kodu yaradın", "İnsanların sizinlə əlaqə saxlaya biləcəyi yerdə göstərin"],
@@ -384,7 +385,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     tr: {
-      introduction: "Bu araç, size adreslenmiş, isterseniz konusu da eklenmiş yeni bir e-posta açan bir QR kod oluşturur.",
+      introduction: TOOL_INTRODUCTIONS["email-qr"].tr,
       valueProposition: "Araç yayına girdiğinde insanların size e-posta göndermesini kolaylaştırın.",
       benefits: ["Alıcı ve konu önceden doldurulur", "Gönderenin yazmasına gerek kalmaz", "Ücretsiz kullanım"],
       howToSteps: ["E-posta adresini ve isteğe bağlı konuyu girin", "QR kodu oluşturun", "İnsanların size ulaşabileceği yerde gösterin"],
@@ -402,7 +403,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
 
   "sms-qr": {
     en: {
-      introduction: "This tool creates a QR code that opens a pre-written text message ready to send.",
+      introduction: TOOL_INTRODUCTIONS["sms-qr"].en,
       valueProposition: "Make it faster for people to text you once the tool is live.",
       benefits: ["Message text pre-filled", "Saves the sender typing", "Free to use"],
       howToSteps: ["Enter the phone number and message", "Generate the QR code", "Share it wherever a quick reply is useful"],
@@ -417,7 +418,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     az: {
-      introduction: "Bu alət göndərilməyə hazır, əvvəlcədən yazılmış mətn mesajı açan QR kod yaradır.",
+      introduction: TOOL_INTRODUCTIONS["sms-qr"].az,
       valueProposition: "Alət aktiv olduqda insanların sizə mesaj yazmasını sürətləndirin.",
       benefits: ["Mesaj mətni əvvəlcədən doldurulur", "Göndərənin yazmasına ehtiyac qalmır", "Pulsuz istifadə"],
       howToSteps: ["Telefon nömrəsini və mesajı daxil edin", "QR kodu yaradın", "Sürətli cavabın faydalı olduğu yerdə paylaşın"],
@@ -432,7 +433,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     tr: {
-      introduction: "Bu araç, gönderilmeye hazır, önceden yazılmış bir metin mesajı açan bir QR kod oluşturur.",
+      introduction: TOOL_INTRODUCTIONS["sms-qr"].tr,
       valueProposition: "Araç yayına girdiğinde insanların size mesaj atmasını hızlandırın.",
       benefits: ["Mesaj metni önceden doldurulur", "Gönderenin yazmasına gerek kalmaz", "Ücretsiz kullanım"],
       howToSteps: ["Telefon numarasını ve mesajı girin", "QR kodu oluşturun", "Hızlı bir yanıtın işe yaradığı yerde paylaşın"],
@@ -450,7 +451,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
 
   "whatsapp-qr": {
     en: {
-      introduction: "This tool creates a QR code that opens a WhatsApp conversation with a chosen number.",
+      introduction: TOOL_INTRODUCTIONS["whatsapp-qr"].en,
       valueProposition: "Make it one scan away for people to message you on WhatsApp once the tool is live.",
       benefits: ["Opens a chat directly", "No need to save the number first", "Free to use"],
       howToSteps: ["Enter the WhatsApp number", "Generate the QR code", "Display it where customers or contacts can scan it"],
@@ -465,7 +466,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     az: {
-      introduction: "Bu alət seçilmiş nömrə ilə WhatsApp söhbətini açan QR kod yaradır.",
+      introduction: TOOL_INTRODUCTIONS["whatsapp-qr"].az,
       valueProposition: "Alət aktiv olduqda insanların sizə WhatsApp-da yazmasını bir skana endirin.",
       benefits: ["Söhbəti birbaşa açır", "Nömrəni əvvəlcədən saxlamağa ehtiyac yoxdur", "Pulsuz istifadə"],
       howToSteps: ["WhatsApp nömrəsini daxil edin", "QR kodu yaradın", "Müştərilərin skan edə biləcəyi yerdə göstərin"],
@@ -480,7 +481,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     tr: {
-      introduction: "Bu araç, seçilen bir numarayla WhatsApp sohbetini açan bir QR kod oluşturur.",
+      introduction: TOOL_INTRODUCTIONS["whatsapp-qr"].tr,
       valueProposition: "Araç yayına girdiğinde insanların size WhatsApp'tan yazmasını tek bir taramaya indirin.",
       benefits: ["Sohbeti doğrudan açar", "Numarayı önceden kaydetmeye gerek yok", "Ücretsiz kullanım"],
       howToSteps: ["WhatsApp numarasını girin", "QR kodu oluşturun", "Müşterilerin taratabileceği yerde gösterin"],
@@ -498,7 +499,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
 
   "phone-qr": {
     en: {
-      introduction: "This tool creates a QR code that starts a phone call to a chosen number when scanned.",
+      introduction: TOOL_INTRODUCTIONS["phone-qr"].en,
       valueProposition: "Turn a phone number into a one-tap call once the tool is live.",
       benefits: ["Starts the call directly", "No need to type the number", "Free to use"],
       howToSteps: ["Enter the phone number", "Generate the QR code", "Display it where a quick call is useful"],
@@ -513,7 +514,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     az: {
-      introduction: "Bu alət skan edildikdə seçilmiş nömrəyə zəng başladan QR kod yaradır.",
+      introduction: TOOL_INTRODUCTIONS["phone-qr"].az,
       valueProposition: "Alət aktiv olduqda telefon nömrəsini bir toxunuşla zəngə çevirin.",
       benefits: ["Zəngi birbaşa başladır", "Nömrəni yazmağa ehtiyac yoxdur", "Pulsuz istifadə"],
       howToSteps: ["Telefon nömrəsini daxil edin", "QR kodu yaradın", "Sürətli zəngin faydalı olduğu yerdə göstərin"],
@@ -528,7 +529,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     tr: {
-      introduction: "Bu araç, taratıldığında seçilen bir numarayı arayan bir QR kod oluşturur.",
+      introduction: TOOL_INTRODUCTIONS["phone-qr"].tr,
       valueProposition: "Araç yayına girdiğinde bir telefon numarasını tek dokunuşla aramaya dönüştürün.",
       benefits: ["Aramayı doğrudan başlatır", "Numarayı yazmaya gerek yok", "Ücretsiz kullanım"],
       howToSteps: ["Telefon numarasını girin", "QR kodu oluşturun", "Hızlı bir aramanın işe yaradığı yerde gösterin"],
@@ -546,7 +547,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
 
   "location-qr": {
     en: {
-      introduction: "This tool creates a QR code that opens a specific map location when scanned.",
+      introduction: TOOL_INTRODUCTIONS["location-qr"].en,
       valueProposition: "Share directions to any place with a single scan once the tool is live.",
       benefits: ["Opens the exact location on a map", "No address typing needed", "Free to use"],
       howToSteps: ["Enter the address or coordinates", "Generate the QR code", "Display it wherever directions are useful"],
@@ -561,7 +562,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     az: {
-      introduction: "Bu alət skan edildikdə konkret xəritə məkanını açan QR kod yaradır.",
+      introduction: TOOL_INTRODUCTIONS["location-qr"].az,
       valueProposition: "Alət aktiv olduqda bir skanla istənilən yerə yol tərifini paylaşın.",
       benefits: ["Xəritədə dəqiq məkanı açır", "Ünvan yazmağa ehtiyac yoxdur", "Pulsuz istifadə"],
       howToSteps: ["Ünvanı və ya koordinatları daxil edin", "QR kodu yaradın", "Yol tərifinin faydalı olduğu yerdə göstərin"],
@@ -576,7 +577,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     tr: {
-      introduction: "Bu araç, taratıldığında belirli bir harita konumunu açan bir QR kod oluşturur.",
+      introduction: TOOL_INTRODUCTIONS["location-qr"].tr,
       valueProposition: "Araç yayına girdiğinde herhangi bir yere yol tarifini tek bir taramayla paylaşın.",
       benefits: ["Haritada tam konumu açar", "Adres yazmaya gerek yok", "Ücretsiz kullanım"],
       howToSteps: ["Adresi veya koordinatları girin", "QR kodu oluşturun", "Yol tarifinin işe yaradığı yerde gösterin"],
@@ -594,7 +595,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
 
   "calendar-qr": {
     en: {
-      introduction: "This tool creates a QR code that adds an event straight to a guest's calendar.",
+      introduction: TOOL_INTRODUCTIONS["calendar-qr"].en,
       valueProposition: "Share event details without back-and-forth messages once the tool is live.",
       benefits: ["Adds date, time and details at once", "No manual calendar entry needed", "Free to use"],
       howToSteps: ["Enter the event details", "Generate the QR code", "Share it on an invite or announcement"],
@@ -609,7 +610,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     az: {
-      introduction: "Bu alət tədbiri birbaşa qonağın təqviminə əlavə edən QR kod yaradır.",
+      introduction: TOOL_INTRODUCTIONS["calendar-qr"].az,
       valueProposition: "Alət aktiv olduqda tədbir detallarını uzun yazışma olmadan paylaşın.",
       benefits: ["Tarix, vaxt və detalları birlikdə əlavə edir", "Əl ilə təqvimə yazmağa ehtiyac yoxdur", "Pulsuz istifadə"],
       howToSteps: ["Tədbir detallarını daxil edin", "QR kodu yaradın", "Dəvətnamədə və ya elanda paylaşın"],
@@ -624,7 +625,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     tr: {
-      introduction: "Bu araç, bir etkinliği doğrudan misafirin takvimine ekleyen bir QR kod oluşturur.",
+      introduction: TOOL_INTRODUCTIONS["calendar-qr"].tr,
       valueProposition: "Araç yayına girdiğinde etkinlik bilgilerini uzun yazışmalar olmadan paylaşın.",
       benefits: ["Tarih, saat ve ayrıntıları birlikte ekler", "Elle takvime girmeye gerek yok", "Ücretsiz kullanım"],
       howToSteps: ["Etkinlik bilgilerini girin", "QR kodu oluşturun", "Davetiye veya duyuruda paylaşın"],
@@ -642,7 +643,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
 
   "pdf-merge": {
     en: {
-      introduction: "PDF merging combines two or more separate PDF files into a single document.",
+      introduction: TOOL_INTRODUCTIONS["pdf-merge"].en,
       valueProposition: "Bring scattered PDF files together into one document once the tool is live.",
       benefits: ["Combines files in the order you choose", "Keeps everything in one document", "Free to use"],
       howToSteps: ["Add the PDF files to merge", "Arrange them in the order you want", "Combine them into a single PDF"],
@@ -657,7 +658,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     az: {
-      introduction: "PDF birləşdirmə iki və ya daha çox ayrı PDF faylını tək sənəddə birləşdirir.",
+      introduction: TOOL_INTRODUCTIONS["pdf-merge"].az,
       valueProposition: "Alət aktiv olduqda dağınıq PDF faylları tək sənəddə toplayın.",
       benefits: ["Faylları seçdiyiniz sırada birləşdirir", "Hər şeyi tək sənəddə saxlayır", "Pulsuz istifadə"],
       howToSteps: ["Birləşdiriləcək PDF fayllarını əlavə edin", "Onları istədiyiniz sırada düzün", "Tək PDF-də birləşdirin"],
@@ -672,7 +673,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     tr: {
-      introduction: "PDF birleştirme, iki veya daha fazla ayrı PDF dosyasını tek bir belgede birleştirir.",
+      introduction: TOOL_INTRODUCTIONS["pdf-merge"].tr,
       valueProposition: "Araç yayına girdiğinde dağınık PDF dosyalarını tek bir belgede toplayın.",
       benefits: ["Dosyaları seçtiğiniz sırada birleştirir", "Her şeyi tek belgede tutar", "Ücretsiz kullanım"],
       howToSteps: ["Birleştirilecek PDF dosyalarını ekleyin", "İstediğiniz sırada düzenleyin", "Tek bir PDF'de birleştirin"],
@@ -690,7 +691,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
 
   "pdf-split": {
     en: {
-      introduction: "PDF splitting separates one PDF document into multiple smaller files by page range.",
+      introduction: TOOL_INTRODUCTIONS["pdf-split"].en,
       valueProposition: "Pull exactly the pages you need out of a larger PDF once the tool is live.",
       benefits: ["Extracts specific page ranges", "Creates smaller, focused files", "Free to use"],
       howToSteps: ["Upload the PDF to split", "Choose the page ranges", "Save each part as a separate file"],
@@ -705,7 +706,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     az: {
-      introduction: "PDF bölmə bir PDF sənədini səhifə aralığına görə bir neçə kiçik fayla ayırır.",
+      introduction: TOOL_INTRODUCTIONS["pdf-split"].az,
       valueProposition: "Alət aktiv olduqda böyük PDF-dən yalnız lazım olan səhifələri çıxarın.",
       benefits: ["Konkret səhifə aralığını çıxarır", "Kiçik, məqsədyönlü fayllar yaradır", "Pulsuz istifadə"],
       howToSteps: ["Bölünəcək PDF-i yükləyin", "Səhifə aralığını seçin", "Hər hissəni ayrı fayl kimi saxlayın"],
@@ -720,7 +721,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     tr: {
-      introduction: "PDF bölme, bir PDF belgesini sayfa aralığına göre birden fazla küçük dosyaya ayırır.",
+      introduction: TOOL_INTRODUCTIONS["pdf-split"].tr,
       valueProposition: "Araç yayına girdiğinde büyük bir PDF'den tam ihtiyacınız olan sayfaları çıkarın.",
       benefits: ["Belirli sayfa aralıklarını çıkarır", "Küçük, odaklı dosyalar oluşturur", "Ücretsiz kullanım"],
       howToSteps: ["Bölünecek PDF'yi yükleyin", "Sayfa aralıklarını seçin", "Her bölümü ayrı dosya olarak kaydedin"],
@@ -738,7 +739,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
 
   "pdf-compress": {
     en: {
-      introduction: "PDF compression reduces a file's size while keeping it readable, often because scanned images make PDFs large.",
+      introduction: TOOL_INTRODUCTIONS["pdf-compress"].en,
       valueProposition: "Make a large PDF easier to email and store once the tool is live.",
       benefits: ["Smaller file size for sharing", "Keeps the document readable", "Free to use"],
       howToSteps: ["Upload the PDF to compress", "Let the tool reduce its file size", "Download the smaller file"],
@@ -753,7 +754,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     az: {
-      introduction: "PDF sıxma faylın oxunaqlı qalmasını təmin edərək ölçüsünü azaldır; adətən skan edilmiş şəkillər PDF-i böyük edir.",
+      introduction: TOOL_INTRODUCTIONS["pdf-compress"].az,
       valueProposition: "Alət aktiv olduqda böyük PDF-i e-poçt və saxlama üçün asanlaşdırın.",
       benefits: ["Paylaşım üçün kiçik fayl ölçüsü", "Sənədi oxunaqlı saxlayır", "Pulsuz istifadə"],
       howToSteps: ["Sıxılacaq PDF-i yükləyin", "Alətin fayl ölçüsünü azaltmasına icazə verin", "Kiçik faylı yükləyin"],
@@ -768,7 +769,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     tr: {
-      introduction: "PDF sıkıştırma, dosyayı okunabilir tutarken boyutunu küçültür; genellikle taranmış görseller PDF'yi büyütür.",
+      introduction: TOOL_INTRODUCTIONS["pdf-compress"].tr,
       valueProposition: "Araç yayına girdiğinde büyük bir PDF'yi e-postayla göndermeyi ve depolamayı kolaylaştırın.",
       benefits: ["Paylaşım için daha küçük dosya boyutu", "Belgeyi okunabilir tutar", "Ücretsiz kullanım"],
       howToSteps: ["Sıkıştırılacak PDF'yi yükleyin", "Aracın dosya boyutunu küçültmesine izin verin", "Küçültülmüş dosyayı indirin"],
@@ -786,7 +787,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
 
   "pdf-to-jpg": {
     en: {
-      introduction: "This tool converts each page of a PDF into a separate JPG image file.",
+      introduction: TOOL_INTRODUCTIONS["pdf-to-jpg"].en,
       valueProposition: "Turn PDF pages into shareable images once the tool is live.",
       benefits: ["One JPG per page", "Good for sharing on platforms that expect images", "Free to use"],
       howToSteps: ["Upload the PDF to convert", "Let the tool convert each page", "Download the JPG images"],
@@ -801,7 +802,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     az: {
-      introduction: "Bu alət PDF-in hər səhifəsini ayrı JPG şəkil faylına çevirir.",
+      introduction: TOOL_INTRODUCTIONS["pdf-to-jpg"].az,
       valueProposition: "Alət aktiv olduqda PDF səhifələrini paylaşıla bilən şəkillərə çevirin.",
       benefits: ["Hər səhifə üçün bir JPG", "Şəkil tələb edən platformalarda paylaşım üçün əlverişlidir", "Pulsuz istifadə"],
       howToSteps: ["Çevriləcək PDF-i yükləyin", "Alətin hər səhifəni çevirməsinə icazə verin", "JPG şəkilləri yükləyin"],
@@ -816,7 +817,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     tr: {
-      introduction: "Bu araç, bir PDF'nin her sayfasını ayrı bir JPG görsel dosyasına dönüştürür.",
+      introduction: TOOL_INTRODUCTIONS["pdf-to-jpg"].tr,
       valueProposition: "Araç yayına girdiğinde PDF sayfalarını paylaşılabilir görsellere dönüştürün.",
       benefits: ["Her sayfa için bir JPG", "Görsel bekleyen platformlarda paylaşım için uygundur", "Ücretsiz kullanım"],
       howToSteps: ["Dönüştürülecek PDF'yi yükleyin", "Aracın her sayfayı dönüştürmesine izin verin", "JPG görselleri indirin"],
@@ -834,7 +835,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
 
   "jpg-to-pdf": {
     en: {
-      introduction: "This tool combines one or more JPG images into a single PDF document.",
+      introduction: TOOL_INTRODUCTIONS["jpg-to-pdf"].en,
       valueProposition: "Turn photos into one shareable PDF once the tool is live.",
       benefits: ["Combines multiple images into one file", "Keeps images in your chosen order", "Free to use"],
       howToSteps: ["Add the JPG images to include", "Arrange them in order", "Combine them into a single PDF"],
@@ -849,7 +850,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     az: {
-      introduction: "Bu alət bir və ya bir neçə JPG şəklini tək PDF sənədində birləşdirir.",
+      introduction: TOOL_INTRODUCTIONS["jpg-to-pdf"].az,
       valueProposition: "Alət aktiv olduqda fotoları tək paylaşıla bilən PDF-ə çevirin.",
       benefits: ["Bir neçə şəkli tək faylda birləşdirir", "Şəkilləri seçdiyiniz sırada saxlayır", "Pulsuz istifadə"],
       howToSteps: ["Daxil ediləcək JPG şəkillərini əlavə edin", "Onları sırayla düzün", "Tək PDF-də birləşdirin"],
@@ -864,7 +865,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     tr: {
-      introduction: "Bu araç, bir veya birden fazla JPG görselini tek bir PDF belgesinde birleştirir.",
+      introduction: TOOL_INTRODUCTIONS["jpg-to-pdf"].tr,
       valueProposition: "Araç yayına girdiğinde fotoğrafları tek bir paylaşılabilir PDF'ye dönüştürün.",
       benefits: ["Birden fazla görseli tek dosyada birleştirir", "Görselleri seçtiğiniz sırada tutar", "Ücretsiz kullanım"],
       howToSteps: ["Eklenecek JPG görsellerini ekleyin", "Sırayla düzenleyin", "Tek bir PDF'de birleştirin"],
@@ -882,7 +883,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
 
   "pdf-to-word": {
     en: {
-      introduction: "This tool converts a PDF document into an editable Word file.",
+      introduction: TOOL_INTRODUCTIONS["pdf-to-word"].en,
       valueProposition: "Make PDF text editable again once the tool is live.",
       benefits: ["Text becomes editable", "Saves retyping the document", "Free to use"],
       howToSteps: ["Upload the PDF to convert", "Let the tool extract the text and layout", "Download the Word file"],
@@ -897,7 +898,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     az: {
-      introduction: "Bu alət PDF sənədini redaktə edilə bilən Word faylına çevirir.",
+      introduction: TOOL_INTRODUCTIONS["pdf-to-word"].az,
       valueProposition: "Alət aktiv olduqda PDF mətnini yenidən redaktə edilə bilən edin.",
       benefits: ["Mətn redaktə edilə bilən olur", "Sənədi yenidən yazmağa ehtiyac qalmır", "Pulsuz istifadə"],
       howToSteps: ["Çevriləcək PDF-i yükləyin", "Alətin mətni və düzəni çıxarmasına icazə verin", "Word faylını yükləyin"],
@@ -912,7 +913,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     tr: {
-      introduction: "Bu araç, bir PDF belgesini düzenlenebilir bir Word dosyasına dönüştürür.",
+      introduction: TOOL_INTRODUCTIONS["pdf-to-word"].tr,
       valueProposition: "Araç yayına girdiğinde PDF metnini yeniden düzenlenebilir hale getirin.",
       benefits: ["Metin düzenlenebilir hale gelir", "Belgeyi yeniden yazmaya gerek kalmaz", "Ücretsiz kullanım"],
       howToSteps: ["Dönüştürülecek PDF'yi yükleyin", "Aracın metni ve düzeni çıkarmasına izin verin", "Word dosyasını indirin"],
@@ -930,7 +931,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
 
   "pdf-to-excel": {
     en: {
-      introduction: "This tool extracts suitable tables from a PDF document into an Excel file.",
+      introduction: TOOL_INTRODUCTIONS["pdf-to-excel"].en,
       valueProposition: "Turn PDF tables into editable spreadsheets once the tool is live.",
       benefits: ["Extracts table data", "Makes numbers usable in a spreadsheet", "Free to use"],
       howToSteps: ["Upload the PDF containing the table", "Let the tool extract the table data", "Download the Excel file"],
@@ -945,7 +946,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     az: {
-      introduction: "Bu alət PDF sənədindəki uyğun cədvəlləri Excel faylına çıxarır.",
+      introduction: TOOL_INTRODUCTIONS["pdf-to-excel"].az,
       valueProposition: "Alət aktiv olduqda PDF cədvəllərini redaktə edilə bilən cədvələ çevirin.",
       benefits: ["Cədvəl məlumatını çıxarır", "Rəqəmləri cədvəldə istifadəyə hazır edir", "Pulsuz istifadə"],
       howToSteps: ["Cədvəl olan PDF-i yükləyin", "Alətin cədvəl məlumatını çıxarmasına icazə verin", "Excel faylını yükləyin"],
@@ -960,7 +961,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     tr: {
-      introduction: "Bu araç, bir PDF belgesindeki uygun tabloları bir Excel dosyasına çıkarır.",
+      introduction: TOOL_INTRODUCTIONS["pdf-to-excel"].tr,
       valueProposition: "Araç yayına girdiğinde PDF tablolarını düzenlenebilir tablolara dönüştürün.",
       benefits: ["Tablo verisini çıkarır", "Sayıları tabloda kullanılabilir hale getirir", "Ücretsiz kullanım"],
       howToSteps: ["Tablo içeren PDF'yi yükleyin", "Aracın tablo verisini çıkarmasına izin verin", "Excel dosyasını indirin"],
@@ -978,7 +979,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
 
   "pdf-rotate": {
     en: {
-      introduction: "This tool rotates one or all pages of a PDF to fix their orientation.",
+      introduction: TOOL_INTRODUCTIONS["pdf-rotate"].en,
       valueProposition: "Fix sideways or upside-down pages once the tool is live.",
       benefits: ["Rotates single pages or the whole document", "Corrects scanning mistakes", "Free to use"],
       howToSteps: ["Upload the PDF to fix", "Choose which pages to rotate and by how much", "Save the corrected PDF"],
@@ -993,7 +994,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     az: {
-      introduction: "Bu alət PDF-in bir və ya bütün səhifələrini döndürərək istiqamətini düzəldir.",
+      introduction: TOOL_INTRODUCTIONS["pdf-rotate"].az,
       valueProposition: "Alət aktiv olduqda yan və ya baş-ayaq səhifələri düzəldin.",
       benefits: ["Tək səhifəni və ya bütün sənədi döndürür", "Skan xətalarını düzəldir", "Pulsuz istifadə"],
       howToSteps: ["Düzəldiləcək PDF-i yükləyin", "Hansı səhifələrin nə qədər döndürüləcəyini seçin", "Düzəldilmiş PDF-i saxlayın"],
@@ -1008,7 +1009,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     tr: {
-      introduction: "Bu araç, yönlerini düzeltmek için bir PDF'nin bir veya tüm sayfalarını döndürür.",
+      introduction: TOOL_INTRODUCTIONS["pdf-rotate"].tr,
       valueProposition: "Araç yayına girdiğinde yan veya baş aşağı sayfaları düzeltin.",
       benefits: ["Tek sayfayı veya tüm belgeyi döndürür", "Tarama hatalarını düzeltir", "Ücretsiz kullanım"],
       howToSteps: ["Düzeltilecek PDF'yi yükleyin", "Hangi sayfaların ne kadar döndürüleceğini seçin", "Düzeltilmiş PDF'yi kaydedin"],
@@ -1026,7 +1027,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
 
   "image-resize": {
     en: {
-      introduction: "Image resizing changes a photo's pixel dimensions to fit a specific width and height.",
+      introduction: TOOL_INTRODUCTIONS["image-resize"].en,
       valueProposition: "Get a photo to exactly the size you need once the tool is live.",
       benefits: ["Sets an exact pixel width and height", "Works for web, social and print sizes", "Free to use"],
       howToSteps: ["Upload the image to resize", "Enter the target dimensions", "Download the resized image"],
@@ -1041,7 +1042,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     az: {
-      introduction: "Şəkil ölçüləndirmə fotonun piksel ölçülərini konkret en və hündürlüyə uyğunlaşdırır.",
+      introduction: TOOL_INTRODUCTIONS["image-resize"].az,
       valueProposition: "Alət aktiv olduqda fotonu tam lazım olan ölçüyə gətirin.",
       benefits: ["Dəqiq piksel eni və hündürlüyü təyin edir", "Veb, sosial media və çap ölçüləri üçün işləyir", "Pulsuz istifadə"],
       howToSteps: ["Ölçüləndiriləcək şəkli yükləyin", "Hədəf ölçüləri daxil edin", "Ölçüləndirilmiş şəkli yükləyin"],
@@ -1056,7 +1057,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     tr: {
-      introduction: "Görsel boyutlandırma, bir fotoğrafın piksel boyutlarını belirli bir genişlik ve yüksekliğe uyacak şekilde değiştirir.",
+      introduction: TOOL_INTRODUCTIONS["image-resize"].tr,
       valueProposition: "Araç yayına girdiğinde bir fotoğrafı tam ihtiyacınız olan boyuta getirin.",
       benefits: ["Tam piksel genişliği ve yüksekliği belirler", "Web, sosyal medya ve baskı boyutları için çalışır", "Ücretsiz kullanım"],
       howToSteps: ["Boyutlandırılacak görseli yükleyin", "Hedef boyutları girin", "Boyutlandırılmış görseli indirin"],
@@ -1074,7 +1075,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
 
   "image-compress": {
     en: {
-      introduction: "Image compression reduces a photo's file size, which is useful because high-resolution photos can be quite large.",
+      introduction: TOOL_INTRODUCTIONS["image-compress"].en,
       valueProposition: "Make images load faster and take up less space once the tool is live.",
       benefits: ["Smaller file size for the web", "Faster page loading when used on a site", "Free to use"],
       howToSteps: ["Upload the image to compress", "Let the tool reduce its file size", "Download the compressed image"],
@@ -1089,7 +1090,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     az: {
-      introduction: "Şəkil sıxma foto fayl ölçüsünü azaldır; bu, yüksək keyfiyyətli fotoların kifayət qədər böyük ola bilməsi səbəbindən faydalıdır.",
+      introduction: TOOL_INTRODUCTIONS["image-compress"].az,
       valueProposition: "Alət aktiv olduqda şəkilləri daha sürətli yüklənən və az yer tutan edin.",
       benefits: ["Veb üçün kiçik fayl ölçüsü", "Saytda istifadə edildikdə daha sürətli yüklənmə", "Pulsuz istifadə"],
       howToSteps: ["Sıxılacaq şəkli yükləyin", "Alətin fayl ölçüsünü azaltmasına icazə verin", "Sıxılmış şəkli yükləyin"],
@@ -1104,7 +1105,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     tr: {
-      introduction: "Görsel sıkıştırma, bir fotoğrafın dosya boyutunu küçültür; bu, yüksek çözünürlüklü fotoğrafların oldukça büyük olabilmesi nedeniyle faydalıdır.",
+      introduction: TOOL_INTRODUCTIONS["image-compress"].tr,
       valueProposition: "Araç yayına girdiğinde görsellerin daha hızlı yüklenmesini ve daha az yer kaplamasını sağlayın.",
       benefits: ["Web için daha küçük dosya boyutu", "Bir sitede kullanıldığında daha hızlı sayfa yükleme", "Ücretsiz kullanım"],
       howToSteps: ["Sıkıştırılacak görseli yükleyin", "Aracın dosya boyutunu küçültmesine izin verin", "Sıkıştırılmış görseli indirin"],
@@ -1122,7 +1123,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
 
   "image-converter": {
     en: {
-      introduction: "This tool converts an image between popular formats like JPG, PNG and WebP.",
+      introduction: TOOL_INTRODUCTIONS["image-converter"].en,
       valueProposition: "Get any image into the format you actually need once the tool is live.",
       benefits: ["Supports several common formats", "Handles single or batch conversion", "Free to use"],
       howToSteps: ["Upload the image to convert", "Choose the target format", "Download the converted image"],
@@ -1137,7 +1138,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     az: {
-      introduction: "Bu alət şəkli JPG, PNG və WebP kimi məşhur formatlar arasında çevirir.",
+      introduction: TOOL_INTRODUCTIONS["image-converter"].az,
       valueProposition: "Alət aktiv olduqda istənilən şəkli əsl lazım olan formata gətirin.",
       benefits: ["Bir neçə geniş yayılmış formatı dəstəkləyir", "Tək və ya toplu çevirməni idarə edir", "Pulsuz istifadə"],
       howToSteps: ["Çevriləcək şəkli yükləyin", "Hədəf formatı seçin", "Çevrilmiş şəkli yükləyin"],
@@ -1152,7 +1153,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     tr: {
-      introduction: "Bu araç, bir görseli JPG, PNG ve WebP gibi popüler formatlar arasında dönüştürür.",
+      introduction: TOOL_INTRODUCTIONS["image-converter"].tr,
       valueProposition: "Araç yayına girdiğinde herhangi bir görseli gerçekten ihtiyacınız olan formata getirin.",
       benefits: ["Birkaç yaygın formatı destekler", "Tekli veya toplu dönüştürmeyi yönetir", "Ücretsiz kullanım"],
       howToSteps: ["Dönüştürülecek görseli yükleyin", "Hedef formatı seçin", "Dönüştürülmüş görseli indirin"],
@@ -1170,7 +1171,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
 
   "jpg-to-png": {
     en: {
-      introduction: "This tool converts a JPG image into PNG format, which supports transparency.",
+      introduction: TOOL_INTRODUCTIONS["jpg-to-png"].en,
       valueProposition: "Get transparency support for a photo once the tool is live.",
       benefits: ["Enables a transparent background", "Keeps image quality high", "Free to use"],
       howToSteps: ["Upload the JPG image", "Convert it to PNG", "Download the PNG file"],
@@ -1185,7 +1186,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     az: {
-      introduction: "Bu alət JPG şəklini şəffaflığı dəstəkləyən PNG formatına çevirir.",
+      introduction: TOOL_INTRODUCTIONS["jpg-to-png"].az,
       valueProposition: "Alət aktiv olduqda foto üçün şəffaflıq dəstəyi əldə edin.",
       benefits: ["Şəffaf fon imkanı verir", "Şəkil keyfiyyətini yüksək saxlayır", "Pulsuz istifadə"],
       howToSteps: ["JPG şəklini yükləyin", "PNG-yə çevirin", "PNG faylını yükləyin"],
@@ -1200,7 +1201,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     tr: {
-      introduction: "Bu araç, bir JPG görseli, şeffaflığı destekleyen PNG formatına dönüştürür.",
+      introduction: TOOL_INTRODUCTIONS["jpg-to-png"].tr,
       valueProposition: "Araç yayına girdiğinde bir fotoğraf için şeffaflık desteği elde edin.",
       benefits: ["Şeffaf arka plan olanağı sağlar", "Görsel kalitesini yüksek tutar", "Ücretsiz kullanım"],
       howToSteps: ["JPG görseli yükleyin", "PNG'ye dönüştürün", "PNG dosyasını indirin"],
@@ -1218,7 +1219,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
 
   "png-to-jpg": {
     en: {
-      introduction: "This tool converts a PNG image into JPG format, typically resulting in a smaller file.",
+      introduction: TOOL_INTRODUCTIONS["png-to-jpg"].en,
       valueProposition: "Get a smaller, more widely compatible image file once the tool is live.",
       benefits: ["Usually reduces file size", "Widely supported format", "Free to use"],
       howToSteps: ["Upload the PNG image", "Convert it to JPG", "Download the JPG file"],
@@ -1233,7 +1234,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     az: {
-      introduction: "Bu alət PNG şəklini adətən daha kiçik fayl verən JPG formatına çevirir.",
+      introduction: TOOL_INTRODUCTIONS["png-to-jpg"].az,
       valueProposition: "Alət aktiv olduqda daha kiçik, geniş uyğunluğu olan şəkil faylı əldə edin.",
       benefits: ["Adətən fayl ölçüsünü azaldır", "Geniş dəstəklənən format", "Pulsuz istifadə"],
       howToSteps: ["PNG şəklini yükləyin", "JPG-yə çevirin", "JPG faylını yükləyin"],
@@ -1248,7 +1249,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     tr: {
-      introduction: "Bu araç, bir PNG görseli genellikle daha küçük bir dosyayla sonuçlanan JPG formatına dönüştürür.",
+      introduction: TOOL_INTRODUCTIONS["png-to-jpg"].tr,
       valueProposition: "Araç yayına girdiğinde daha küçük, daha geniş uyumlu bir görsel dosyası elde edin.",
       benefits: ["Genellikle dosya boyutunu küçültür", "Yaygın olarak desteklenen format", "Ücretsiz kullanım"],
       howToSteps: ["PNG görseli yükleyin", "JPG'ye dönüştürün", "JPG dosyasını indirin"],
@@ -1266,7 +1267,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
 
   "webp-converter": {
     en: {
-      introduction: "This tool converts images to or from the WebP format, a modern format designed for smaller web images.",
+      introduction: TOOL_INTRODUCTIONS["webp-converter"].en,
       valueProposition: "Move between WebP and more universally supported formats once the tool is live.",
       benefits: ["Converts both to and from WebP", "Good for smaller website images", "Free to use"],
       howToSteps: ["Upload the image to convert", "Choose WebP or the target format", "Download the converted image"],
@@ -1281,7 +1282,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     az: {
-      introduction: "Bu alət şəkilləri veb üçün kiçik ölçü nəzərdə tutulmuş müasir format olan WebP-ə və ya WebP-dən çevirir.",
+      introduction: TOOL_INTRODUCTIONS["webp-converter"].az,
       valueProposition: "Alət aktiv olduqda WebP və daha universal dəstəklənən formatlar arasında keçin.",
       benefits: ["Həm WebP-ə, həm də WebP-dən çevirir", "Kiçik veb sayt şəkilləri üçün əlverişlidir", "Pulsuz istifadə"],
       howToSteps: ["Çevriləcək şəkli yükləyin", "WebP və ya hədəf formatı seçin", "Çevrilmiş şəkli yükləyin"],
@@ -1296,7 +1297,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     tr: {
-      introduction: "Bu araç, görselleri daha küçük web görselleri için tasarlanmış modern bir format olan WebP'ye veya WebP'den dönüştürür.",
+      introduction: TOOL_INTRODUCTIONS["webp-converter"].tr,
       valueProposition: "Araç yayına girdiğinde WebP ile daha evrensel desteklenen formatlar arasında geçiş yapın.",
       benefits: ["Hem WebP'ye hem de WebP'den dönüştürür", "Daha küçük web sitesi görselleri için uygundur", "Ücretsiz kullanım"],
       howToSteps: ["Dönüştürülecek görseli yükleyin", "WebP veya hedef formatı seçin", "Dönüştürülmüş görseli indirin"],
@@ -1314,7 +1315,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
 
   "image-crop": {
     en: {
-      introduction: "Image cropping removes the parts of a photo outside a chosen area, keeping only what's needed.",
+      introduction: TOOL_INTRODUCTIONS["image-crop"].en,
       valueProposition: "Focus a photo on exactly the part that matters once the tool is live.",
       benefits: ["Keeps only the selected area", "Good for framing and focus", "Free to use"],
       howToSteps: ["Upload the image to crop", "Select the area to keep", "Download the cropped image"],
@@ -1329,7 +1330,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     az: {
-      introduction: "Şəkil kəsmə fotonun seçilmiş sahədən kənar hissələrini silərək yalnız lazım olanı saxlayır.",
+      introduction: TOOL_INTRODUCTIONS["image-crop"].az,
       valueProposition: "Alət aktiv olduqda fotonu tam əhəmiyyətli hissəyə fokuslayın.",
       benefits: ["Yalnız seçilmiş sahəni saxlayır", "Çərçivələmə və fokus üçün əlverişlidir", "Pulsuz istifadə"],
       howToSteps: ["Kəsiləcək şəkli yükləyin", "Saxlanılacaq sahəni seçin", "Kəsilmiş şəkli yükləyin"],
@@ -1344,7 +1345,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     tr: {
-      introduction: "Görsel kırpma, bir fotoğrafın seçilen alan dışındaki kısımlarını kaldırarak yalnızca gerekeni bırakır.",
+      introduction: TOOL_INTRODUCTIONS["image-crop"].tr,
       valueProposition: "Araç yayına girdiğinde bir fotoğrafı tam önemli olan kısma odaklayın.",
       benefits: ["Yalnızca seçilen alanı korur", "Çerçeveleme ve odaklama için uygundur", "Ücretsiz kullanım"],
       howToSteps: ["Kırpılacak görseli yükleyin", "Korunacak alanı seçin", "Kırpılmış görseli indirin"],
@@ -1362,7 +1363,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
 
   "image-rotate": {
     en: {
-      introduction: "Image rotation turns a photo to correct its orientation, such as fixing a sideways picture.",
+      introduction: TOOL_INTRODUCTIONS["image-rotate"].en,
       valueProposition: "Get a photo facing the right way once the tool is live.",
       benefits: ["Fixes sideways or upside-down photos", "Simple orientation correction", "Free to use"],
       howToSteps: ["Upload the image to rotate", "Choose the rotation direction and angle", "Download the corrected image"],
@@ -1377,7 +1378,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     az: {
-      introduction: "Şəkil döndürmə fotonun istiqamətini düzəldir, məsələn, yan çəkilmiş şəkli düzəldir.",
+      introduction: TOOL_INTRODUCTIONS["image-rotate"].az,
       valueProposition: "Alət aktiv olduqda fotonu düzgün istiqamətə gətirin.",
       benefits: ["Yan və ya baş-ayaq fotoları düzəldir", "Sadə istiqamət düzəlişi", "Pulsuz istifadə"],
       howToSteps: ["Döndəriləcək şəkli yükləyin", "Döndürmə istiqamətini və bucağını seçin", "Düzəldilmiş şəkli yükləyin"],
@@ -1392,7 +1393,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     tr: {
-      introduction: "Görsel döndürme, yan çekilmiş bir fotoğrafı düzeltmek gibi, fotoğrafın yönünü düzeltmek için çevirir.",
+      introduction: TOOL_INTRODUCTIONS["image-rotate"].tr,
       valueProposition: "Araç yayına girdiğinde bir fotoğrafı doğru yöne getirin.",
       benefits: ["Yan veya baş aşağı fotoğrafları düzeltir", "Basit yön düzeltmesi", "Ücretsiz kullanım"],
       howToSteps: ["Döndürülecek görseli yükleyin", "Döndürme yönünü ve açısını seçin", "Düzeltilmiş görseli indirin"],
@@ -1410,7 +1411,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
 
   "background-remover": {
     en: {
-      introduction: "Background removal isolates the main subject of a photo by removing everything behind it.",
+      introduction: TOOL_INTRODUCTIONS["background-remover"].en,
       valueProposition: "Get a clean cutout of your subject once the tool is live.",
       benefits: ["Isolates the main subject", "Useful for product and portrait photos", "Free to use"],
       howToSteps: ["Upload the image", "Let the tool detect and remove the background", "Download the image with the background removed"],
@@ -1425,7 +1426,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     az: {
-      introduction: "Fon silmə fotonun arxasındakı hər şeyi silərək əsas obyekti ayırır.",
+      introduction: TOOL_INTRODUCTIONS["background-remover"].az,
       valueProposition: "Alət aktiv olduqda obyektinizin təmiz kəsimini əldə edin.",
       benefits: ["Əsas obyekti ayırır", "Məhsul və portret fotoları üçün faydalıdır", "Pulsuz istifadə"],
       howToSteps: ["Şəkli yükləyin", "Alətin fonu aşkarlayıb silməsinə icazə verin", "Fonu silinmiş şəkli yükləyin"],
@@ -1440,7 +1441,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     tr: {
-      introduction: "Arka plan kaldırma, bir fotoğrafın arkasındaki her şeyi kaldırarak ana öğeyi ayırır.",
+      introduction: TOOL_INTRODUCTIONS["background-remover"].tr,
       valueProposition: "Araç yayına girdiğinde konunuzun temiz bir kesimini elde edin.",
       benefits: ["Ana öğeyi ayırır", "Ürün ve portre fotoğrafları için faydalıdır", "Ücretsiz kullanım"],
       howToSteps: ["Görseli yükleyin", "Aracın arka planı algılayıp kaldırmasına izin verin", "Arka planı kaldırılmış görseli indirin"],
@@ -1458,7 +1459,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
 
   "image-to-pdf": {
     en: {
-      introduction: "This tool combines one or more images into a single PDF document.",
+      introduction: TOOL_INTRODUCTIONS["image-to-pdf"].en,
       valueProposition: "Turn a set of photos into one shareable PDF once the tool is live.",
       benefits: ["Combines multiple images into one file", "Works with different image formats", "Free to use"],
       howToSteps: ["Add the images to include", "Arrange them in order", "Combine them into a single PDF"],
@@ -1473,7 +1474,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     az: {
-      introduction: "Bu alət bir və ya bir neçə şəkli tək PDF sənədində birləşdirir.",
+      introduction: TOOL_INTRODUCTIONS["image-to-pdf"].az,
       valueProposition: "Alət aktiv olduqda foto dəstini tək paylaşıla bilən PDF-ə çevirin.",
       benefits: ["Bir neçə şəkli tək faylda birləşdirir", "Fərqli şəkil formatları ilə işləyir", "Pulsuz istifadə"],
       howToSteps: ["Daxil ediləcək şəkilləri əlavə edin", "Onları sırayla düzün", "Tək PDF-də birləşdirin"],
@@ -1488,7 +1489,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     tr: {
-      introduction: "Bu araç, bir veya birden fazla görseli tek bir PDF belgesinde birleştirir.",
+      introduction: TOOL_INTRODUCTIONS["image-to-pdf"].tr,
       valueProposition: "Araç yayına girdiğinde bir fotoğraf setini tek bir paylaşılabilir PDF'ye dönüştürün.",
       benefits: ["Birden fazla görseli tek dosyada birleştirir", "Farklı görsel formatlarıyla çalışır", "Ücretsiz kullanım"],
       howToSteps: ["Eklenecek görselleri ekleyin", "Sırayla düzenleyin", "Tek bir PDF'de birleştirin"],
@@ -1506,7 +1507,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
 
   "pdf-to-image": {
     en: {
-      introduction: "This tool converts each page of a PDF into a separate image file.",
+      introduction: TOOL_INTRODUCTIONS["pdf-to-image"].en,
       valueProposition: "Turn PDF pages into standalone pictures once the tool is live.",
       benefits: ["One image per page", "Flexible output for viewing or sharing", "Free to use"],
       howToSteps: ["Upload the PDF to convert", "Let the tool convert each page", "Download the images"],
@@ -1521,7 +1522,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     az: {
-      introduction: "Bu alət PDF-in hər səhifəsini ayrı şəkil faylına çevirir.",
+      introduction: TOOL_INTRODUCTIONS["pdf-to-image"].az,
       valueProposition: "Alət aktiv olduqda PDF səhifələrini müstəqil fotolara çevirin.",
       benefits: ["Hər səhifə üçün bir şəkil", "Baxış və ya paylaşım üçün çevik nəticə", "Pulsuz istifadə"],
       howToSteps: ["Çevriləcək PDF-i yükləyin", "Alətin hər səhifəni çevirməsinə icazə verin", "Şəkilləri yükləyin"],
@@ -1536,7 +1537,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     tr: {
-      introduction: "Bu araç, bir PDF'nin her sayfasını ayrı bir görsel dosyasına dönüştürür.",
+      introduction: TOOL_INTRODUCTIONS["pdf-to-image"].tr,
       valueProposition: "Araç yayına girdiğinde PDF sayfalarını bağımsız görsellere dönüştürün.",
       benefits: ["Her sayfa için bir görsel", "Görüntüleme veya paylaşım için esnek çıktı", "Ücretsiz kullanım"],
       howToSteps: ["Dönüştürülecek PDF'yi yükleyin", "Aracın her sayfayı dönüştürmesine izin verin", "Görselleri indirin"],
@@ -1554,7 +1555,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
 
   "gif-maker": {
     en: {
-      introduction: "A GIF maker combines a sequence of images or frames into a short, looping animation.",
+      introduction: TOOL_INTRODUCTIONS["gif-maker"].en,
       valueProposition: "Turn a series of photos into one animated GIF once the tool is live.",
       benefits: ["Combines multiple images into an animation", "Good for quick, shareable clips", "Free to use"],
       howToSteps: ["Add the images or frames to include", "Set their order and timing", "Create the animated GIF"],
@@ -1569,7 +1570,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     az: {
-      introduction: "GIF yaradıcısı şəkil və ya kadr ardıcıllığını qısa, dövri animasiyada birləşdirir.",
+      introduction: TOOL_INTRODUCTIONS["gif-maker"].az,
       valueProposition: "Alət aktiv olduqda foto sırasını tək animasiyalı GIF-ə çevirin.",
       benefits: ["Bir neçə şəkli animasiyada birləşdirir", "Sürətli, paylaşıla bilən klip üçün əlverişlidir", "Pulsuz istifadə"],
       howToSteps: ["Daxil ediləcək şəkil və ya kadrları əlavə edin", "Sırasını və vaxtlamasını təyin edin", "Animasiyalı GIF-i yaradın"],
@@ -1584,7 +1585,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     tr: {
-      introduction: "Bir GIF oluşturucu, bir dizi görsel veya kareyi kısa, döngülü bir animasyonda birleştirir.",
+      introduction: TOOL_INTRODUCTIONS["gif-maker"].tr,
       valueProposition: "Araç yayına girdiğinde bir dizi fotoğrafı tek bir animasyonlu GIF'e dönüştürün.",
       benefits: ["Birden fazla görseli animasyonda birleştirir", "Hızlı, paylaşılabilir klipler için uygundur", "Ücretsiz kullanım"],
       howToSteps: ["Eklenecek görselleri veya kareleri ekleyin", "Sırasını ve zamanlamasını ayarlayın", "Animasyonlu GIF'i oluşturun"],
@@ -1602,7 +1603,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
 
   "meme-generator": {
     en: {
-      introduction: "A meme generator adds custom text, usually at the top and bottom, to an image.",
+      introduction: TOOL_INTRODUCTIONS["meme-generator"].en,
       valueProposition: "Turn a photo into a shareable meme once the tool is live.",
       benefits: ["Adds custom text to any image", "Simple, fast meme creation", "Free to use"],
       howToSteps: ["Upload the image to use", "Add the top and bottom text", "Download the finished meme"],
@@ -1617,7 +1618,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     az: {
-      introduction: "Mem generatoru şəklə adətən yuxarı və aşağı hissədə fərdi mətn əlavə edir.",
+      introduction: TOOL_INTRODUCTIONS["meme-generator"].az,
       valueProposition: "Alət aktiv olduqda fotonu paylaşıla bilən memə çevirin.",
       benefits: ["İstənilən şəklə fərdi mətn əlavə edir", "Sadə, sürətli mem yaratma", "Pulsuz istifadə"],
       howToSteps: ["İstifadə ediləcək şəkli yükləyin", "Yuxarı və aşağı mətni əlavə edin", "Hazır memi yükləyin"],
@@ -1632,7 +1633,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     tr: {
-      introduction: "Bir meme oluşturucu, genellikle üstte ve altta olmak üzere bir görsele özel metin ekler.",
+      introduction: TOOL_INTRODUCTIONS["meme-generator"].tr,
       valueProposition: "Araç yayına girdiğinde bir fotoğrafı paylaşılabilir bir meme'ye dönüştürün.",
       benefits: ["Herhangi bir görsele özel metin ekler", "Basit, hızlı meme oluşturma", "Ücretsiz kullanım"],
       howToSteps: ["Kullanılacak görseli yükleyin", "Üst ve alt metni ekleyin", "Bitmiş meme'yi indirin"],
@@ -1650,7 +1651,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
 
   "color-palette-generator": {
     en: {
-      introduction: "A color palette generator extracts or suggests a set of matching colors, often based on an image.",
+      introduction: TOOL_INTRODUCTIONS["color-palette-generator"].en,
       valueProposition: "Get a ready-made color scheme for your project once the tool is live.",
       benefits: ["Suggests matching colors together", "Useful starting point for design work", "Free to use"],
       howToSteps: ["Upload an image or start from an idea", "Let the tool generate matching colors", "Save or copy the resulting palette"],
@@ -1665,7 +1666,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     az: {
-      introduction: "Rəng palitrası generatoru adətən şəkil əsasında uyğun gələn rənglər toplusunu çıxarır və ya təklif edir.",
+      introduction: TOOL_INTRODUCTIONS["color-palette-generator"].az,
       valueProposition: "Alət aktiv olduqda layihəniz üçün hazır rəng sxemi əldə edin.",
       benefits: ["Bir-birinə uyğun rəngləri təklif edir", "Dizayn işi üçün faydalı başlanğıc nöqtəsi", "Pulsuz istifadə"],
       howToSteps: ["Şəkil yükləyin və ya ideyadan başlayın", "Alətin uyğun rəngləri yaratmasına icazə verin", "Alınan palitranı saxlayın və ya kopyalayın"],
@@ -1680,7 +1681,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
       ],
     },
     tr: {
-      introduction: "Bir renk paleti oluşturucu, genellikle bir görsele dayanarak uyumlu bir renk setini çıkarır veya önerir.",
+      introduction: TOOL_INTRODUCTIONS["color-palette-generator"].tr,
       valueProposition: "Araç yayına girdiğinde projeniz için hazır bir renk şeması elde edin.",
       benefits: ["Birbirine uyumlu renkleri önerir", "Tasarım çalışması için faydalı bir başlangıç noktası", "Ücretsiz kullanım"],
       howToSteps: ["Bir görsel yükleyin veya bir fikirden başlayın", "Aracın uyumlu renkler oluşturmasına izin verin", "Elde edilen paleti kaydedin veya kopyalayın"],

@@ -21,6 +21,15 @@
  *    client-side, and serialized with the same `serializeJsonLdGraph`
  *    escaping helper — not a second, independently-maintained schema
  *    implementation (Phase 3.15 Change Control — this change).
+ *  - A real, visible H1 and one introduction paragraph, appended into
+ *    `#root` (Phase 3.15 Change Control: "critical content injection" —
+ *    this change). This is deliberately NOT full content parity — no FAQ,
+ *    no benefits/how-to/use-cases lists, no related tools, no blog, no
+ *    CMS. It is safe specifically because `src/main.tsx` calls
+ *    `createRoot(...).render(...)`, never `hydrateRoot(...)` — React does
+ *    not reconcile against `#root`'s existing children, it simply replaces
+ *    them once it mounts, so there is no hydration-mismatch risk (verified
+ *    by reading `src/main.tsx`).
  *
  * Explicitly still NOT done here (out of scope, would need separate
  * Change Control):
@@ -58,6 +67,8 @@ import {
   serializeJsonLdGraph,
   type JsonLdGraph,
 } from "../shared/seo/schema";
+import { getToolDisplayName } from "../shared/seo/ai";
+import { TOOL_INTRODUCTIONS } from "../shared/seo/tool-intro";
 import { DEFAULT_LANGUAGE } from "../shared/i18n/languages";
 
 const PATH_TO_STATIC_ENTITY = new Map<string, SeoEntity>(
@@ -114,14 +125,79 @@ export function resolveJsonLdGraph(pathname: string): JsonLdGraph | null {
   return null;
 }
 
+/** Escapes the 3 characters that matter for safely embedding plain text
+ * inside HTML element content (as opposed to inside a `<script>` JSON
+ * payload, which `serializeJsonLdGraph` handles separately): `&`, `<`,
+ * `>`. Real, live example this actually matters for: `PAGE_SEO.home`'s own
+ * title is `"Codivio – Free Online Tools for QR Codes, PDFs & Images"` —
+ * the literal `&` must become `&amp;` to keep the generated HTML valid,
+ * not just "probably fine" under lenient browser parsing. */
+export function escapeHtml(value: string): string {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+export interface CriticalContent {
+  h1: string;
+  intro: string;
+}
+
+/**
+ * Resolves the real, visible H1 + one introduction paragraph for a known
+ * static page or tool route — reusing existing, already-reviewed data
+ * only, never inventing new copy:
+ *  - Static pages: `PAGE_SEO[key]`'s own title/description (the exact
+ *    values already used for `<title>`/`meta description`/`og:title`/
+ *    `og:description` on the same route).
+ *  - Tool pages: `getToolDisplayName` (`shared/seo/ai.ts`) for the H1 —
+ *    the same lightweight, TOOL_SEO-only accessor `buildToolPageGraph`
+ *    already uses, and the same plain tool name (title text before the
+ *    "–") the client actually renders as `<h1>{tool.name}</h1>` in
+ *    `src/pages/ToolPage.tsx` — plus `TOOL_INTRODUCTIONS[slug]`
+ *    (`shared/seo/tool-intro.ts`, extracted from `shared/seo/content.ts`'s
+ *    existing Phase 3.4 blueprint specifically so the Worker doesn't need
+ *    to import that file's full ~1900-line dataset — see tool-intro.ts's
+ *    own header comment).
+ *
+ * Known, documented limitation: a small number of static pages currently
+ * render a different, hardcoded-English on-page `<h1>` client-side (a
+ * pre-existing inconsistency in `src/App.tsx`, unrelated to this change
+ * and out of this task's scope to fix) — the server-injected H1 here uses
+ * the already-canonical `PAGE_SEO` title instead, which is consistent with
+ * this route's own raw-HTML `<title>`/`og:title`, even where it briefly
+ * differs from the pre-existing client H1 text until `createRoot()`
+ * replaces it.
+ */
+export function resolveCriticalContent(pathname: string): CriticalContent | null {
+  const pageKey = PATH_TO_PAGE_KEY.get(pathname);
+  if (pageKey) {
+    const copy = PAGE_SEO[pageKey].localized[DEFAULT_LANGUAGE];
+    return { h1: copy.title, intro: copy.description };
+  }
+
+  const toolMatch = pathname.match(/^\/tools\/([^/]+)$/);
+  if (toolMatch) {
+    const slug = toolMatch[1];
+    const h1 = getToolDisplayName(slug, DEFAULT_LANGUAGE);
+    const intro = TOOL_INTRODUCTIONS[slug]?.[DEFAULT_LANGUAGE];
+    if (h1 && intro) return { h1, intro };
+  }
+
+  return null;
+}
+
 /**
  * Rewrites `<title>`, `meta[name=description]`, `meta[name=robots]`,
  * `link[rel=canonical]`, `meta[property=og:title]`,
  * `meta[property=og:description]`, `meta[property=og:url]`,
  * `meta[name=twitter:title]`, `meta[name=twitter:description]`, and
- * appends a JSON-LD `<script>` into `<head>`, in an already-fetched
- * SPA-shell response, using `DEFAULT_LANGUAGE`'s copy for the resolved
- * route.
+ * appends a JSON-LD `<script>` into `<head>` plus a real `<h1>`+`<p>` into
+ * `#root`, in an already-fetched SPA-shell response, using
+ * `DEFAULT_LANGUAGE`'s copy for the resolved route.
+ *
+ * The `#root` content is appended, not used to replace anything — `#root`
+ * is empty in `index.html`, so this is the page's only visible content
+ * until `createRoot()` mounts and replaces it (see `resolveCriticalContent`
+ * for why this carries no hydration risk here).
  *
  * The JSON-LD script carries `id={JSON_LD_SCRIPT_ID}` — the same id
  * `src/seo/useSeo.ts#upsertJsonLd` looks for via
@@ -184,6 +260,11 @@ export function injectStaticSeoMetadata(response: Response, normalizedPathname: 
     ? `<script type="application/ld+json" id="${JSON_LD_SCRIPT_ID}">${serializeJsonLdGraph(jsonLdGraph)}</script>`
     : null;
 
+  const criticalContent = resolveCriticalContent(normalizedPathname);
+  const criticalContentHtml = criticalContent
+    ? `<h1>${escapeHtml(criticalContent.h1)}</h1><p>${escapeHtml(criticalContent.intro)}</p>`
+    : null;
+
   return new HTMLRewriter()
     .on("title", {
       element(element) {
@@ -233,6 +314,11 @@ export function injectStaticSeoMetadata(response: Response, normalizedPathname: 
     .on("head", {
       element(element) {
         if (jsonLdScriptTag) element.append(jsonLdScriptTag, { html: true });
+      },
+    })
+    .on("#root", {
+      element(element) {
+        if (criticalContentHtml) element.append(criticalContentHtml, { html: true });
       },
     })
     .transform(response);

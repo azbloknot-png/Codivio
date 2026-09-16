@@ -1,8 +1,15 @@
 import { describe, expect, it } from "vitest";
 import worker from "../worker/index";
-import { injectStaticSeoMetadata, resolveJsonLdGraph, resolveStaticSeoEntity } from "../worker/seo-rewrite";
+import {
+  escapeHtml,
+  injectStaticSeoMetadata,
+  resolveCriticalContent,
+  resolveJsonLdGraph,
+  resolveStaticSeoEntity,
+} from "../worker/seo-rewrite";
 import { buildCanonicalUrl } from "../shared/seo/site";
 import { serializeJsonLdGraph } from "../shared/seo/schema";
+import { PAGE_SEO } from "../shared/seo/pages";
 import { makeEnv } from "./helpers/fake-d1";
 
 /**
@@ -68,6 +75,44 @@ describe("resolveJsonLdGraph", () => {
     expect(resolveJsonLdGraph("/tools/not-a-real-tool")).toBeNull();
     expect(resolveJsonLdGraph("/some-cms-page")).toBeNull();
     expect(resolveJsonLdGraph("/this-page-does-not-exist")).toBeNull();
+  });
+});
+
+describe("resolveCriticalContent", () => {
+  it("returns the real static page's own title/description as h1/intro (same values already used for <title>/meta description)", () => {
+    const content = resolveCriticalContent("/faq");
+    expect(content).not.toBeNull();
+    expect(content!.h1).toBe(PAGE_SEO.faq.localized.az.title);
+    expect(content!.intro).toBe(PAGE_SEO.faq.localized.az.description);
+  });
+
+  it("returns the tool's plain display name (not the full SEO title) as h1, and its content-blueprint introduction", () => {
+    const content = resolveCriticalContent("/tools/qr-code-generator");
+    expect(content).not.toBeNull();
+    // getToolDisplayName strips everything from "–" onward.
+    expect(content!.h1).not.toContain("–");
+    expect(content!.h1.length).toBeGreaterThan(0);
+    expect(content!.intro.length).toBeGreaterThan(0);
+  });
+
+  it("returns null for a fake tool, a CMS-shaped path, and a genuinely unknown path (no injected content on invalid routes)", () => {
+    expect(resolveCriticalContent("/tools/not-a-real-tool")).toBeNull();
+    expect(resolveCriticalContent("/some-cms-page")).toBeNull();
+    expect(resolveCriticalContent("/this-page-does-not-exist")).toBeNull();
+  });
+});
+
+describe("escapeHtml", () => {
+  it("escapes &, < and > so injected text can never break out of its HTML element or inject a tag", () => {
+    expect(escapeHtml("QR Codes, PDFs & Images")).toBe("QR Codes, PDFs &amp; Images");
+    expect(escapeHtml("<script>alert(1)</script>")).toBe("&lt;script&gt;alert(1)&lt;/script&gt;");
+    // Real data this matters for (not a hypothetical): the homepage's own
+    // English PAGE_SEO title contains a literal "&" (AZ/TR use "və"/"ve"
+    // instead, so DEFAULT_LANGUAGE's own injected string happens not to
+    // need this today — but the helper must handle it correctly
+    // regardless, since it isn't specific to one language's data).
+    expect(PAGE_SEO.home.localized.en.title).toContain("&");
+    expect(escapeHtml(PAGE_SEO.home.localized.en.title)).toContain("&amp;");
   });
 });
 
