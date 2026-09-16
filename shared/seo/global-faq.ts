@@ -2,17 +2,22 @@
  * Global (site-wide) FAQ content — Phase 3 Finalization.
  *
  * Distinct from a per-tool FAQ (shared/seo/content.ts#TOOL_CONTENT / #getToolFaqs),
- * which answers questions about one specific tool. This file answers questions
- * about Codivio as a platform (what it is, how it works, privacy, cost, roadmap
- * honesty) and backs the public `/faq` page plus the Homepage FAQ preview.
+ * which answers questions about one specific tool. This file's content answers
+ * questions about Codivio as a platform (what it is, how it works, privacy,
+ * cost, roadmap honesty).
  *
- * Static and deterministic, matching the same architecture decision already
- * made for tool FAQs: no API call, no dynamic generation, no external AI call.
- * Admin FAQ Management (worker/faq.ts, src/admin/AdminFaqPage.tsx) manages a
- * separate, DB-backed mirror of this same content for configuration/reporting
- * purposes — see migrations/0009_faq_management.sql for why the two are not
- * (yet) the same runtime source, mirroring the precedent already set by Tools
- * Management (migrations/0006) and Pages Management (migrations/0005).
+ * FAQ MANAGEMENT SOURCE-OF-TRUTH REMEDIATION: the live source of truth for the
+ * public `/faq` page and Homepage FAQ preview is now the `site_faqs` D1 table
+ * (scope="global", status="active"), served by GET /api/faqs and consumed via
+ * src/App.tsx's `useGlobalFaqs` hook — an Admin-created/edited/deactivated/
+ * reordered global FAQ entry is reflected there. This file is now consulted
+ * ONLY as that hook's synchronous initial render value and its fallback if the
+ * API call fails (e.g. a transient D1 outage) — never edit this file expecting
+ * it to change what visitors see; edit the FAQ in Admin (`/admin/faq`)
+ * instead. It intentionally still matches the D1 seed 1:1 (both originated
+ * from the same content — see migrations/0009_faq_management.sql) so the
+ * fallback never silently diverges from the last-known-good managed content;
+ * it is not a second independently maintained FAQ source.
  */
 
 import type { Language } from "../i18n/languages";

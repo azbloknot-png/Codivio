@@ -19,10 +19,12 @@ export class FakeD1 implements D1Database {
   pages: Record<string, unknown>[] = [];
   categories: Record<string, unknown>[] = [];
   tools: Record<string, unknown>[] = [];
+  siteFaqs: Record<string, unknown>[] = [];
   private nextUserId = 1;
   private nextAuditId = 1;
   private nextPageId = 1;
   private nextToolId = 1;
+  private nextFaqId = 1;
 
   /** Seeds the same 4 category rows migrations/0006_tools_management.sql
    * inserts. Real tool rows are seeded separately per-test via
@@ -77,11 +79,11 @@ export class FakeD1 implements D1Database {
         return db.run(q, bound).first as T | null;
       },
       async run() {
-        db.run(q, bound);
-        return { results: [], success: true };
+        const result = db.run(q, bound);
+        return { results: [], success: true, meta: { last_row_id: result.lastRowId ?? 0, changes: 0 } };
       },
       async all<T>() {
-        return { results: db.run(q, bound).all as T[], success: true };
+        return { results: db.run(q, bound).all as T[], success: true, meta: { last_row_id: 0, changes: 0 } };
       },
     };
     return stmt;
@@ -90,7 +92,7 @@ export class FakeD1 implements D1Database {
   private run(
     q: string,
     v: unknown[]
-  ): { first: Record<string, unknown> | null; all: Record<string, unknown>[] } {
+  ): { first: Record<string, unknown> | null; all: Record<string, unknown>[]; lastRowId?: number } {
     if (q.startsWith("SELECT id, email, password_hash, role, status FROM users WHERE email")) {
       const row = this.users.find((u) => u.email === v[0]) ?? null;
       return { first: row, all: row ? [row] : [] };
@@ -394,6 +396,70 @@ export class FakeD1 implements D1Database {
     if (q.startsWith("DELETE FROM tools")) {
       const [id] = v;
       this.tools = this.tools.filter((t) => t.id !== id);
+      return { first: null, all: [] };
+    }
+    if (q.startsWith("SELECT id FROM tools WHERE slug = ?")) {
+      const row = this.tools.find((t) => t.slug === v[0]) ?? null;
+      return { first: row ? { id: row.id } : null, all: row ? [{ id: row.id }] : [] };
+    }
+    if (q.startsWith("SELECT id, scope, tool_slug, language, question, answer, status, sort_order, created_at, updated_at, created_by, updated_by FROM site_faqs")) {
+      if (q.includes("WHERE id = ?")) {
+        const row = this.siteFaqs.find((f) => f.id === v[0]) ?? null;
+        return { first: row ? { ...row } : null, all: row ? [{ ...row }] : [] };
+      }
+      // ORDER BY scope ASC, language ASC, sort_order ASC (admin list-all query)
+      const rows = [...this.siteFaqs]
+        .sort((a, b) => {
+          const scopeDiff = (a.scope as string).localeCompare(b.scope as string);
+          if (scopeDiff !== 0) return scopeDiff;
+          const langDiff = (a.language as string).localeCompare(b.language as string);
+          if (langDiff !== 0) return langDiff;
+          return (a.sort_order as number) - (b.sort_order as number);
+        })
+        .map((f) => ({ ...f }));
+      return { first: rows[0] ?? null, all: rows };
+    }
+    if (q.startsWith("SELECT question, answer FROM site_faqs")) {
+      const [language] = v as [string];
+      const rows = this.siteFaqs
+        .filter((f) => f.scope === "global" && f.status === "active" && f.language === language)
+        .sort((a, b) => {
+          const orderDiff = (a.sort_order as number) - (b.sort_order as number);
+          return orderDiff !== 0 ? orderDiff : (a.id as number) - (b.id as number);
+        })
+        .map((f) => ({ question: f.question, answer: f.answer }));
+      return { first: rows[0] ?? null, all: rows };
+    }
+    if (q.startsWith("INSERT INTO site_faqs")) {
+      const [scope, tool_slug, language, question, answer, status, sort_order, created_at, updated_at, created_by, updated_by] = v;
+      const id = this.nextFaqId++;
+      this.siteFaqs.push({
+        id,
+        scope,
+        tool_slug,
+        language,
+        question,
+        answer,
+        status,
+        sort_order,
+        created_at,
+        updated_at,
+        created_by,
+        updated_by,
+      });
+      return { first: null, all: [], lastRowId: id };
+    }
+    if (q.startsWith("UPDATE site_faqs SET scope")) {
+      const [scope, tool_slug, language, question, answer, status, sort_order, updated_at, updated_by, id] = v;
+      const row = this.siteFaqs.find((f) => f.id === id);
+      if (row) {
+        Object.assign(row, { scope, tool_slug, language, question, answer, status, sort_order, updated_at, updated_by });
+      }
+      return { first: null, all: [] };
+    }
+    if (q.startsWith("DELETE FROM site_faqs")) {
+      const [id] = v;
+      this.siteFaqs = this.siteFaqs.filter((f) => f.id !== id);
       return { first: null, all: [] };
     }
     throw new Error(`FakeD1: unhandled query: ${q}`);

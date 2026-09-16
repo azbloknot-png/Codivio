@@ -1,7 +1,8 @@
 /**
  * Phase 3 Finalization — Admin FAQ Management.
+ * FAQ Management Source-of-Truth Remediation — public FAQ read endpoint.
  *
- * Admin endpoints only (all require RBAC via the existing `authorize()`
+ * Admin endpoints (all require RBAC via the existing `authorize()`
  * pipeline — no second authorization mechanism), mirroring worker/tools.ts:
  *  - GET    /api/admin/faqs       — faq.view — list every FAQ entry, any status
  *  - GET    /api/admin/faqs/:id   — faq.view — one FAQ entry
@@ -9,10 +10,19 @@
  *  - PATCH  /api/admin/faqs/:id   — faq.manage — partial update
  *  - DELETE /api/admin/faqs/:id   — faq.manage — delete
  *
- * No public `GET /api/faqs` endpoint exists yet — the public /faq page and
- * Homepage FAQ preview continue to read shared/seo/global-faq.ts's static
- * content unchanged, the same deliberate deferral already documented for
- * Tools Management (worker/tools.ts) and Pages Management (worker/pages.ts).
+ * Public endpoint (no auth — this is intentionally public content):
+ *  - GET /api/faqs?language=xx — scope="global", status="active" only, for
+ *    one language, ordered by sort_order then id. This is what makes Admin
+ *    FAQ Management a real source of truth for the public /faq page and
+ *    Homepage FAQ preview (src/App.tsx's `useGlobalFaqs` hook) instead of a
+ *    separate, unused database — see that hook's own comment for the
+ *    fallback-on-failure behavior (shared/seo/global-faq.ts).
+ *
+ * Only `question`/`answer` are ever returned publicly — never `id`,
+ * `status`, `created_by`/`updated_by`, timestamps, or any inactive/draft
+ * row. Tool-scoped (scope="tool") entries are never exposed by this
+ * endpoint; per-tool FAQ content on /tools/:slug pages is unrelated and
+ * unchanged (still shared/seo/content.ts#TOOL_CONTENT).
  *
  * scope="tool" entries are validated against the real `tools` table here
  * (shared/faq.ts cannot do a DB lookup) — a toolSlug that doesn't match a
@@ -25,7 +35,7 @@ import { jsonError } from "./auth";
 import { authorize } from "./rbac";
 import { auditLog } from "./audit";
 import { validateFaqInput, type FaqScope, type FaqStatus } from "../shared/faq";
-import type { Language } from "../shared/i18n/languages";
+import { isValidLanguage, type Language } from "../shared/i18n/languages";
 
 interface FaqRow {
   id: number;
@@ -266,4 +276,37 @@ export async function handleDeleteFaq(request: Request, env: Env, idParam: strin
   });
 
   return Response.json({ success: true });
+}
+
+interface PublicFaqRow {
+  question: string;
+  answer: string;
+}
+
+/**
+ * GET /api/faqs?language=xx — public, no auth. Returns only active, global
+ * FAQ entries for the requested language, ordered for display. This is the
+ * one query that makes Admin FAQ Management a real source of truth for the
+ * public FAQ content — see the file-level comment for the exposure rules.
+ */
+export async function handlePublicFaqs(request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url);
+  const languageParam = url.searchParams.get("language") ?? "";
+
+  if (!isValidLanguage(languageParam)) {
+    return jsonError("A valid language query parameter is required", 400);
+  }
+
+  const rows = await env.DB.prepare(
+    `SELECT question, answer FROM site_faqs
+     WHERE scope = 'global' AND status = 'active' AND language = ?
+     ORDER BY sort_order ASC, id ASC`
+  )
+    .bind(languageParam)
+    .all<PublicFaqRow>();
+
+  return Response.json(
+    { faqs: rows.results },
+    { headers: { "Cache-Control": "public, max-age=300" } }
+  );
 }

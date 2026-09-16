@@ -39,6 +39,7 @@ import {
   handleDeleteFaq,
   handleGetFaq,
   handleListFaqs,
+  handlePublicFaqs,
   handleUpdateFaq,
 } from "./faq";
 import { withSecurityHeaders } from "./security-headers";
@@ -117,6 +118,10 @@ async function route(request: Request, env: Env): Promise<Response> {
       return request.method === "GET"
         ? handlePublicPage(request, env, publicPageMatch[1])
         : methodNotAllowed(["GET"]);
+    }
+
+    if (url.pathname === "/api/faqs") {
+      return request.method === "GET" ? handlePublicFaqs(request, env) : methodNotAllowed(["GET"]);
     }
 
     if (url.pathname === "/api/admin/tools") {

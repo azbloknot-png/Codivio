@@ -56,7 +56,47 @@ import { getPageSeo, getToolSeo, ROBOTS_NOINDEX_NOFOLLOW } from "../shared/seo";
 import { buildStandardPageGraph, buildToolPageGraph } from "../shared/seo/schema";
 import { getVisiblePlansByPriority } from "../shared/monetization/plans";
 import { ENTITLEMENTS, getPlanEntitlementKeys } from "../shared/monetization/entitlements";
-import { getGlobalFaqs } from "../shared/seo/global-faq";
+import { getGlobalFaqs, type GlobalFaqItem } from "../shared/seo/global-faq";
+import type { Language } from "../shared/i18n/languages";
+
+/**
+ * FAQ Management Source-of-Truth Remediation.
+ *
+ * The public global FAQ's real source of truth is Admin FAQ Management
+ * (`site_faqs`, scope="global", status="active"), served by the public,
+ * unauthenticated `GET /api/faqs?language=xx` (worker/faq.ts#handlePublicFaqs)
+ * — an Admin create/edit/deactivate/reorder is reflected here. The static
+ * `getGlobalFaqs` import is used only as this hook's synchronous initial
+ * value (so the page never renders blank while the fetch is in flight) and
+ * as its fallback if the request fails, e.g. a transient D1 outage — see
+ * shared/seo/global-faq.ts's own comment for why that file must never
+ * become an independently-edited second FAQ source.
+ */
+function useGlobalFaqs(language: Language): GlobalFaqItem[] {
+  const [faqs, setFaqs] = useState<GlobalFaqItem[]>(() => getGlobalFaqs(language));
+
+  useEffect(() => {
+    setFaqs(getGlobalFaqs(language));
+    let cancelled = false;
+
+    fetch(`/api/faqs?language=${language}`)
+      .then((response) => (response.ok ? (response.json() as Promise<{ faqs: GlobalFaqItem[] }>) : null))
+      .then((data) => {
+        if (cancelled || !data || !Array.isArray(data.faqs) || data.faqs.length === 0) return;
+        setFaqs(data.faqs);
+      })
+      .catch(() => {
+        // Network or D1 failure: keep the static fallback already shown
+        // rather than leaving the page blank.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [language]);
+
+  return faqs;
+}
 
 /** Phase 3.1 — usePageMeta now also sets canonical/robots/OG/Twitter/html
  * lang; re-exported here (rather than re-pointing every existing import at
@@ -684,6 +724,7 @@ function HomePage() {
   const { t, language } = useLanguage();
   const homeSeo = getPageSeo("home", language).copy;
   usePageMeta(homeSeo.title, homeSeo.description, { schemaGraph: buildStandardPageGraph("home", language) });
+  const globalFaqs = useGlobalFaqs(language);
   const [query, setQuery] = useState("");
   const [menuCategory, setMenuCategory] = useState<string>("All");
   const popularTrackRef = useRef<HTMLDivElement>(null);
@@ -1147,7 +1188,7 @@ function HomePage() {
             <span className="eyebrow">HELP CENTER</span>
             <h2>Frequently Asked Questions</h2>
 
-            {getGlobalFaqs(language).slice(0, 5).map((faq) => (
+            {globalFaqs.slice(0, 5).map((faq) => (
               <details key={faq.question}>
                 <summary>
                   {faq.question}
@@ -1280,7 +1321,7 @@ function FAQPage() {
   const seo = getPageSeo("faq", language).copy;
   usePageMeta(seo.title, seo.description, { schemaGraph: buildStandardPageGraph("faq", language) });
   const [search, setSearch] = useState("");
-  const faqs = getGlobalFaqs(language);
+  const faqs = useGlobalFaqs(language);
 
   const filteredFaqs = faqs.filter((faq) =>
     `${faq.question} ${faq.answer}`

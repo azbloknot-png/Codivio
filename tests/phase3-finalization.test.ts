@@ -46,8 +46,14 @@ describe("Global FAQ content (Phase 3 Finalization)", () => {
     }
   });
 
-  it("the public FAQ page and Homepage FAQ preview read from getGlobalFaqs, not a leftover hardcoded array", () => {
-    expect(appSource).toContain("getGlobalFaqs(language)");
+  it("the public FAQ page and Homepage FAQ preview read from useGlobalFaqs (backed by GET /api/faqs), not a leftover hardcoded array", () => {
+    // FAQ Management Source-of-Truth Remediation: useGlobalFaqs fetches the
+    // live, Admin-managed content and falls back to getGlobalFaqs's static
+    // snapshot only for the initial render and on fetch failure — see
+    // tests/faq-source-of-truth.test.ts for the actual data-flow coverage.
+    expect(appSource).toContain("const globalFaqs = useGlobalFaqs(language);");
+    expect(appSource).toContain("const faqs = useGlobalFaqs(language);");
+    expect(appSource).toContain('fetch(`/api/faqs?language=${language}`)');
     expect(appSource).not.toMatch(/^const faqs = \[/m);
   });
 });
