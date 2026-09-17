@@ -408,3 +408,28 @@ INSERT OR IGNORE INTO site_faqs (scope, tool_slug, language, question, answer, s
 ('global', NULL, 'tr', 'Bazı araç sayfalarında aracın henüz kullanılamadığı neden yazıyor?', 'Codivio aşamalı olarak geliştirilip yayınlanıyor. Bir aracın sayfası, işlevi tamamlanmadan önce net bir açıklama ve SSS ile yayına girer ve özelliğin zaten çalıştığını iddia etmek yerine bunu dürüstçe belirtir.', 'active', 9, '2026-09-15T00:00:00.000Z', '2026-09-15T00:00:00.000Z'),
 ('global', NULL, 'tr', 'Codivio reklam gösteriyor mu?', 'Codivio''da kontrollü, açıkça etiketlenmiş reklam yerleşimleri için ayrılmış bir reklam alanı bulunur. Pop-up veya rahatsız edici reklam formatları kullanılmaz.', 'active', 10, '2026-09-15T00:00:00.000Z', '2026-09-15T00:00:00.000Z'),
 ('global', NULL, 'tr', 'Sorum burada yanıtlanmadıysa nasıl yardım alabilirim?', 'Doğrudan ulaşmak için İletişim sayfasını kullanın ve araç kataloğu büyüdükçe bu SSS bölümünü tekrar kontrol edin.', 'active', 11, '2026-09-15T00:00:00.000Z', '2026-09-15T00:00:00.000Z');
+
+-- SEO Override Architecture (migrations/0010_seo_overrides.sql). An
+-- optional per-language override layer on top of the compile-time
+-- PAGE_SEO/TOOL_SEO defaults (shared/seo/pages.ts, shared/seo/tools.ts) —
+-- those remain the permanent fallback; a row here only takes effect while
+-- status='active'. Covers both entity_type='page' (a real PAGE_SEO key)
+-- and entity_type='tool' (a real TOOL_SEO slug) in one shared table. No
+-- seed data — starts empty, since the compile-time defaults are already
+-- correct until an admin deliberately overrides one.
+CREATE TABLE IF NOT EXISTS seo_overrides (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  entity_type TEXT NOT NULL,
+  entity_key TEXT NOT NULL,
+  language TEXT NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'active',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  created_by INTEGER REFERENCES users(id),
+  updated_by INTEGER REFERENCES users(id)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_seo_overrides_entity_lang ON seo_overrides(entity_type, entity_key, language);
+CREATE INDEX IF NOT EXISTS idx_seo_overrides_status ON seo_overrides(status);

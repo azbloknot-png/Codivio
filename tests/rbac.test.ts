@@ -34,6 +34,8 @@ describe("hasPermission", () => {
   it("grants admin content management but not user/settings management", () => {
     expect(hasPermission("admin", "pages.manage")).toBe(true);
     expect(hasPermission("admin", "tools.manage")).toBe(true);
+    expect(hasPermission("admin", "seo.view")).toBe(true);
+    expect(hasPermission("admin", "seo.manage")).toBe(true);
     expect(hasPermission("admin", "users.view")).toBe(true);
     expect(hasPermission("admin", "users.manage")).toBe(false);
     expect(hasPermission("admin", "settings.manage")).toBe(false);
@@ -42,6 +44,8 @@ describe("hasPermission", () => {
   it("grants editor content management but not users/settings/analytics/audit visibility", () => {
     expect(hasPermission("editor", "pages.manage")).toBe(true);
     expect(hasPermission("editor", "tools.manage")).toBe(true);
+    expect(hasPermission("editor", "seo.view")).toBe(true);
+    expect(hasPermission("editor", "seo.manage")).toBe(true);
     expect(hasPermission("editor", "users.view")).toBe(false);
     expect(hasPermission("editor", "settings.view")).toBe(false);
     expect(hasPermission("editor", "analytics.view")).toBe(false);
@@ -53,7 +57,19 @@ describe("hasPermission", () => {
     expect(hasPermission("analyst", "dashboard.view")).toBe(true);
     expect(hasPermission("analyst", "pages.view")).toBe(false);
     expect(hasPermission("analyst", "tools.view")).toBe(false);
+    expect(hasPermission("analyst", "seo.view")).toBe(false);
+    expect(hasPermission("analyst", "seo.manage")).toBe(false);
     expect(hasPermission("analyst", "users.view")).toBe(false);
+  });
+
+  it("seo.view/seo.manage (Phase 3.15-B) follow the exact same admin+editor-only pattern as pages/tools/faq — never granted alone, never to analyst", () => {
+    for (const role of ["admin", "editor"] as const) {
+      expect(hasPermission(role, "seo.view")).toBe(hasPermission(role, "pages.view"));
+      expect(hasPermission(role, "seo.manage")).toBe(hasPermission(role, "pages.manage"));
+    }
+    expect(hasPermission("super_admin", "seo.view")).toBe(true);
+    expect(hasPermission("super_admin", "seo.manage")).toBe(true);
+    expect(hasPermission("analyst", "seo.view")).toBe(false);
   });
 
   it("every role has admin.access (all four can reach the shell) but no role gets it implicitly beyond what's listed", () => {

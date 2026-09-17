@@ -123,7 +123,7 @@ describe("injectStaticSeoMetadata", () => {
     const original = new Response("<html><head><title>Original</title></head></html>", {
       headers: { "content-type": "text/html; charset=utf-8" },
     });
-    const result = injectStaticSeoMetadata(original, "/faq");
+    const result = await injectStaticSeoMetadata(original, "/faq", makeEnv());
 
     expect(result).toBe(original);
     expect(await result.text()).toContain("Original");

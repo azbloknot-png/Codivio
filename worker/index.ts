@@ -45,6 +45,13 @@ import {
   handlePublicFaqs,
   handleUpdateFaq,
 } from "./faq";
+import {
+  handleCreateSeoOverride,
+  handleDeleteSeoOverride,
+  handleGetSeoOverride,
+  handleListSeoOverrides,
+  handleUpdateSeoOverride,
+} from "./seo-overrides";
 import { withSecurityHeaders } from "./security-headers";
 
 export type { Env };
@@ -157,6 +164,21 @@ async function route(request: Request, env: Env): Promise<Response> {
       return methodNotAllowed(["GET", "PATCH", "DELETE"]);
     }
 
+    if (url.pathname === "/api/admin/seo-overrides") {
+      if (request.method === "GET") return handleListSeoOverrides(request, env);
+      if (request.method === "POST") return handleCreateSeoOverride(request, env);
+      return methodNotAllowed(["GET", "POST"]);
+    }
+
+    const adminSeoOverrideMatch = url.pathname.match(/^\/api\/admin\/seo-overrides\/([^/]+)$/);
+    if (adminSeoOverrideMatch) {
+      const id = adminSeoOverrideMatch[1];
+      if (request.method === "GET") return handleGetSeoOverride(request, env, id);
+      if (request.method === "PATCH") return handleUpdateSeoOverride(request, env, id);
+      if (request.method === "DELETE") return handleDeleteSeoOverride(request, env, id);
+      return methodNotAllowed(["GET", "PATCH", "DELETE"]);
+    }
+
     // Every specific /api/* route above has already had its chance to
     // match — an unmatched /api/* path is a genuine 404, not the SPA shell
     // (previously this fell through to env.ASSETS.fetch() below and
@@ -190,7 +212,7 @@ async function route(request: Request, env: Env): Promise<Response> {
       // robots/OG-title/OG-description for a known static page or tool
       // route; a no-op everywhere else (unknown routes never reach this
       // line — they returned 404 above).
-      return injectStaticSeoMetadata(assetsResponse, normalizedPath);
+      return injectStaticSeoMetadata(assetsResponse, normalizedPath, env);
     }
 
     return assetsResponse;

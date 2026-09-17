@@ -84,6 +84,22 @@ export const DEFAULT_LENGTH_THRESHOLDS: LengthThresholds = {
   descriptionMax: 165,
 };
 
+export type LengthStatus = "short" | "good" | "long";
+
+/** Classifies a single title/description length against the same
+ * guidance thresholds `findLengthOutliers` already uses — extracted as
+ * its own pure function (Phase 3.15-A) so a single field being edited in
+ * the Admin SEO UI can be classified in real time (short/good/long),
+ * without needing a full `SeoEntityRef[]` list the way `findLengthOutliers`
+ * does. Boundary values (`length === min` or `length === max`) count as
+ * "good" — only strictly outside the range is short/long, matching
+ * `findLengthOutliers`'s own `<`/`>` (not `<=`/`>=`) comparisons. */
+export function classifyLength(length: number, min: number, max: number): LengthStatus {
+  if (length < min) return "short";
+  if (length > max) return "long";
+  return "good";
+}
+
 export function findLengthOutliers(
   refs: SeoEntityRef[],
   languages: readonly Language[],

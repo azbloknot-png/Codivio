@@ -54,12 +54,30 @@
  *    fixed default language regardless of the visitor's real preference.
  *  - `www` → apex redirection — a Cloudflare zone/routing concern, not
  *    something this Worker module can safely express; not attempted here.
+ *
+ * Phase 3.15-C adds one more source, checked BEFORE the compile-time
+ * default: an optional per-(entity, language) row in the new
+ * `seo_overrides` D1 table (see worker/seo-overrides.ts,
+ * shared/seo-overrides.ts, migrations/0010_seo_overrides.sql). It affects
+ * ONLY `<title>`/meta description/og:title/og:description/twitter:title/
+ * twitter:description — the exact fields Admin can edit
+ * (AdminSeoPage.tsx). It deliberately does NOT affect the injected H1/
+ * intro paragraph (`resolveCriticalContent`) or the JSON-LD graph's
+ * name/description (`resolveJsonLdGraph`), which still always reflect the
+ * compile-time default — a known, documented inconsistency risk (editing
+ * a title override without a matching future H1/JSON-LD override leaves
+ * the visible H1 and the meta title saying different things) accepted for
+ * this phase as explicit "future extensibility" scope, not solved here.
+ * The D1 lookup is wrapped so ANY failure (D1 unavailable, no row, a
+ * transient error) transparently falls back to the untouched compile-time
+ * default — the existing, already-proven rendering behavior is never at
+ * risk of breaking because of this addition.
  */
 
 import { PAGE_SEO, type PageSeoKey } from "../shared/seo/pages";
 import { TOOL_SEO } from "../shared/seo/tools";
 import { buildCanonicalUrl, buildTitle } from "../shared/seo/site";
-import { robotsToString, type SeoEntity } from "../shared/seo/types";
+import { robotsToString, type SeoEntity, type LocalizedSeoCopy } from "../shared/seo/types";
 import {
   buildStandardPageGraph,
   buildToolPageGraph,
@@ -70,6 +88,9 @@ import {
 import { getToolDisplayName } from "../shared/seo/ai";
 import { TOOL_INTRODUCTIONS } from "../shared/seo/tool-intro";
 import { DEFAULT_LANGUAGE } from "../shared/i18n/languages";
+import type { SeoOverrideEntityType } from "../shared/seo-overrides";
+import { fetchActiveOverride } from "./seo-overrides";
+import type { Env } from "./types";
 
 const PATH_TO_STATIC_ENTITY = new Map<string, SeoEntity>(
   Object.values(PAGE_SEO).map((entity) => [entity.path, entity])
@@ -91,6 +112,27 @@ export function resolveStaticSeoEntity(pathname: string): SeoEntity | null {
   const toolMatch = pathname.match(/^\/tools\/([^/]+)$/);
   if (toolMatch && Object.prototype.hasOwnProperty.call(TOOL_SEO, toolMatch[1])) {
     return TOOL_SEO[toolMatch[1]];
+  }
+
+  return null;
+}
+
+export interface EntityIdentity {
+  entityType: SeoOverrideEntityType;
+  entityKey: string;
+}
+
+/** Identifies which (entityType, entityKey) a path corresponds to, for the
+ * `seo_overrides` lookup (Phase 3.15-C) — reuses the exact same two
+ * sources `resolveStaticSeoEntity` does, so a path resolves an identity if
+ * and only if it also resolves an entity (never one without the other). */
+export function resolveEntityIdentity(pathname: string): EntityIdentity | null {
+  const pageKey = PATH_TO_PAGE_KEY.get(pathname);
+  if (pageKey) return { entityType: "page", entityKey: pageKey };
+
+  const toolMatch = pathname.match(/^\/tools\/([^/]+)$/);
+  if (toolMatch && Object.prototype.hasOwnProperty.call(TOOL_SEO, toolMatch[1])) {
+    return { entityType: "tool", entityKey: toolMatch[1] };
   }
 
   return null;
@@ -222,8 +264,12 @@ export function resolveCriticalContent(pathname: string): CriticalContent | null
  *    and CMS pages are out of scope, see the module doc comment). No
  *    JSON-LD script is appended in this case either, since the whole
  *    rewriter is skipped.
+ *
+ * Now `async` (Phase 3.15-C) and takes `env` so it can look up an active
+ * `seo_overrides` row before falling back to the compile-time default —
+ * see the module doc comment for the override lookup's safety guarantees.
  */
-export function injectStaticSeoMetadata(response: Response, normalizedPathname: string): Response {
+export async function injectStaticSeoMetadata(response: Response, normalizedPathname: string, env: Env): Promise<Response> {
   if (typeof HTMLRewriter === "undefined") return response;
 
   const contentType = response.headers.get("content-type") ?? "";
@@ -248,9 +294,26 @@ export function injectStaticSeoMetadata(response: Response, normalizedPathname: 
    * same as before this change) rather than introducing a second,
    * differently-resolved default. Real per-language SEO would require a
    * genuine URL-per-language or cookie-based architecture decision — out
-   * of scope for this change.
+   * of scope for this change. The Phase 3.15-C override lookup below is
+   * subject to the exact same limitation — it looks up an override for
+   * DEFAULT_LANGUAGE only, same as everything else in this function.
    */
-  const copy = entity.localized[DEFAULT_LANGUAGE];
+  let copy: LocalizedSeoCopy = entity.localized[DEFAULT_LANGUAGE];
+  const identity = resolveEntityIdentity(normalizedPathname);
+  if (identity) {
+    try {
+      const override = await fetchActiveOverride(env, identity.entityType, identity.entityKey, DEFAULT_LANGUAGE);
+      if (override) {
+        copy = { title: override.title, description: override.description };
+      }
+    } catch {
+      // D1 unavailable, table missing, or any other failure — silently
+      // keep the compile-time default. This is the one place in this
+      // function allowed to swallow an error: the whole point of an
+      // "override" is that its absence (for any reason) must be
+      // indistinguishable from "no override was ever created".
+    }
+  }
   const fullTitle = buildTitle(copy.title);
   const canonicalUrl = buildCanonicalUrl(entity.path);
   const robotsValue = robotsToString(entity.robots);

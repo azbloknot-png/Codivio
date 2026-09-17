@@ -189,6 +189,15 @@ describe("Admin navigation architecture (Phase 2.13, translated in Phase 2.15; F
     expect(toCount).toBe(entryCount);
   });
 
+  it("the SEO nav item requires seo.view (Phase 3.15-B) — not visible to every admin.access role by default anymore", () => {
+    const navBlock = adminSource.slice(
+      adminSource.indexOf("function getNavItems"),
+      adminSource.indexOf("function AdminNavLink")
+    );
+    const seoLine = navBlock.split("\n").find((line) => line.includes("label: t.nav.seo,"));
+    expect(seoLine).toContain('permission: "seo.view"');
+  });
+
   it("the EN dictionary provides real English text for all 17 nav labels (no missing/placeholder values)", async () => {
     const { en } = await import("../shared/i18n/en");
     for (const value of Object.values(en.nav)) {

@@ -33,9 +33,17 @@ export {
   findDuplicateDescriptions,
   findMissingMetadata,
   findLengthOutliers,
+  classifyLength,
   DEFAULT_LENGTH_THRESHOLDS,
 } from "./duplicates";
-export type { SeoEntityRef, DuplicateGroup, MissingMetadata, LengthOutlier, LengthThresholds } from "./duplicates";
+export type {
+  SeoEntityRef,
+  DuplicateGroup,
+  MissingMetadata,
+  LengthOutlier,
+  LengthThresholds,
+  LengthStatus,
+} from "./duplicates";
 
 import type { Language } from "../i18n/languages";
 import type { LocalizedSeoCopy, SeoEntity } from "./types";

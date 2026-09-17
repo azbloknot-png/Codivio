@@ -20,11 +20,13 @@ export class FakeD1 implements D1Database {
   categories: Record<string, unknown>[] = [];
   tools: Record<string, unknown>[] = [];
   siteFaqs: Record<string, unknown>[] = [];
+  seoOverrides: Record<string, unknown>[] = [];
   private nextUserId = 1;
   private nextAuditId = 1;
   private nextPageId = 1;
   private nextToolId = 1;
   private nextFaqId = 1;
+  private nextSeoOverrideId = 1;
 
   /** Seeds the same 4 category rows migrations/0006_tools_management.sql
    * inserts. Real tool rows are seeded separately per-test via
@@ -464,6 +466,74 @@ export class FakeD1 implements D1Database {
     if (q.startsWith("DELETE FROM site_faqs")) {
       const [id] = v;
       this.siteFaqs = this.siteFaqs.filter((f) => f.id !== id);
+      return { first: null, all: [] };
+    }
+    if (q.startsWith("SELECT title, description FROM seo_overrides")) {
+      const [entity_type, entity_key, language] = v as [string, string, string];
+      const row =
+        this.seoOverrides.find(
+          (o) =>
+            o.entity_type === entity_type &&
+            o.entity_key === entity_key &&
+            o.language === language &&
+            o.status === "active"
+        ) ?? null;
+      return { first: row ? { title: row.title, description: row.description } : null, all: [] };
+    }
+    if (q.startsWith("SELECT id, entity_type, entity_key, language, title, description, status, created_at, updated_at, created_by, updated_by FROM seo_overrides")) {
+      if (q.includes("WHERE id = ?")) {
+        const row = this.seoOverrides.find((o) => o.id === v[0]) ?? null;
+        return { first: row ? { ...row } : null, all: row ? [{ ...row }] : [] };
+      }
+      if (q.includes("WHERE entity_type = ? AND entity_key = ? AND language = ?")) {
+        const [entity_type, entity_key, language] = v as [string, string, string];
+        const row =
+          this.seoOverrides.find(
+            (o) => o.entity_type === entity_type && o.entity_key === entity_key && o.language === language
+          ) ?? null;
+        return { first: row ? { ...row } : null, all: row ? [{ ...row }] : [] };
+      }
+      // ORDER BY entity_type ASC, entity_key ASC, language ASC (admin list-all query)
+      const rows = [...this.seoOverrides]
+        .sort((a, b) => {
+          const typeDiff = (a.entity_type as string).localeCompare(b.entity_type as string);
+          if (typeDiff !== 0) return typeDiff;
+          const keyDiff = (a.entity_key as string).localeCompare(b.entity_key as string);
+          if (keyDiff !== 0) return keyDiff;
+          return (a.language as string).localeCompare(b.language as string);
+        })
+        .map((o) => ({ ...o }));
+      return { first: rows[0] ?? null, all: rows };
+    }
+    if (q.startsWith("INSERT INTO seo_overrides")) {
+      const [entity_type, entity_key, language, title, description, status, created_at, updated_at, created_by, updated_by] = v;
+      const id = this.nextSeoOverrideId++;
+      this.seoOverrides.push({
+        id,
+        entity_type,
+        entity_key,
+        language,
+        title,
+        description,
+        status,
+        created_at,
+        updated_at,
+        created_by,
+        updated_by,
+      });
+      return { first: null, all: [], lastRowId: id };
+    }
+    if (q.startsWith("UPDATE seo_overrides SET entity_type")) {
+      const [entity_type, entity_key, language, title, description, status, updated_at, updated_by, id] = v;
+      const row = this.seoOverrides.find((o) => o.id === id);
+      if (row) {
+        Object.assign(row, { entity_type, entity_key, language, title, description, status, updated_at, updated_by });
+      }
+      return { first: null, all: [] };
+    }
+    if (q.startsWith("DELETE FROM seo_overrides")) {
+      const [id] = v;
+      this.seoOverrides = this.seoOverrides.filter((o) => o.id !== id);
       return { first: null, all: [] };
     }
     throw new Error(`FakeD1: unhandled query: ${q}`);

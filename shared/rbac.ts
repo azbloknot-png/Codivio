@@ -28,6 +28,8 @@ export const PERMISSIONS = [
   "tools.manage",
   "faq.view",
   "faq.manage",
+  "seo.view",
+  "seo.manage",
   "users.view",
   "users.manage",
   "settings.view",
@@ -54,6 +56,15 @@ export const ROLE_DISPLAY_NAMES: Readonly<Record<Role, string>> = {
  * security issue was found in the matrix as specified, so it is
  * implemented as given rather than silently altered — see DECISIONS.md
  * if this needs to change later.
+ *
+ * `seo.view`/`seo.manage` (Phase 3.15-B) were added to `admin` and
+ * `editor` following the EXACT same pattern already established for
+ * `pages.*`/`tools.*`/`faq.*` — every existing content-management pair is
+ * granted to both of those two roles together, never to just one, and
+ * never to `analyst` (which has no content permissions at all today).
+ * `seo.manage` gates the SEO override CRUD endpoints added in Phase
+ * 3.15-C (`worker/seo-overrides.ts`) — see DECISIONS.md's Phase 3.15-B
+ * and 3.15-C entries.
  */
 const ROLE_PERMISSIONS: Readonly<Record<Role, readonly Permission[]>> = {
   super_admin: PERMISSIONS,
@@ -66,6 +77,8 @@ const ROLE_PERMISSIONS: Readonly<Record<Role, readonly Permission[]>> = {
     "tools.manage",
     "faq.view",
     "faq.manage",
+    "seo.view",
+    "seo.manage",
     "users.view",
     "analytics.view",
     "settings.view",
@@ -80,6 +93,8 @@ const ROLE_PERMISSIONS: Readonly<Record<Role, readonly Permission[]>> = {
     "tools.manage",
     "faq.view",
     "faq.manage",
+    "seo.view",
+    "seo.manage",
   ],
   analyst: ["admin.access", "dashboard.view", "analytics.view"],
 };

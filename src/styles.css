@@ -334,6 +334,22 @@
    card tokens rather than a new visual system. */
 .admin-seo-page h1{margin:0 0 6px;color:var(--color-ink);font-size:26px}
 .admin-seo-intro{margin:0 0 22px;color:var(--color-muted);font-size:14px;max-width:720px;line-height:1.6}
+/* Phase 3.15-B — seo.view denial state, same tone/color as the existing
+   403-mapping strings in AdminPagesPage.tsx/AdminSettingsPage.tsx/etc. */
+.admin-seo-denied{display:flex;align-items:center;gap:8px;color:#a3690a;font-size:14px;font-weight:600}
+
+/* Phase 3.15-C — SEO override editing (seo.manage). Reuses .primary-button/
+   .admin-secondary-button for actions rather than inventing new button
+   styles; only the badge/field/container styles below are new. */
+.admin-seo-override-badge{align-self:flex-start;font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#1a5fb4;background:#eaf2fd;border-radius:999px;padding:3px 9px}
+.admin-seo-edit-button{min-height:32px;padding:0 14px;font-size:12.5px;align-self:flex-start}
+.admin-seo-editor{grid-column:1/-1;margin-top:14px;padding-top:14px;border-top:1px dashed #e4eaf2;display:flex;flex-direction:column;gap:12px}
+.admin-seo-editor-field{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:700;color:#3d4c63}
+.admin-seo-editor-field input,.admin-seo-editor-field textarea{font:inherit;font-size:14px;font-weight:400;color:#243b5a;padding:10px 12px;border:1px solid #dbe4ef;border-radius:10px;outline:none;background:#fff;resize:vertical}
+.admin-seo-editor-field input:focus,.admin-seo-editor-field textarea:focus{border-color:#9fc3ed;box-shadow:0 0 0 4px rgba(23,105,224,.08)}
+.admin-seo-editor-error{margin:0;color:#c0392b;font-size:12.5px;font-weight:600}
+.admin-seo-editor-actions{display:flex;flex-wrap:wrap;gap:10px}
+.admin-seo-editor-actions button{min-height:38px}
 .admin-seo-page section{margin-bottom:26px}
 .admin-seo-page h2{display:flex;align-items:center;gap:8px;margin:0 0 12px;color:var(--color-ink);font-size:16px}
 .admin-seo-page h3{margin:0 0 8px;color:#3d4c63;font-size:13px}
@@ -355,8 +371,38 @@
 .admin-seo-meta{display:flex;flex-direction:column;gap:4px;font-size:11.5px;color:#7c899b;justify-content:center}
 .admin-seo-key{font-weight:800;color:#3d4c63}
 
+/* Phase 3.15-A — character-length status (short/good/long), same
+   DEFAULT_LENGTH_THRESHOLDS guidance the sitewide warnings section above
+   already uses via findLengthOutliers. */
+.admin-seo-length{display:flex;align-items:center;gap:5px;font-weight:600}
+.admin-seo-length-short{color:#a3690a}
+.admin-seo-length-good{color:#1a8f5c}
+.admin-seo-length-long{color:#c0392b}
+
+/* Phase 3.15-A — Google Search Result preview mockups. Informational only
+   (see AdminSeoPage.tsx's own disclaimer); the small round "C" mark is a
+   plain decorative letter, never a real favicon or an upload control. */
+.admin-seo-serp{display:flex;flex-wrap:wrap;gap:18px;margin-top:12px}
+.admin-seo-serp-mock{min-width:0;background:#fff;border:1px solid #e4eaf2;border-radius:var(--radius-md);padding:12px 14px}
+.admin-seo-serp-mock-desktop{flex:1 1 380px;max-width:600px}
+.admin-seo-serp-mock-mobile{flex:0 1 360px;max-width:360px;background:#fbfcfe}
+.admin-seo-serp-device-label{display:block;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:#8a97a9;margin-bottom:8px}
+.admin-seo-serp-site{display:flex;align-items:center;gap:8px;min-width:0}
+.admin-seo-serp-mark{flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:var(--color-primary);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.admin-seo-serp-site-text{display:flex;flex-direction:column;min-width:0;line-height:1.3}
+.admin-seo-serp-sitename{font-size:13px;color:#202124;font-weight:600}
+.admin-seo-serp-mock-desktop .admin-seo-serp-url{margin-left:2px}
+.admin-seo-serp-url{font-size:12px;color:#4d5156;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.admin-seo-serp-title{color:#1a0dab;margin-top:6px}
+.admin-seo-serp-title-desktop{font-size:19px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:560px}
+.admin-seo-serp-title-mobile{font-size:16px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.admin-seo-serp-desc{color:#4d5156;margin-top:4px;line-height:1.5}
+.admin-seo-serp-desc-desktop{font-size:13.5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-width:560px}
+.admin-seo-serp-desc-mobile{font-size:13px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
 @media(max-width:650px){
 .admin-seo-row{grid-template-columns:1fr}
+.admin-seo-serp{flex-direction:column}
 }
 
 /* Phase 3.14: Pricing page (informational plan comparison, no checkout) */
