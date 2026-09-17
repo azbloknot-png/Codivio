@@ -589,6 +589,23 @@ function SiteHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
   const { t } = useLanguage();
 
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setMenuOpen(false);
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [menuOpen]);
+
   return (
     <header className="header">
       <div className="container nav">
@@ -597,7 +614,7 @@ function SiteHeader() {
           Codivio
         </Link>
 
-        <nav className={`nav-links ${menuOpen ? "open" : ""}`}>
+        <nav id="site-mobile-nav" className={`nav-links ${menuOpen ? "open" : ""}`}>
           <Link to="/" onClick={() => setMenuOpen(false)}>
             {t.site.navHome}
           </Link>
@@ -632,6 +649,7 @@ function SiteHeader() {
             onClick={() => setMenuOpen((value) => !value)}
             aria-label={menuOpen ? t.admin.closeMenu : t.admin.openMenu}
             aria-expanded={menuOpen}
+            aria-controls="site-mobile-nav"
           >
             {menuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>

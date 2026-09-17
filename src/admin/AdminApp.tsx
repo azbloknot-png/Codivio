@@ -352,6 +352,23 @@ function AdminShell({
 
   const closeSidebar = () => setSidebarOpen(false);
 
+  useEffect(() => {
+    if (!sidebarOpen) return;
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setSidebarOpen(false);
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [sidebarOpen]);
+
   return (
     <div className="admin-shell">
       <header className="admin-header">
@@ -361,6 +378,7 @@ function AdminShell({
           onClick={() => setSidebarOpen((value) => !value)}
           aria-label={sidebarOpen ? t.admin.closeMenu : t.admin.openMenu}
           aria-expanded={sidebarOpen}
+          aria-controls="admin-sidebar-nav"
         >
           {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
@@ -381,7 +399,7 @@ function AdminShell({
       </header>
 
       <div className="admin-body">
-        <nav className={`admin-sidebar ${sidebarOpen ? "open" : ""}`} aria-label="Admin navigation">
+        <nav id="admin-sidebar-nav" className={`admin-sidebar ${sidebarOpen ? "open" : ""}`} aria-label="Admin navigation">
           {getNavItems(t)
             .filter((item) => item.permission === undefined || hasPermission(user.role, item.permission))
             .map((item) => (
