@@ -529,3 +529,17 @@ Deferred (require real browser/screenshot verification): tool-card height/width 
 - **Git**: commit `4bc370b` ("fix: finalize global mobile responsive layout"), pushed to `origin/main` (`9d5908f..4bc370b`).
 - **Deployed**: `npx wrangler deploy` — **Cloudflare Version ID `b95f78ab-928a-405b-a8cf-ba48de447084`**. Post-deployment: homepage/`/faq`/`/tools/qr-code-generator`/`/admin/login` all 200, `/api/health` connected, all 6 security headers present, live CSS bundle confirmed byte-for-byte identical (37,293 bytes) to the local build containing both new rules.
 - **Visual/browser rendering remains `UNKNOWN — NOT VERIFIED`** across this entire checkpoint — no browser or screenshot tool was available at any point. Phase 4 was not started.
+
+## Phase 4.1 — Shared QR Engine (2026-09-17)
+
+**Implemented, committed, and pushed — NOT deployed, no UI wired to it.** Foundation-only sub-phase for future QR tool pages (Generator, URL/Text/WiFi/vCard/Email/SMS/WhatsApp/Phone/Location/Calendar QR); does not itself build any tool page or UI.
+
+- Added `qrcode` (MIT) as the project's first runtime npm dependency beyond React/react-router/lucide-react, plus `@types/qrcode` (devDependency) — verified via `npm view` (v1.5.4, published 2025-11-13, actively maintained) and `npm install` (0 vulnerabilities).
+- New pure, framework-agnostic module `shared/qr/{types,validate,index}.ts` (types + validation, mirrors the existing `shared/seo/` pattern, importable by both Worker and frontend) and a new browser-only wrapper `src/lib/qr-engine.ts` (the only file importing `qrcode`, since the Worker has no Canvas API and imports neither this file nor exposes a QR endpoint).
+- Public API: `generateQrCode(payload, config?, format?)` — validates via `validateQrRequest` (collects all errors at once) before rendering, returns a tagged `{format, data}` result (`png-data-url` or `svg`), throws a typed `QrGenerationError` on invalid input. Scope this phase: generic text/URL payload only (`QrTextPayload`) — no vCard/WiFi/Email/SMS/etc. payload builders, no logo embedding, no download UI, no `ToolPage.tsx` wiring.
+- Validation limits: payload non-empty, ≤2,000 chars (soft app-level cap); size 16–2048px; margin 0–20 modules; colors strict hex only.
+- New test file `tests/qr-engine.test.ts` (6 cases: valid default generation, empty/over-length rejection with multi-error collection, config defaulting/per-field validation, real PNG-data-URL/SVG output structurally verified, invalid-input rejection, determinism).
+- Architectural decision recorded in `DECISIONS.md` ("Shared QR Engine — First Runtime Dependency").
+- Test/build: `npm run typecheck` — PASS. `npm run typecheck:tests` — PASS. `npm test` — PASS, **340/340** (334 pre-existing + 6 new). `npm run build` — PASS, client main JS **unchanged** (474.58 kB / gzip 138.19 kB) — measured (not estimated) 0 KB bundle impact, confirmed by grepping the built JS for `"qrcode"` (zero matches), since nothing yet imports `src/lib/qr-engine.ts` from the running app.
+- **Git**: commit `b51abd7` ("feat: add shared QR engine foundation"), pushed to `origin/main` (`c2850f9..b51abd7`).
+- **Not deployed.** Production remains at commit `4bc370b` / Cloudflare Version ID `b95f78ab-928a-405b-a8cf-ba48de447084`. Mobile carousel, homepage, Admin UI, SEO, and auth were not touched. Phase 4.2 (QR Generator UI and the rest of Phase 4) was not started.
