@@ -185,6 +185,24 @@ Project memory lives in files, not conversation history: `PROJECT_STATE.md` (cur
 
 **Actual code, tests, and Git state always override stale memory.** If a memory file conflicts with reality, report the conflict and treat the real project state as authoritative — then update the memory file. Update `PROJECT_STATE.md` and add a `CHANGELOG.md` entry at meaningful checkpoints; update `DECISIONS.md` only when a genuinely new decision was made. Use the `codivio-memory` skill for the read/update workflow — it governs the memory files, not the rules in this document.
 
+## 25. Fast Track Development Rules
+
+**[DEFAULT]** These rules reduce unnecessary repetition and speed up day-to-day development on small, well-understood tasks. They apply strictly within the boundaries every other section of this file already sets. **Nothing in this section loosens §9 Security, §17 Testing Gate, §18 Git Workflow, §19 Change Control, §24 Project Memory System, or the Mandatory ChatGPT Phase Handoff Report below — wherever a Fast Track principle and an existing rule could be read as being in tension, the existing, stricter rule always wins.**
+
+- **Scope reading.** Beyond the standard `PROJECT_STATE.md` → `CLAUDE.md` → `DECISIONS.md` session-start read (§24), read only the additional documentation actually relevant to the current task — don't re-read the full `CODIVIO_MASTER_PLAN.md`/`ARCHITECTURE.md`/etc. for a small, unambiguous change. Still read whatever a genuine architecture/security/database/permission change requires under §19.
+- **Don't repeat sufficiently verified work.** Don't re-run an investigation, audit, or test that already produced a sufficient, still-valid answer for the exact thing being changed. If the surrounding code has changed since, or the prior result is genuinely uncertain, re-verify rather than assume.
+- **Smallest production-quality change.** Implement the smallest change that correctly and durably solves the actual task — still production-quality (no shortcuts on correctness, security, or error handling), never a placeholder or half-finished implementation. Restates §2, not a new standard.
+- **Leave the rest alone.** Never touch unrelated files, and never touch pre-existing WIP/uncommitted work that isn't part of the current task. Restates §2/§18.
+- **Targeted tests while iterating.** While developing, run the specific test(s) that exercise the change rather than the entire suite on every intermediate step. **This does not change §17**: the full Testing Gate sequence (typecheck → unit tests → build → security checks → dependency audit when relevant → diff review → no-secrets/no-unrelated-changes check) still applies in full before every meaningful commit, exactly as §17 already requires.
+- **Typecheck and build on every production-code change**, regardless of how small the change looks.
+- **Full test suite at release checkpoints**, or whenever a change carries meaningful regression risk (touches shared/core modules, RBAC, auth, database, or public rendering) — use judgment, and default to running it in full whenever unsure.
+- **[CRITICAL] Never apply a database migration without explicit approval.** Restates §9/§19 — not a new or separate rule.
+- **[CRITICAL] Never deploy without explicit approval.** Restates §18/§19 — not a new or separate rule.
+- **[CRITICAL] Never start the next roadmap phase automatically.** Restates §1/§4 — a Fast Track task never implies permission to advance the roadmap.
+- **One focused clarification question, only when genuinely blocked** by an ambiguity only the user can resolve. Don't ask when the answer is derivable from the code, the docs, or a reasonable default consistent with existing decisions in `DECISIONS.md`.
+- **Small, reversible, easy-to-review changes.** Prefer changes a human can review quickly and undo cleanly over large, sweeping ones — matches the project's existing "match action scope to what was actually requested" discipline.
+- **Concise handoff reports for Fast Track tasks.** For a small, non-phase-completing change, provide exactly the report §20 already requires (what changed, files changed, tests run, test results, security checks, Git diff summary, known limitations, recommended next step) plus explicit commit/migration/deployment status — kept concise, never padded with unrelated detail. **This does not replace the Mandatory ChatGPT Phase Handoff Report below** — that full, structured 24-item report is still required, unchanged, at the end of every Phase or Sub-phase, regardless of how small the individual changes within it were.
+
 ## Mandatory ChatGPT Phase Handoff Report
 
 **[CRITICAL]** At the end of every Phase or Subphase, produce a structured handoff report specifically for ChatGPT review, in addition to whatever other report format the task itself requested.
