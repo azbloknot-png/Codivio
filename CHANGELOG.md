@@ -475,3 +475,26 @@ Chronological, checkpoint-based project history. Where a real Git commit exists,
 - Test status: `npm run typecheck` — PASS. `npm run typecheck:tests` — PASS. `npm test` — PASS, 334/334. `npm run build` — PASS (Worker 228.46 kB / gzip 61.08 kB; client CSS 36.90 kB / gzip 7.11 kB; `ToolPage` chunk unchanged at 166.18 kB; client main JS 473.91 kB / gzip 137.97 kB).
 - Migration status: **NOT APPLIED** (file only).
 - Deployment status: **NOT DEPLOYED.**
+
+## Phase 3.15 Production Readiness Audit (2026-09-17)
+
+**Audit only — no code, documentation, migration, or deployment changed.** Full read of `CLAUDE.md`/`PROJECT_STATE.md`/`DECISIONS.md`/`SECURITY_BASELINE.md`/`DEPLOYMENT.md`, plus a fresh, full-file read of `worker/seo-rewrite.ts`, `worker/seo-overrides.ts`, `shared/seo-overrides.ts`, `worker/index.ts`, and `worker/route-guard.ts`.
+
+- Confirmed git state (HEAD `4e0a450`, local/remote synchronized, 8 commits since production `f48b9f8`, unrelated WIP files untouched) and re-ran `typecheck`/`typecheck:tests`/`test`/`build` fresh — all PASS, 334/334, byte-identical build output.
+- Security review of the combined 3.15-A/B/C surface found no SQL injection, mass-assignment, privilege-escalation, or XSS defect. Confirmed the new `seo_overrides` D1 lookup (`fetchActiveOverride`) fails safe (any D1 error is indistinguishable from "no override," falling back to the compile-time default).
+- **New finding (LOW), not previously documented**: `worker/route-guard.ts#isPublishedCmsSlug` and `worker/pages.ts`'s D1 queries have no try/catch — a D1 outage while serving a CMS-page-shaped path (not one of the 9 static pages/34 tools) would surface as an unhandled exception rather than a graceful fallback. Pre-existing (in the already-shipped soft-404 code, not introduced by 3.15-C) — flagged for a future hardening task, not fixed here.
+- **New finding (LOW)**: deploying 3.15-C's code before applying migration 0010 would make the Admin SEO override list/save/reset show an empty/error state rather than crash (confirmed `AdminSeoPage.tsx`'s fetch/save/reset calls all have their own `.catch()`) — recommended applying the migration in the same release window as the code, per `DEPLOYMENT.md` §7.1's own sequence.
+- Migration 0010 structurally reviewed again: purely additive, idempotent, reversible; `database/schema.sql`'s block confirmed identical (aside from comments) to the migration file.
+- Result: **READY WITH CONDITIONS** — no BLOCKER/HIGH finding; conditions were migration-before-deploy sequencing and the two standing MEDIUM findings (`www` DNS/SSL, Contact channel), both requiring input outside this environment.
+
+## Phase 3.15 Production Release (2026-09-17)
+
+**Migration applied, code deployed, live-verified — Phase 3 closed.** Explicitly authorized by the user for this task, following the audit above. Full detail in `PROJECT_STATE.md`'s "Phase 3.15 Production Release" section; summary here:
+
+- **Migration**: `npx wrangler d1 migrations apply codivio --remote` applied `0010_seo_overrides.sql` (4 SQL commands, ✅). `npx wrangler d1 migrations list codivio --remote` confirmed zero pending migrations afterward. Direct query (`SELECT COUNT(*) FROM seo_overrides`) confirmed the table exists with 0 rows.
+- **Deploy**: `npx wrangler deploy` — Cloudflare Version ID `780d5f46-45cb-47e2-8cec-14607eb015ad`, deploying commit `4e0a450` (code content identical to `8063302`, the last code-bearing commit; `4e0a450` itself is docs-only).
+- **Live-verified via real HTTP requests against `https://codivio.online`**: homepage/`/faq`/`/tools/qr-code-generator` all 200; a genuinely nonexistent path 404; `/api/health` connected; `/api/admin/seo-overrides` (and `/:id`) unauthenticated both 401; `/api/admin/pages` unauthenticated still 401 (regression check); `/admin/seo` 200; an unmatched `/api/*` path 404; all 6 security headers present on `/`; `robots.txt`/`sitemap.xml` both 200. **Directly inspected raw HTML** confirming the HTMLRewriter work is genuinely live: `/faq`'s response contains the correct route-specific `<title>`, meta description, `robots` (`index,follow`), canonical, a valid parseable JSON-LD graph (`id="codivio-jsonld"`), OG/Twitter tags, and a real injected `<h1>`+`<p>` inside `#root`; `/tools/qr-code-generator` correctly shows `noindex,follow` and its own tool-specific title/JSON-LD.
+- **Not verified, stated honestly**: the authenticated Admin SEO override CRUD flow was not exercised live (no production admin credentials available in this environment, the same standing limitation as every prior Phase 3 release) — proven instead by `tests/seo-overrides.test.ts`'s real-handler test harness.
+- **Deferred by explicit user decision, not part of this release's success criteria**: `www.codivio.online` HTTP 525 (Cloudflare dashboard task); the Contact page's channel (pending real business input); the D1-outage error-handling gap in `route-guard.ts`/`pages.ts` (future hardening task).
+- Test/build re-confirmed immediately before this release: `npm run typecheck` — PASS. `npm run typecheck:tests` — PASS. `npm test` — PASS, 334/334. `npm run build` — PASS.
+- **Phase 3 is now CLOSED.** Phase 4 (QR Tools) was not started.
