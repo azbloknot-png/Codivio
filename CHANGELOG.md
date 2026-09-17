@@ -498,3 +498,18 @@ Chronological, checkpoint-based project history. Where a real Git commit exists,
 - **Deferred by explicit user decision, not part of this release's success criteria**: `www.codivio.online` HTTP 525 (Cloudflare dashboard task); the Contact page's channel (pending real business input); the D1-outage error-handling gap in `route-guard.ts`/`pages.ts` (future hardening task).
 - Test/build re-confirmed immediately before this release: `npm run typecheck` — PASS. `npm run typecheck:tests` — PASS. `npm test` — PASS, 334/334. `npm run build` — PASS.
 - **Phase 3 is now CLOSED.** Phase 4 (QR Tools) was not started.
+
+## Pre-Phase 4 UI/UX and Accessibility Remediation Checkpoint (2026-09-17)
+
+**Implemented, committed, and pushed — NOT deployed.** Not a numbered roadmap phase; sits between the closed Phase 3 and the not-yet-started Phase 4. Investigated 7 user-provided responsive/accessibility hypotheses directly against source code (no browser/screenshot tool available in this environment — each finding classified honestly, including two left as UNKNOWN pending real rendering verification), then implemented the 5 confirmed-safe fixes:
+
+- Fixed a real CSS-specificity bug (`.admin-tools-table .admin-pages-row`'s unconditional 8-column desktop grid was more specific than the intended `≤650px` single-column override) that prevented the Admin Tools list from collapsing on mobile — added a matching-specificity mobile override.
+- Removed an oversized mobile `.hero-grid` `min-height:550px` override (higher than desktop's 510px despite less mobile content) — mobile now falls back to the already-live 510px tablet value.
+- Added a modest `≤650px` reduction to `.section`/`.content-section`/`.tool-slider-section` spacing (no prior responsive reduction existed at any breakpoint).
+- Added matching `id`/`aria-controls` pairs, `Escape`-key close, and a body-scroll lock to both the public and Admin mobile navigation toggles (none of the three existed before, confirmed by a full-file grep). Existing Admin sidebar click-outside-to-close preserved.
+- Added a `.faq summary:focus-visible` style matching the existing tool-page FAQ pattern.
+
+Deferred (require real browser/screenshot verification): tool-card height/width proportions on mobile; `.section-heading`'s lack of `flex-wrap` and its real-world visual severity at narrow widths with AZ/TR/EN string lengths. Untouched, per explicit scope: CSR/SSR architecture, SEO/AI-discoverability architecture, the Contact form, Cloudflare configuration, and all Phase 4/QR functionality.
+
+- Test/build: `npm run typecheck` — PASS. `npm run typecheck:tests` — PASS. `npm test` — PASS, 334/334. `npm run build` — PASS (Worker unchanged 228.34 kB; client CSS 36.90→37.13 kB; client main JS 473.91→474.58 kB; `ToolPage` chunk unchanged).
+- **Git**: commit `416b93c` ("fix: improve responsive UI and mobile navigation accessibility"), pushed to `origin/main` (`7916a1d..416b93c`). **Not deployed** — production remains at `7916a1d` / Cloudflare Version ID `780d5f46-45cb-47e2-8cec-14607eb015ad`. Phase 4 was not started.
