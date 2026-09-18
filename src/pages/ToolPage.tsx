@@ -1,8 +1,18 @@
+import { lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
 import { ShieldCheck, Zap } from "lucide-react";
 import { useLanguage } from "../i18n/LanguageContext";
 import { getContentBlueprint } from "../../shared/seo/content";
 import { getRelatedToolLinks, getToolBreadcrumb } from "../../shared/seo/internal-links";
+
+/**
+ * Phase 4.2 — its own lazy chunk, separate from this already-lazy ToolPage
+ * chunk, so the `qrcode` dependency (Phase 4.1) is only downloaded by a
+ * visitor who actually opens this one tool — not the other 33 tool pages
+ * that also load this file.
+ */
+const QrCodeGeneratorTool = lazy(() => import("../tools/QrCodeGeneratorTool"));
+const QR_CODE_GENERATOR_SLUG = "qr-code-generator";
 
 type ToolPageProps = {
   name: string;
@@ -157,19 +167,25 @@ function ToolPage({ name, description, category, slug }: ToolPageProps) {
           <p>{description}</p>
         </section>
 
-        <section className="tool-workspace">
-          <div className="tool-workspace-placeholder">
-            <div className="tool-placeholder-icon">
-              <Zap size={28} />
+        <section className={slug === QR_CODE_GENERATOR_SLUG ? "tool-workspace qr-generator-workspace" : "tool-workspace"}>
+          {slug === QR_CODE_GENERATOR_SLUG ? (
+            <Suspense fallback={<div className="qr-generator-loading">Loading QR generator…</div>}>
+              <QrCodeGeneratorTool />
+            </Suspense>
+          ) : (
+            <div className="tool-workspace-placeholder">
+              <div className="tool-placeholder-icon">
+                <Zap size={28} />
+              </div>
+
+              <h2>Tool coming soon</h2>
+
+              <p>
+                This Codivio tool is currently being prepared. The working
+                version will be available here soon.
+              </p>
             </div>
-
-            <h2>Tool coming soon</h2>
-
-            <p>
-              This Codivio tool is currently being prepared. The working
-              version will be available here soon.
-            </p>
-          </div>
+          )}
         </section>
 
         <section className="tool-trust">

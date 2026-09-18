@@ -28,6 +28,38 @@
 .tool-trust>div{display:flex;align-items:center;gap:7px}
 .tool-trust svg{color:#20a466}
 
+/* Phase 4.2 — QR Code Generator workspace. `.qr-generator-workspace` only
+   overrides `display` (flex -> block), a property the existing responsive
+   `.tool-workspace` rules never touch at any breakpoint, so this combined
+   selector's higher specificity can never fight the mobile padding/min-
+   height rules the way `.admin-tools-table .admin-pages-row` once did. */
+.tool-workspace.qr-generator-workspace{display:block}
+.qr-generator-loading{padding:40px 20px;text-align:center;color:var(--color-muted);font-size:14px}
+.qr-generator{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,300px);gap:24px;align-items:start;text-align:left}
+.qr-generator-field{display:block;margin-bottom:16px;color:#243b5a;font-size:13px;font-weight:700}
+.qr-generator-field textarea,.qr-generator-field select{display:block;width:100%;box-sizing:border-box;margin-top:6px;border:1px solid #dbe4ef;border-radius:11px;outline:none;background:#fff;color:#243b5a;font:inherit;font-size:14px}
+.qr-generator-field textarea{padding:12px 13px;min-height:90px;resize:vertical}
+.qr-generator-field select{height:44px;padding:0 13px}
+.qr-generator-field textarea:focus,.qr-generator-field select:focus{border-color:#9fc3ed;box-shadow:0 0 0 4px rgba(23,105,224,.08)}
+.qr-generator-field input[type="color"]{display:block;margin-top:6px;width:64px;height:44px;padding:2px;border:1px solid #dbe4ef;border-radius:11px;background:#fff;cursor:pointer}
+.qr-generator-field input[type="color"]:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px}
+.qr-generator-config{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 16px}
+.qr-generator-char-count{margin:-8px 0 16px;color:var(--color-muted);font-size:12px}
+.qr-generator-char-count.is-over-limit{color:#b3261e;font-weight:700}
+.qr-generator-preview{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:220px;padding:20px;border:1px dashed #dbe4ef;border-radius:14px;background:#f7fafd;text-align:center}
+.qr-generator-image{max-width:100%;height:auto;border-radius:8px}
+.qr-generator-empty-state{color:var(--color-muted);font-size:13px;max-width:240px}
+.qr-generator-status{color:var(--color-muted);font-size:13px}
+.qr-generator-error{width:100%;text-align:left}
+.qr-generator-error p{margin:0}
+.qr-generator-error p+p{margin-top:4px}
+@media(max-width:900px){
+.qr-generator{grid-template-columns:minmax(0,1fr)}
+}
+@media(max-width:650px){
+.qr-generator-config{grid-template-columns:1fr}
+}
+
 /* Phase 3.13: Tool Page Content Architecture (breadcrumb, content
    blueprint, FAQ, related tools) — reuses the color/radius design tokens
    rather than raw hex, since these are new rules (see codivio-ui skill:
