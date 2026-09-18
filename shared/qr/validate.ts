@@ -13,6 +13,7 @@ import {
   type QrValidationResult,
 } from "./types";
 import { buildWifiQrValue, validateWifiPayload } from "./wifi";
+import { buildVCardQrValue, validateVCardPayload } from "./vcard";
 
 /** Strict hex color only — `#rgb`, `#rrggbb`, or `#rrggbbaa`. Named CSS
  * colors and rgb()/hsl() are rejected in this phase to keep this a single
@@ -55,6 +56,9 @@ function validatePayloadValueBounds(value: string): QrValidationError[] {
 export function validateQrPayload(payload: unknown): QrValidationError[] {
   if ((payload as { kind?: unknown } | null)?.kind === "wifi") {
     return validateWifiPayload(payload);
+  }
+  if ((payload as { kind?: unknown } | null)?.kind === "vcard") {
+    return validateVCardPayload(payload);
   }
 
   if (
@@ -142,7 +146,12 @@ export function validateQrRequest(
   }
 
   const typedPayload = payload as QrPayload;
-  const encodedValue = typedPayload.kind === "wifi" ? buildWifiQrValue(typedPayload) : typedPayload.value;
+  const encodedValue =
+    typedPayload.kind === "wifi"
+      ? buildWifiQrValue(typedPayload)
+      : typedPayload.kind === "vcard"
+        ? buildVCardQrValue(typedPayload)
+        : typedPayload.value;
 
   return { ok: true, payload: typedPayload, config: mergedConfig, encodedValue };
 }

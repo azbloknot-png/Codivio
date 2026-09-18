@@ -10,19 +10,22 @@ import { MAX_QR_PAYLOAD_LENGTH, type QrErrorCorrectionLevel, type QrPayload, typ
  * the other 33 tool pages or the main bundle.
  *
  * Phase 4.3 added a Text/URL mode toggle. Phase 4.4 added a third WiFi
- * mode with its own structured fields (SSID/password/security/hidden) —
- * unlike text/url, a WiFi payload has no single "value" the user types
- * directly; `generateQrCode` still needs no branching, since
+ * mode with its own structured fields (SSID/password/security/hidden).
+ * Phase 4.5 added a fourth vCard mode (first/last name, organization, job
+ * title, phone, email, website) — a second structured payload kind.
+ * `generateQrCode` still needs no branching for any of this, since
  * `shared/qr/validate.ts` pre-computes the actual encodable string
- * (`encodedValue`) for every kind, WiFi included.
+ * (`encodedValue`) for every kind.
  *
  * Every mode shares config controls, preview, debounce/stale-request/
- * unmount guards, and error/empty/loading states. WiFi payload formatting
- * and escaping live in shared/qr/wifi.ts — not duplicated here.
+ * unmount guards, and error/empty/loading states. WiFi/vCard payload
+ * formatting and escaping live in shared/qr/wifi.ts and shared/qr/vcard.ts
+ * respectively — not duplicated here.
  *
- * Scope: text/URL/WiFi payloads only — no vCard/Email/etc. builders, no
- * logo embedding, no download/export UI. All generation happens locally;
- * no payload (including WiFi credentials) is ever logged or sent anywhere.
+ * Scope: text/URL/WiFi/vCard payloads only — no Email/SMS/etc. builders,
+ * no logo embedding, no download/export UI (reserved for Phase 4.7). All
+ * generation happens locally; no payload (including WiFi credentials or
+ * vCard contact details) is ever logged or sent anywhere.
  */
 
 type QrInputMode = QrPayload["kind"];
@@ -41,6 +44,14 @@ function QrCodeGeneratorTool() {
   const [wifiSecurity, setWifiSecurity] = useState<QrWifiSecurity>("WPA");
   const [wifiHidden, setWifiHidden] = useState(false);
   const [showWifiPassword, setShowWifiPassword] = useState(false);
+
+  const [vcardFirstName, setVcardFirstName] = useState("");
+  const [vcardLastName, setVcardLastName] = useState("");
+  const [vcardOrganization, setVcardOrganization] = useState("");
+  const [vcardJobTitle, setVcardJobTitle] = useState("");
+  const [vcardPhone, setVcardPhone] = useState("");
+  const [vcardEmail, setVcardEmail] = useState("");
+  const [vcardWebsite, setVcardWebsite] = useState("");
 
   const [errorCorrectionLevel, setErrorCorrectionLevel] = useState<QrErrorCorrectionLevel>("M");
   const [size, setSize] = useState<number>(256);
@@ -62,7 +73,12 @@ function QrCodeGeneratorTool() {
     [],
   );
 
-  const hasContent = mode === "wifi" ? wifiSsid.trim().length > 0 : text.trim().length > 0;
+  const hasContent =
+    mode === "wifi"
+      ? wifiSsid.trim().length > 0
+      : mode === "vcard"
+        ? vcardFirstName.trim().length > 0 || vcardLastName.trim().length > 0
+        : text.trim().length > 0;
 
   useEffect(() => {
     if (!hasContent) {
@@ -79,7 +95,18 @@ function QrCodeGeneratorTool() {
     const payload: QrPayload =
       mode === "wifi"
         ? { kind: "wifi", ssid: wifiSsid, password: wifiPassword, security: wifiSecurity, hidden: wifiHidden }
-        : { kind: mode, value: text };
+        : mode === "vcard"
+          ? {
+              kind: "vcard",
+              firstName: vcardFirstName,
+              lastName: vcardLastName,
+              organization: vcardOrganization,
+              jobTitle: vcardJobTitle,
+              phone: vcardPhone,
+              email: vcardEmail,
+              website: vcardWebsite,
+            }
+          : { kind: mode, value: text };
 
     const timer = setTimeout(() => {
       generateQrCode(payload, { errorCorrectionLevel, size, margin, foregroundColor, backgroundColor })
@@ -103,10 +130,33 @@ function QrCodeGeneratorTool() {
     }, DEBOUNCE_MS);
 
     return () => clearTimeout(timer);
-  }, [mode, text, wifiSsid, wifiPassword, wifiSecurity, wifiHidden, hasContent, errorCorrectionLevel, size, margin, foregroundColor, backgroundColor]);
+  }, [
+    mode,
+    text,
+    wifiSsid,
+    wifiPassword,
+    wifiSecurity,
+    wifiHidden,
+    vcardFirstName,
+    vcardLastName,
+    vcardOrganization,
+    vcardJobTitle,
+    vcardPhone,
+    vcardEmail,
+    vcardWebsite,
+    hasContent,
+    errorCorrectionLevel,
+    size,
+    margin,
+    foregroundColor,
+    backgroundColor,
+  ]);
 
   const charCount = text.length;
   const isOverLimit = charCount > MAX_QR_PAYLOAD_LENGTH;
+  // Contact name only — never includes phone/email in the accessible alt
+  // text, matching the same privacy pattern as WiFi's password exclusion.
+  const vcardDisplayName = [vcardFirstName.trim(), vcardLastName.trim()].filter((part) => part.length > 0).join(" ");
 
   function selectMode(nextMode: QrInputMode) {
     if (nextMode === mode) return;
@@ -119,6 +169,13 @@ function QrCodeGeneratorTool() {
     setWifiSecurity("WPA");
     setWifiHidden(false);
     setShowWifiPassword(false);
+    setVcardFirstName("");
+    setVcardLastName("");
+    setVcardOrganization("");
+    setVcardJobTitle("");
+    setVcardPhone("");
+    setVcardEmail("");
+    setVcardWebsite("");
   }
 
   return (
@@ -133,6 +190,9 @@ function QrCodeGeneratorTool() {
           </button>
           <button type="button" className={mode === "wifi" ? "active" : undefined} aria-pressed={mode === "wifi"} onClick={() => selectMode("wifi")}>
             WiFi
+          </button>
+          <button type="button" className={mode === "vcard" ? "active" : undefined} aria-pressed={mode === "vcard"} onClick={() => selectMode("vcard")}>
+            vCard
           </button>
         </div>
 
@@ -194,6 +254,92 @@ function QrCodeGeneratorTool() {
             <label className="qr-generator-checkbox-field">
               <input type="checkbox" checked={wifiHidden} onChange={(event) => setWifiHidden(event.target.checked)} />
               This is a hidden network
+            </label>
+          </>
+        ) : mode === "vcard" ? (
+          <>
+            <label className="qr-generator-field" htmlFor="qr-vcard-first-name">
+              First name
+              <input
+                id="qr-vcard-first-name"
+                type="text"
+                autoComplete="given-name"
+                placeholder="Jane"
+                value={vcardFirstName}
+                onChange={(event) => setVcardFirstName(event.target.value)}
+              />
+            </label>
+
+            <label className="qr-generator-field" htmlFor="qr-vcard-last-name">
+              Last name
+              <input
+                id="qr-vcard-last-name"
+                type="text"
+                autoComplete="family-name"
+                placeholder="Doe"
+                value={vcardLastName}
+                onChange={(event) => setVcardLastName(event.target.value)}
+              />
+            </label>
+
+            <label className="qr-generator-field" htmlFor="qr-vcard-organization">
+              Organization (optional)
+              <input
+                id="qr-vcard-organization"
+                type="text"
+                autoComplete="organization"
+                placeholder="Codivio"
+                value={vcardOrganization}
+                onChange={(event) => setVcardOrganization(event.target.value)}
+              />
+            </label>
+
+            <label className="qr-generator-field" htmlFor="qr-vcard-job-title">
+              Job title (optional)
+              <input
+                id="qr-vcard-job-title"
+                type="text"
+                autoComplete="organization-title"
+                placeholder="Product Manager"
+                value={vcardJobTitle}
+                onChange={(event) => setVcardJobTitle(event.target.value)}
+              />
+            </label>
+
+            <label className="qr-generator-field" htmlFor="qr-vcard-phone">
+              Phone (optional)
+              <input
+                id="qr-vcard-phone"
+                type="tel"
+                autoComplete="tel"
+                placeholder="+1 555 123 4567"
+                value={vcardPhone}
+                onChange={(event) => setVcardPhone(event.target.value)}
+              />
+            </label>
+
+            <label className="qr-generator-field" htmlFor="qr-vcard-email">
+              Email (optional)
+              <input
+                id="qr-vcard-email"
+                type="email"
+                autoComplete="email"
+                placeholder="jane@example.com"
+                value={vcardEmail}
+                onChange={(event) => setVcardEmail(event.target.value)}
+              />
+            </label>
+
+            <label className="qr-generator-field" htmlFor="qr-vcard-website">
+              Website (optional)
+              <input
+                id="qr-vcard-website"
+                type="url"
+                autoComplete="url"
+                placeholder="https://example.com"
+                value={vcardWebsite}
+                onChange={(event) => setVcardWebsite(event.target.value)}
+              />
             </label>
           </>
         ) : (
@@ -307,7 +453,9 @@ function QrCodeGeneratorTool() {
             <p>
               {mode === "wifi"
                 ? "Enter your network name above to generate a Wi-Fi QR code."
-                : "Enter text or a URL above to generate your QR code."}
+                : mode === "vcard"
+                  ? "Enter a first or last name above to generate a contact QR code."
+                  : "Enter text or a URL above to generate your QR code."}
             </p>
           </div>
         )}
@@ -321,9 +469,11 @@ function QrCodeGeneratorTool() {
             alt={
               mode === "wifi"
                 ? `QR code for Wi-Fi network: ${wifiSsid.trim().slice(0, 120)}`
-                : mode === "url"
-                  ? `QR code linking to: ${text.trim().slice(0, 120)}`
-                  : `QR code for: ${text.trim().slice(0, 120)}`
+                : mode === "vcard"
+                  ? `QR code for contact: ${vcardDisplayName.slice(0, 120)}`
+                  : mode === "url"
+                    ? `QR code linking to: ${text.trim().slice(0, 120)}`
+                    : `QR code for: ${text.trim().slice(0, 120)}`
             }
             width={size}
             height={size}

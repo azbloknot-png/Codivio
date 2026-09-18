@@ -13,13 +13,15 @@
  * first payload kind that is genuinely structured (SSID/password/security/
  * hidden) rather than a flat string, because a scannable Wi-Fi QR code
  * encodes a specific `WIFI:...;;` format, not the raw fields (see
- * wifi.ts#buildWifiQrValue). To keep the encoder itself branch-free,
+ * wifi.ts#buildWifiQrValue). Phase 4.5 adds `QrVCardPayload` — a second
+ * structured kind, encoding a standards-compatible vCard 3.0 contact card
+ * (see vcard.ts#buildVCardQrValue). To keep the encoder itself branch-free,
  * `QrValidationResult`'s success case carries a pre-computed
- * `encodedValue: string` — for text/url it's just `.value`; for wifi it's
- * the built `WIFI:` string. `generateQrCode` in src/lib/qr-engine.ts
+ * `encodedValue: string` — for text/url it's just `.value`; for wifi/vcard
+ * it's the built format string. `generateQrCode` in src/lib/qr-engine.ts
  * always encodes `encodedValue`, never inspects `payload` shape itself.
- * vCard/Email/SMS/WhatsApp/Phone/Location/Calendar structured payload
- * builders remain out of scope, deliberately not modeled here.
+ * Email/SMS/WhatsApp/Phone/Location/Calendar structured payload builders
+ * remain out of scope, deliberately not modeled here.
  */
 
 export type QrErrorCorrectionLevel = "L" | "M" | "Q" | "H";
@@ -45,7 +47,25 @@ export interface QrWifiPayload {
   hidden: boolean;
 }
 
-export type QrPayload = QrTextPayload | QrUrlPayload | QrWifiPayload;
+/**
+ * A "digital business card" contact payload. Only the fields with real
+ * scope justification are modeled — a full postal `ADR` component is a
+ * complex 7-part structured field (PO box/extended/street/city/region/
+ * postal code/country) not needed for the core contact-card use case, so
+ * it is deliberately excluded this phase (see `DECISIONS.md`).
+ */
+export interface QrVCardPayload {
+  kind: "vcard";
+  firstName: string;
+  lastName: string;
+  organization: string;
+  jobTitle: string;
+  phone: string;
+  email: string;
+  website: string;
+}
+
+export type QrPayload = QrTextPayload | QrUrlPayload | QrWifiPayload | QrVCardPayload;
 
 export interface QrEncodingConfig {
   errorCorrectionLevel: QrErrorCorrectionLevel;
@@ -88,6 +108,14 @@ export type QrValidationErrorCode =
   | "wifi_password_required"
   | "wifi_password_too_short"
   | "wifi_password_too_long"
+  | "vcard_name_required"
+  | "vcard_first_name_too_long"
+  | "vcard_last_name_too_long"
+  | "vcard_organization_too_long"
+  | "vcard_job_title_too_long"
+  | "vcard_phone_too_long"
+  | "vcard_email_too_long"
+  | "vcard_website_too_long"
   | "invalid_error_correction_level"
   | "invalid_size"
   | "invalid_margin"

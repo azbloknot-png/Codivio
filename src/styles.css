@@ -44,10 +44,10 @@
 .category-filter.qr-generator-mode-toggle{justify-content:flex-start;margin:0 0 18px}
 .qr-generator-mode-toggle button:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px}
 .qr-generator-field{display:block;margin-bottom:16px;color:#243b5a;font-size:13px;font-weight:700}
-.qr-generator-field textarea,.qr-generator-field select,.qr-generator-field input[type="url"],.qr-generator-field input[type="text"],.qr-generator-field input[type="password"]{display:block;width:100%;box-sizing:border-box;margin-top:6px;border:1px solid #dbe4ef;border-radius:11px;outline:none;background:#fff;color:#243b5a;font:inherit;font-size:14px}
+.qr-generator-field textarea,.qr-generator-field select,.qr-generator-field input[type="url"],.qr-generator-field input[type="text"],.qr-generator-field input[type="password"],.qr-generator-field input[type="tel"],.qr-generator-field input[type="email"]{display:block;width:100%;box-sizing:border-box;margin-top:6px;border:1px solid #dbe4ef;border-radius:11px;outline:none;background:#fff;color:#243b5a;font:inherit;font-size:14px}
 .qr-generator-field textarea{padding:12px 13px;min-height:90px;resize:vertical}
-.qr-generator-field select,.qr-generator-field input[type="url"],.qr-generator-field input[type="text"],.qr-generator-field input[type="password"]{height:44px;padding:0 13px}
-.qr-generator-field textarea:focus,.qr-generator-field select:focus,.qr-generator-field input[type="url"]:focus,.qr-generator-field input[type="text"]:focus,.qr-generator-field input[type="password"]:focus{border-color:#9fc3ed;box-shadow:0 0 0 4px rgba(23,105,224,.08)}
+.qr-generator-field select,.qr-generator-field input[type="url"],.qr-generator-field input[type="text"],.qr-generator-field input[type="password"],.qr-generator-field input[type="tel"],.qr-generator-field input[type="email"]{height:44px;padding:0 13px}
+.qr-generator-field textarea:focus,.qr-generator-field select:focus,.qr-generator-field input[type="url"]:focus,.qr-generator-field input[type="text"]:focus,.qr-generator-field input[type="password"]:focus,.qr-generator-field input[type="tel"]:focus,.qr-generator-field input[type="email"]:focus{border-color:#9fc3ed;box-shadow:0 0 0 4px rgba(23,105,224,.08)}
 .qr-generator-field input[type="color"]{display:block;margin-top:6px;width:64px;height:44px;padding:2px;border:1px solid #dbe4ef;border-radius:11px;background:#fff;cursor:pointer}
 .qr-generator-field input[type="color"]:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px}
 /* Phase 4.4 — WiFi mode: password show/hide row and the hidden-network

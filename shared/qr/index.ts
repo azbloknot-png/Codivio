@@ -12,6 +12,7 @@ export type {
   QrUrlPayload,
   QrWifiSecurity,
   QrWifiPayload,
+  QrVCardPayload,
   QrPayload,
   QrEncodingConfig,
   QrValidationErrorCode,
@@ -29,3 +30,15 @@ export {
   MIN_WIFI_WPA_PASSWORD_LENGTH,
   MAX_WIFI_PASSWORD_LENGTH,
 } from "./wifi";
+
+export {
+  escapeVCardValue,
+  buildVCardQrValue,
+  validateVCardPayload,
+  MAX_VCARD_NAME_LENGTH,
+  MAX_VCARD_ORGANIZATION_LENGTH,
+  MAX_VCARD_JOB_TITLE_LENGTH,
+  MAX_VCARD_PHONE_LENGTH,
+  MAX_VCARD_EMAIL_LENGTH,
+  MAX_VCARD_WEBSITE_LENGTH,
+} from "./vcard";
