@@ -13,6 +13,7 @@
     "typecheck:tests": "tsc --noEmit -p tsconfig.test.json"
   },
   "dependencies": {
+    "jsqr": "^1.4.0",
     "lucide-react": "^0.468.0",
     "qrcode": "^1.5.4",
     "react": "^19.0.0",

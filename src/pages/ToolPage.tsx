@@ -14,6 +14,15 @@ import { getRelatedToolLinks, getToolBreadcrumb } from "../../shared/seo/interna
 const QrCodeGeneratorTool = lazy(() => import("../tools/QrCodeGeneratorTool"));
 const QR_CODE_GENERATOR_SLUG = "qr-code-generator";
 
+/**
+ * Phase 4.6 — same isolation strategy as the Phase 4.2 QR Code Generator:
+ * its own lazy chunk, gated on its own slug, so the `jsqr` decoding
+ * dependency is only downloaded by a visitor who actually opens this one
+ * tool page.
+ */
+const QrCodeScannerTool = lazy(() => import("../tools/QrCodeScannerTool"));
+const QR_CODE_SCANNER_SLUG = "qr-code-scanner";
+
 type ToolPageProps = {
   name: string;
   description: string;
@@ -167,10 +176,22 @@ function ToolPage({ name, description, category, slug }: ToolPageProps) {
           <p>{description}</p>
         </section>
 
-        <section className={slug === QR_CODE_GENERATOR_SLUG ? "tool-workspace qr-generator-workspace" : "tool-workspace"}>
+        <section
+          className={
+            slug === QR_CODE_GENERATOR_SLUG
+              ? "tool-workspace qr-generator-workspace"
+              : slug === QR_CODE_SCANNER_SLUG
+                ? "tool-workspace qr-scanner-workspace"
+                : "tool-workspace"
+          }
+        >
           {slug === QR_CODE_GENERATOR_SLUG ? (
             <Suspense fallback={<div className="qr-generator-loading">Loading QR generator…</div>}>
               <QrCodeGeneratorTool />
+            </Suspense>
+          ) : slug === QR_CODE_SCANNER_SLUG ? (
+            <Suspense fallback={<div className="qr-generator-loading">Loading QR scanner…</div>}>
+              <QrCodeScannerTool />
             </Suspense>
           ) : (
             <div className="tool-workspace-placeholder">

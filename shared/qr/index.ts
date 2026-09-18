@@ -42,3 +42,6 @@ export {
   MAX_VCARD_EMAIL_LENGTH,
   MAX_VCARD_WEBSITE_LENGTH,
 } from "./vcard";
+
+export { classifyScannedQrContent } from "./classify";
+export type { ScannedQrContentKind, ScannedQrClassification } from "./classify";
