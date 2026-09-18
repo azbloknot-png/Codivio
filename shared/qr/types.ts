@@ -1,14 +1,18 @@
 /**
- * Codivio Shared QR Engine — types (Phase 4.1).
+ * Codivio Shared QR Engine — types (Phase 4.1, extended Phase 4.3).
  *
  * Framework-agnostic: no import of the `qrcode` package or any browser/Node
  * API. Safe to import from both the Worker and the frontend, mirroring the
  * shared/seo/ split (see shared/seo/types.ts).
  *
- * Phase 4.1 scope: a generic text/URL payload only. vCard/WiFi/Email/SMS/
- * WhatsApp/Phone/Location/Calendar structured payload builders are Phase
- * 4.2+ work and are deliberately not modeled here — adding an unused
- * discriminant now would be speculative.
+ * Phase 4.1 shipped the generic text payload only, with URL handling
+ * deferred ("a URL is just a string payload... no protocol validation
+ * beyond non-empty/length" — see DECISIONS.md). Phase 4.3 fulfills that by
+ * adding a distinct `QrUrlPayload` kind with real http/https validation
+ * (see validate.ts#isValidQrUrl), while the QR code itself still just
+ * encodes `.value` as text either way — no separate rendering path.
+ * vCard/WiFi/Email/SMS/WhatsApp/Phone/Location/Calendar structured payload
+ * builders remain out of scope, deliberately not modeled here.
  */
 
 export type QrErrorCorrectionLevel = "L" | "M" | "Q" | "H";
@@ -18,7 +22,12 @@ export interface QrTextPayload {
   value: string;
 }
 
-export type QrPayload = QrTextPayload;
+export interface QrUrlPayload {
+  kind: "url";
+  value: string;
+}
+
+export type QrPayload = QrTextPayload | QrUrlPayload;
 
 export interface QrEncodingConfig {
   errorCorrectionLevel: QrErrorCorrectionLevel;
@@ -55,6 +64,7 @@ export const MAX_QR_MARGIN = 20;
 export type QrValidationErrorCode =
   | "empty_payload"
   | "payload_too_long"
+  | "invalid_url"
   | "invalid_error_correction_level"
   | "invalid_size"
   | "invalid_margin"
@@ -68,5 +78,5 @@ export interface QrValidationError {
 }
 
 export type QrValidationResult =
-  | { ok: true; payload: QrTextPayload; config: QrEncodingConfig }
+  | { ok: true; payload: QrPayload; config: QrEncodingConfig }
   | { ok: false; errors: QrValidationError[] };

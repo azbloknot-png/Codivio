@@ -36,11 +36,18 @@
 .tool-workspace.qr-generator-workspace{display:block}
 .qr-generator-loading{padding:40px 20px;text-align:center;color:var(--color-muted);font-size:14px}
 .qr-generator{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,300px);gap:24px;align-items:start;text-align:left}
+/* Phase 4.3 — Text/URL mode toggle, reusing .category-filter's existing
+   pill-button styling. Only justify-content/margin are overridden (not
+   touched by .category-filter's own mobile rule, so no specificity-order
+   risk); a dedicated :focus-visible is added since the base
+   .category-filter button has none. */
+.category-filter.qr-generator-mode-toggle{justify-content:flex-start;margin:0 0 18px}
+.qr-generator-mode-toggle button:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px}
 .qr-generator-field{display:block;margin-bottom:16px;color:#243b5a;font-size:13px;font-weight:700}
-.qr-generator-field textarea,.qr-generator-field select{display:block;width:100%;box-sizing:border-box;margin-top:6px;border:1px solid #dbe4ef;border-radius:11px;outline:none;background:#fff;color:#243b5a;font:inherit;font-size:14px}
+.qr-generator-field textarea,.qr-generator-field select,.qr-generator-field input[type="url"]{display:block;width:100%;box-sizing:border-box;margin-top:6px;border:1px solid #dbe4ef;border-radius:11px;outline:none;background:#fff;color:#243b5a;font:inherit;font-size:14px}
 .qr-generator-field textarea{padding:12px 13px;min-height:90px;resize:vertical}
-.qr-generator-field select{height:44px;padding:0 13px}
-.qr-generator-field textarea:focus,.qr-generator-field select:focus{border-color:#9fc3ed;box-shadow:0 0 0 4px rgba(23,105,224,.08)}
+.qr-generator-field select,.qr-generator-field input[type="url"]{height:44px;padding:0 13px}
+.qr-generator-field textarea:focus,.qr-generator-field select:focus,.qr-generator-field input[type="url"]:focus{border-color:#9fc3ed;box-shadow:0 0 0 4px rgba(23,105,224,.08)}
 .qr-generator-field input[type="color"]{display:block;margin-top:6px;width:64px;height:44px;padding:2px;border:1px solid #dbe4ef;border-radius:11px;background:#fff;cursor:pointer}
 .qr-generator-field input[type="color"]:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px}
 .qr-generator-config{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 16px}

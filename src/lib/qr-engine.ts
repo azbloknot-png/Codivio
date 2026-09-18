@@ -1,13 +1,17 @@
 import QRCode from "qrcode";
 import { validateQrRequest } from "../../shared/qr";
-import type { QrEncodingConfig, QrTextPayload, QrValidationError } from "../../shared/qr";
+import type { QrEncodingConfig, QrPayload, QrValidationError } from "../../shared/qr";
 
 /**
- * Codivio Shared QR Engine — browser-side rendering wrapper (Phase 4.1).
+ * Codivio Shared QR Engine — browser-side rendering wrapper (Phase 4.1,
+ * extended Phase 4.3 to accept either payload kind).
  *
  * This is the only file that imports the `qrcode` package. Pure types and
  * validation live in shared/qr/ so they stay importable from the Worker
  * (which has no Canvas API) without ever pulling in a rendering path.
+ * `generateQrCode` itself needs no branching per payload kind — a "url"
+ * payload is still just `.value` encoded as text; only shared/qr/validate.ts
+ * treats the two kinds differently (URL format checking).
  */
 
 export class QrGenerationError extends Error {
@@ -34,7 +38,7 @@ export interface QrGenerateResult {
  * input rather than silently producing a blank-but-valid-looking QR.
  */
 export async function generateQrCode(
-  payload: QrTextPayload,
+  payload: QrPayload,
   config?: Partial<QrEncodingConfig>,
   format: QrOutputFormat = "png-data-url",
 ): Promise<QrGenerateResult> {

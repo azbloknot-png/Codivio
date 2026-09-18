@@ -9,6 +9,7 @@ export {
 export type {
   QrErrorCorrectionLevel,
   QrTextPayload,
+  QrUrlPayload,
   QrPayload,
   QrEncodingConfig,
   QrValidationErrorCode,
@@ -16,4 +17,4 @@ export type {
   QrValidationResult,
 } from "./types";
 
-export { validateQrPayload, validateQrConfig, validateQrRequest } from "./validate";
+export { validateQrPayload, validateQrConfig, validateQrRequest, isValidQrUrl } from "./validate";

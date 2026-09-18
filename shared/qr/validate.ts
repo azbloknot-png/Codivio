@@ -6,7 +6,7 @@ import {
   MIN_QR_MARGIN,
   MIN_QR_SIZE,
   type QrEncodingConfig,
-  type QrTextPayload,
+  type QrPayload,
   type QrValidationError,
   type QrValidationResult,
 } from "./types";
@@ -17,26 +17,62 @@ import {
 const HEX_COLOR_PATTERN = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
 
 const VALID_ERROR_CORRECTION_LEVELS = new Set(["L", "M", "Q", "H"]);
+const VALID_QR_URL_PROTOCOLS = new Set(["http:", "https:"]);
+
+/**
+ * Phase 4.3 — real http/https format check, used only for the `"url"`
+ * payload kind. A `"text"` payload is never run through this (it may
+ * legitimately be anything, including a string that isn't a URL at all).
+ */
+export function isValidQrUrl(value: string): boolean {
+  try {
+    return VALID_QR_URL_PROTOCOLS.has(new URL(value.trim()).protocol);
+  } catch {
+    return false;
+  }
+}
+
+/** Shared by both payload kinds — empty/length bounds only. Kept as one
+ * function so a future third kind reuses it instead of re-deriving it. */
+function validatePayloadValueBounds(value: string): QrValidationError[] {
+  if (value.trim().length === 0) {
+    return [{ code: "empty_payload", message: "Payload text must not be empty." }];
+  }
+  if (value.length > MAX_QR_PAYLOAD_LENGTH) {
+    return [
+      {
+        code: "payload_too_long",
+        message: `Payload text must be at most ${MAX_QR_PAYLOAD_LENGTH} characters.`,
+      },
+    ];
+  }
+  return [];
+}
 
 export function validateQrPayload(payload: unknown): QrValidationError[] {
-  const errors: QrValidationError[] = [];
   if (
     typeof payload !== "object" ||
     payload === null ||
-    (payload as { kind?: unknown }).kind !== "text" ||
-    typeof (payload as { value?: unknown }).value !== "string" ||
-    (payload as { value: string }).value.trim().length === 0
+    ((payload as { kind?: unknown }).kind !== "text" && (payload as { kind?: unknown }).kind !== "url") ||
+    typeof (payload as { value?: unknown }).value !== "string"
   ) {
-    errors.push({ code: "empty_payload", message: "Payload text must not be empty." });
-    return errors;
+    return [{ code: "empty_payload", message: "Payload text must not be empty." }];
   }
-  const value = (payload as QrTextPayload).value;
-  if (value.length > MAX_QR_PAYLOAD_LENGTH) {
+
+  const { kind, value } = payload as QrPayload;
+  const errors = validatePayloadValueBounds(value);
+  // An empty/over-length value is already fully reported — don't also run
+  // the URL-format check against it (an empty string is trivially "not a
+  // URL," which would be a redundant, less useful second error).
+  if (errors.length > 0) return errors;
+
+  if (kind === "url" && !isValidQrUrl(value)) {
     errors.push({
-      code: "payload_too_long",
-      message: `Payload text must be at most ${MAX_QR_PAYLOAD_LENGTH} characters.`,
+      code: "invalid_url",
+      message: "Enter a valid URL starting with http:// or https://.",
     });
   }
+
   return errors;
 }
 
@@ -98,5 +134,5 @@ export function validateQrRequest(
     return { ok: false, errors };
   }
 
-  return { ok: true, payload: payload as QrTextPayload, config: mergedConfig };
+  return { ok: true, payload: payload as QrPayload, config: mergedConfig };
 }
