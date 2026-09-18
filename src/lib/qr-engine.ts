@@ -4,14 +4,16 @@ import type { QrEncodingConfig, QrPayload, QrValidationError } from "../../share
 
 /**
  * Codivio Shared QR Engine — browser-side rendering wrapper (Phase 4.1,
- * extended Phase 4.3 to accept either payload kind).
+ * extended Phase 4.3/4.4 to accept every payload kind).
  *
  * This is the only file that imports the `qrcode` package. Pure types and
  * validation live in shared/qr/ so they stay importable from the Worker
  * (which has no Canvas API) without ever pulling in a rendering path.
- * `generateQrCode` itself needs no branching per payload kind — a "url"
- * payload is still just `.value` encoded as text; only shared/qr/validate.ts
- * treats the two kinds differently (URL format checking).
+ * `generateQrCode` itself needs no branching per payload kind — it always
+ * encodes `result.encodedValue`, a string `validateQrRequest` has already
+ * computed (the raw `.value` for text/url, the built `WIFI:...;;` string
+ * for wifi — see shared/qr/wifi.ts#buildWifiQrValue). This keeps the
+ * encoder itself unaware of how many payload shapes exist.
  */
 
 export class QrGenerationError extends Error {
@@ -58,10 +60,10 @@ export async function generateQrCode(
   };
 
   if (format === "svg") {
-    const svg = await QRCode.toString(result.payload.value, { ...options, type: "svg" });
+    const svg = await QRCode.toString(result.encodedValue, { ...options, type: "svg" });
     return { format: "svg", data: svg };
   }
 
-  const dataUrl = await QRCode.toDataURL(result.payload.value, options);
+  const dataUrl = await QRCode.toDataURL(result.encodedValue, options);
   return { format: "png-data-url", data: dataUrl };
 }

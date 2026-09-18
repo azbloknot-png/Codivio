@@ -10,6 +10,8 @@ export type {
   QrErrorCorrectionLevel,
   QrTextPayload,
   QrUrlPayload,
+  QrWifiSecurity,
+  QrWifiPayload,
   QrPayload,
   QrEncodingConfig,
   QrValidationErrorCode,
@@ -18,3 +20,12 @@ export type {
 } from "./types";
 
 export { validateQrPayload, validateQrConfig, validateQrRequest, isValidQrUrl } from "./validate";
+
+export {
+  escapeWifiValue,
+  buildWifiQrValue,
+  validateWifiPayload,
+  MAX_WIFI_SSID_LENGTH,
+  MIN_WIFI_WPA_PASSWORD_LENGTH,
+  MAX_WIFI_PASSWORD_LENGTH,
+} from "./wifi";

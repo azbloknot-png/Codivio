@@ -69,7 +69,12 @@ describe("QrCodeGeneratorTool URL mode UI", () => {
   it("has a Text/URL mode toggle and sends the selected kind to generateQrCode", () => {
     expect(source).toContain('aria-pressed={mode === "text"}');
     expect(source).toContain('aria-pressed={mode === "url"}');
-    expect(source).toContain("generateQrCode({ kind: mode, value: text }");
+    // Phase 4.4 introduced a third (wifi) mode with its own payload shape,
+    // so the text/url payload is now built into a `payload` variable
+    // (branched on `mode`) before the single generateQrCode(payload, ...)
+    // call site, rather than constructed inline at the call itself.
+    expect(source).toContain('{ kind: mode, value: text }');
+    expect(source).toContain("generateQrCode(payload,");
   });
 
   it("never logs the entered URL/text (no console.* call)", () => {

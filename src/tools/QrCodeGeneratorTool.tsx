@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { generateQrCode, QrGenerationError, type QrGenerateResult } from "../lib/qr-engine";
-import { MAX_QR_PAYLOAD_LENGTH, type QrErrorCorrectionLevel, type QrPayload } from "../../shared/qr";
+import { MAX_QR_PAYLOAD_LENGTH, type QrErrorCorrectionLevel, type QrPayload, type QrWifiSecurity } from "../../shared/qr";
 
 /**
  * Phase 4.2 — the first functional tool UI, built on the Phase 4.1 shared
@@ -8,15 +9,20 @@ import { MAX_QR_PAYLOAD_LENGTH, type QrErrorCorrectionLevel, type QrPayload } fr
  * slug === "qr-code-generator") so the `qrcode` dependency never reaches
  * the other 33 tool pages or the main bundle.
  *
- * Phase 4.3 added a Text/URL mode toggle. Both modes share every piece of
- * this component (config controls, preview, debounce/stale-request/unmount
- * guards) — only the payload `kind` sent to `generateQrCode` and the
- * input's label/placeholder/control type differ. URL format validation
- * itself lives in shared/qr/validate.ts#isValidQrUrl, not duplicated here.
+ * Phase 4.3 added a Text/URL mode toggle. Phase 4.4 added a third WiFi
+ * mode with its own structured fields (SSID/password/security/hidden) —
+ * unlike text/url, a WiFi payload has no single "value" the user types
+ * directly; `generateQrCode` still needs no branching, since
+ * `shared/qr/validate.ts` pre-computes the actual encodable string
+ * (`encodedValue`) for every kind, WiFi included.
  *
- * Scope: generic text/URL payload only — no vCard/WiFi/Email/etc.
- * builders, no logo embedding, no download/export UI. All generation
- * happens locally; the payload value is never logged or sent anywhere.
+ * Every mode shares config controls, preview, debounce/stale-request/
+ * unmount guards, and error/empty/loading states. WiFi payload formatting
+ * and escaping live in shared/qr/wifi.ts — not duplicated here.
+ *
+ * Scope: text/URL/WiFi payloads only — no vCard/Email/etc. builders, no
+ * logo embedding, no download/export UI. All generation happens locally;
+ * no payload (including WiFi credentials) is ever logged or sent anywhere.
  */
 
 type QrInputMode = QrPayload["kind"];
@@ -29,6 +35,13 @@ const DEBOUNCE_MS = 300;
 function QrCodeGeneratorTool() {
   const [mode, setMode] = useState<QrInputMode>("text");
   const [text, setText] = useState("");
+
+  const [wifiSsid, setWifiSsid] = useState("");
+  const [wifiPassword, setWifiPassword] = useState("");
+  const [wifiSecurity, setWifiSecurity] = useState<QrWifiSecurity>("WPA");
+  const [wifiHidden, setWifiHidden] = useState(false);
+  const [showWifiPassword, setShowWifiPassword] = useState(false);
+
   const [errorCorrectionLevel, setErrorCorrectionLevel] = useState<QrErrorCorrectionLevel>("M");
   const [size, setSize] = useState<number>(256);
   const [margin, setMargin] = useState<number>(4);
@@ -49,9 +62,10 @@ function QrCodeGeneratorTool() {
     [],
   );
 
+  const hasContent = mode === "wifi" ? wifiSsid.trim().length > 0 : text.trim().length > 0;
+
   useEffect(() => {
-    const trimmed = text.trim();
-    if (trimmed.length === 0) {
+    if (!hasContent) {
       requestIdRef.current += 1;
       setResult(null);
       setErrors([]);
@@ -62,8 +76,13 @@ function QrCodeGeneratorTool() {
     const requestId = ++requestIdRef.current;
     setIsGenerating(true);
 
+    const payload: QrPayload =
+      mode === "wifi"
+        ? { kind: "wifi", ssid: wifiSsid, password: wifiPassword, security: wifiSecurity, hidden: wifiHidden }
+        : { kind: mode, value: text };
+
     const timer = setTimeout(() => {
-      generateQrCode({ kind: mode, value: text }, { errorCorrectionLevel, size, margin, foregroundColor, backgroundColor })
+      generateQrCode(payload, { errorCorrectionLevel, size, margin, foregroundColor, backgroundColor })
         .then((generated) => {
           if (!isMountedRef.current || requestIdRef.current !== requestId) return;
           setResult(generated);
@@ -84,7 +103,7 @@ function QrCodeGeneratorTool() {
     }, DEBOUNCE_MS);
 
     return () => clearTimeout(timer);
-  }, [mode, text, errorCorrectionLevel, size, margin, foregroundColor, backgroundColor]);
+  }, [mode, text, wifiSsid, wifiPassword, wifiSecurity, wifiHidden, hasContent, errorCorrectionLevel, size, margin, foregroundColor, backgroundColor]);
 
   const charCount = text.length;
   const isOverLimit = charCount > MAX_QR_PAYLOAD_LENGTH;
@@ -93,8 +112,13 @@ function QrCodeGeneratorTool() {
     if (nextMode === mode) return;
     setMode(nextMode);
     // Clears any lingering result/error from the previous mode rather than
-    // showing (e.g.) a stale "invalid URL" message after switching to Text.
+    // showing (e.g.) a stale "invalid URL" message after switching modes.
     setText("");
+    setWifiSsid("");
+    setWifiPassword("");
+    setWifiSecurity("WPA");
+    setWifiHidden(false);
+    setShowWifiPassword(false);
   }
 
   return (
@@ -107,36 +131,103 @@ function QrCodeGeneratorTool() {
           <button type="button" className={mode === "url" ? "active" : undefined} aria-pressed={mode === "url"} onClick={() => selectMode("url")}>
             URL
           </button>
+          <button type="button" className={mode === "wifi" ? "active" : undefined} aria-pressed={mode === "wifi"} onClick={() => selectMode("wifi")}>
+            WiFi
+          </button>
         </div>
 
-        <label className="qr-generator-field" htmlFor="qr-generator-text">
-          {mode === "url" ? "URL" : "Text"}
-          {mode === "url" ? (
-            <input
-              id="qr-generator-text"
-              type="url"
-              placeholder="https://example.com"
-              value={text}
-              onChange={(event) => setText(event.target.value)}
-              aria-describedby="qr-generator-char-count"
-            />
-          ) : (
-            <textarea
-              id="qr-generator-text"
-              rows={3}
-              placeholder="Enter text to encode..."
-              value={text}
-              onChange={(event) => setText(event.target.value)}
-              aria-describedby="qr-generator-char-count"
-            />
-          )}
-        </label>
-        <p
-          id="qr-generator-char-count"
-          className={isOverLimit ? "qr-generator-char-count is-over-limit" : "qr-generator-char-count"}
-        >
-          {charCount} / {MAX_QR_PAYLOAD_LENGTH} characters
-        </p>
+        {mode === "wifi" ? (
+          <>
+            <label className="qr-generator-field" htmlFor="qr-wifi-ssid">
+              Network name (SSID)
+              <input
+                id="qr-wifi-ssid"
+                type="text"
+                placeholder="My Wi-Fi Network"
+                value={wifiSsid}
+                onChange={(event) => setWifiSsid(event.target.value)}
+              />
+            </label>
+
+            <label className="qr-generator-field" htmlFor="qr-wifi-security">
+              Security type
+              <select
+                id="qr-wifi-security"
+                value={wifiSecurity}
+                onChange={(event) => {
+                  const nextSecurity = event.target.value as QrWifiSecurity;
+                  setWifiSecurity(nextSecurity);
+                  if (nextSecurity === "nopass") setWifiPassword("");
+                }}
+              >
+                <option value="WPA">WPA/WPA2</option>
+                <option value="WEP">WEP</option>
+                <option value="nopass">None (open network)</option>
+              </select>
+            </label>
+
+            <label className="qr-generator-field" htmlFor="qr-wifi-password">
+              Password
+              <div className="qr-generator-password-field">
+                <input
+                  id="qr-wifi-password"
+                  type={showWifiPassword ? "text" : "password"}
+                  value={wifiPassword}
+                  onChange={(event) => setWifiPassword(event.target.value)}
+                  disabled={wifiSecurity === "nopass"}
+                  placeholder={wifiSecurity === "nopass" ? "Not required for an open network" : "Enter the Wi-Fi password"}
+                  autoComplete="off"
+                />
+                <button
+                  type="button"
+                  className="qr-generator-password-toggle"
+                  onClick={() => setShowWifiPassword((visible) => !visible)}
+                  disabled={wifiSecurity === "nopass"}
+                  aria-pressed={showWifiPassword}
+                  aria-label={showWifiPassword ? "Hide password" : "Show password"}
+                >
+                  {showWifiPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </label>
+
+            <label className="qr-generator-checkbox-field">
+              <input type="checkbox" checked={wifiHidden} onChange={(event) => setWifiHidden(event.target.checked)} />
+              This is a hidden network
+            </label>
+          </>
+        ) : (
+          <>
+            <label className="qr-generator-field" htmlFor="qr-generator-text">
+              {mode === "url" ? "URL" : "Text"}
+              {mode === "url" ? (
+                <input
+                  id="qr-generator-text"
+                  type="url"
+                  placeholder="https://example.com"
+                  value={text}
+                  onChange={(event) => setText(event.target.value)}
+                  aria-describedby="qr-generator-char-count"
+                />
+              ) : (
+                <textarea
+                  id="qr-generator-text"
+                  rows={3}
+                  placeholder="Enter text to encode..."
+                  value={text}
+                  onChange={(event) => setText(event.target.value)}
+                  aria-describedby="qr-generator-char-count"
+                />
+              )}
+            </label>
+            <p
+              id="qr-generator-char-count"
+              className={isOverLimit ? "qr-generator-char-count is-over-limit" : "qr-generator-char-count"}
+            >
+              {charCount} / {MAX_QR_PAYLOAD_LENGTH} characters
+            </p>
+          </>
+        )}
 
         <div className="qr-generator-config">
           <label className="qr-generator-field" htmlFor="qr-generator-ec-level">
@@ -211,9 +302,13 @@ function QrCodeGeneratorTool() {
           </div>
         )}
 
-        {errors.length === 0 && text.trim().length === 0 && (
+        {errors.length === 0 && !hasContent && (
           <div className="qr-generator-empty-state">
-            <p>Enter text or a URL above to generate your QR code.</p>
+            <p>
+              {mode === "wifi"
+                ? "Enter your network name above to generate a Wi-Fi QR code."
+                : "Enter text or a URL above to generate your QR code."}
+            </p>
           </div>
         )}
 
@@ -223,7 +318,13 @@ function QrCodeGeneratorTool() {
           <img
             className="qr-generator-image"
             src={result.data}
-            alt={mode === "url" ? `QR code linking to: ${text.trim().slice(0, 120)}` : `QR code for: ${text.trim().slice(0, 120)}`}
+            alt={
+              mode === "wifi"
+                ? `QR code for Wi-Fi network: ${wifiSsid.trim().slice(0, 120)}`
+                : mode === "url"
+                  ? `QR code linking to: ${text.trim().slice(0, 120)}`
+                  : `QR code for: ${text.trim().slice(0, 120)}`
+            }
             width={size}
             height={size}
           />

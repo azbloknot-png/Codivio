@@ -44,12 +44,26 @@
 .category-filter.qr-generator-mode-toggle{justify-content:flex-start;margin:0 0 18px}
 .qr-generator-mode-toggle button:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px}
 .qr-generator-field{display:block;margin-bottom:16px;color:#243b5a;font-size:13px;font-weight:700}
-.qr-generator-field textarea,.qr-generator-field select,.qr-generator-field input[type="url"]{display:block;width:100%;box-sizing:border-box;margin-top:6px;border:1px solid #dbe4ef;border-radius:11px;outline:none;background:#fff;color:#243b5a;font:inherit;font-size:14px}
+.qr-generator-field textarea,.qr-generator-field select,.qr-generator-field input[type="url"],.qr-generator-field input[type="text"],.qr-generator-field input[type="password"]{display:block;width:100%;box-sizing:border-box;margin-top:6px;border:1px solid #dbe4ef;border-radius:11px;outline:none;background:#fff;color:#243b5a;font:inherit;font-size:14px}
 .qr-generator-field textarea{padding:12px 13px;min-height:90px;resize:vertical}
-.qr-generator-field select,.qr-generator-field input[type="url"]{height:44px;padding:0 13px}
-.qr-generator-field textarea:focus,.qr-generator-field select:focus,.qr-generator-field input[type="url"]:focus{border-color:#9fc3ed;box-shadow:0 0 0 4px rgba(23,105,224,.08)}
+.qr-generator-field select,.qr-generator-field input[type="url"],.qr-generator-field input[type="text"],.qr-generator-field input[type="password"]{height:44px;padding:0 13px}
+.qr-generator-field textarea:focus,.qr-generator-field select:focus,.qr-generator-field input[type="url"]:focus,.qr-generator-field input[type="text"]:focus,.qr-generator-field input[type="password"]:focus{border-color:#9fc3ed;box-shadow:0 0 0 4px rgba(23,105,224,.08)}
 .qr-generator-field input[type="color"]{display:block;margin-top:6px;width:64px;height:44px;padding:2px;border:1px solid #dbe4ef;border-radius:11px;background:#fff;cursor:pointer}
 .qr-generator-field input[type="color"]:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px}
+/* Phase 4.4 — WiFi mode: password show/hide row and the hidden-network
+   checkbox. `.qr-generator-password-field input` reuses the same
+   width:100% rule via its own declaration (the shared selector above can't
+   reach it, since it's now nested one level deeper next to the toggle
+   button) rather than duplicating the full style block. */
+.qr-generator-password-field{display:flex;align-items:stretch;gap:8px;margin-top:6px}
+.qr-generator-field .qr-generator-password-field input{flex:1;min-width:0;margin-top:0}
+.qr-generator-password-toggle{flex:0 0 auto;display:grid;place-items:center;width:44px;height:44px;border:1px solid #dbe4ef;border-radius:11px;background:#fff;color:#68778d;cursor:pointer}
+.qr-generator-password-toggle:hover:not(:disabled){border-color:#9fc3ed;color:var(--color-primary)}
+.qr-generator-password-toggle:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px}
+.qr-generator-password-toggle:disabled{opacity:.5;cursor:default}
+.qr-generator-checkbox-field{display:flex;align-items:center;gap:9px;margin:0 0 16px;color:#243b5a;font-size:13px;font-weight:700;cursor:pointer}
+.qr-generator-checkbox-field input{width:16px;height:16px;margin:0;cursor:pointer}
+.qr-generator-checkbox-field input:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px}
 .qr-generator-config{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 16px}
 .qr-generator-char-count{margin:-8px 0 16px;color:var(--color-muted);font-size:12px}
 .qr-generator-char-count.is-over-limit{color:#b3261e;font-weight:700}

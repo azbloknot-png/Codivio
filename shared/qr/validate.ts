@@ -7,9 +7,12 @@ import {
   MIN_QR_SIZE,
   type QrEncodingConfig,
   type QrPayload,
+  type QrTextPayload,
+  type QrUrlPayload,
   type QrValidationError,
   type QrValidationResult,
 } from "./types";
+import { buildWifiQrValue, validateWifiPayload } from "./wifi";
 
 /** Strict hex color only — `#rgb`, `#rrggbb`, or `#rrggbbaa`. Named CSS
  * colors and rgb()/hsl() are rejected in this phase to keep this a single
@@ -50,6 +53,10 @@ function validatePayloadValueBounds(value: string): QrValidationError[] {
 }
 
 export function validateQrPayload(payload: unknown): QrValidationError[] {
+  if ((payload as { kind?: unknown } | null)?.kind === "wifi") {
+    return validateWifiPayload(payload);
+  }
+
   if (
     typeof payload !== "object" ||
     payload === null ||
@@ -59,7 +66,7 @@ export function validateQrPayload(payload: unknown): QrValidationError[] {
     return [{ code: "empty_payload", message: "Payload text must not be empty." }];
   }
 
-  const { kind, value } = payload as QrPayload;
+  const { kind, value } = payload as QrTextPayload | QrUrlPayload;
   const errors = validatePayloadValueBounds(value);
   // An empty/over-length value is already fully reported — don't also run
   // the URL-format check against it (an empty string is trivially "not a
@@ -134,5 +141,8 @@ export function validateQrRequest(
     return { ok: false, errors };
   }
 
-  return { ok: true, payload: payload as QrPayload, config: mergedConfig };
+  const typedPayload = payload as QrPayload;
+  const encodedValue = typedPayload.kind === "wifi" ? buildWifiQrValue(typedPayload) : typedPayload.value;
+
+  return { ok: true, payload: typedPayload, config: mergedConfig, encodedValue };
 }
