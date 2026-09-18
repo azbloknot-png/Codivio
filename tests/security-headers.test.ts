@@ -11,7 +11,10 @@ describe("security headers baseline (Phase 2.11)", () => {
     expect(wrapped.headers.get("Content-Security-Policy")).not.toContain("unsafe-eval");
     expect(wrapped.headers.get("X-Content-Type-Options")).toBe("nosniff");
     expect(wrapped.headers.get("Referrer-Policy")).toBe("strict-origin-when-cross-origin");
-    expect(wrapped.headers.get("Permissions-Policy")).toContain("camera=()");
+    // Exact full-string match (not just toContain) so any future accidental
+    // widening of microphone/geolocation/payment, or of camera beyond
+    // same-origin, fails loudly instead of silently passing a loose check.
+    expect(wrapped.headers.get("Permissions-Policy")).toBe("camera=(self), microphone=(), geolocation=(), payment=()");
     expect(wrapped.headers.get("X-Frame-Options")).toBe("DENY");
   });
 

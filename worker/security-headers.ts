@@ -42,7 +42,7 @@ const STATIC_SECURITY_HEADERS: ReadonlyArray<readonly [string, string]> = [
   ["Content-Security-Policy", CONTENT_SECURITY_POLICY],
   ["X-Content-Type-Options", "nosniff"],
   ["Referrer-Policy", "strict-origin-when-cross-origin"],
-  ["Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()"],
+  ["Permissions-Policy", "camera=(self), microphone=(), geolocation=(), payment=()"],
   // Legacy fallback for browsers that don't honor CSP's frame-ancestors yet.
   ["X-Frame-Options", "DENY"],
 ];
