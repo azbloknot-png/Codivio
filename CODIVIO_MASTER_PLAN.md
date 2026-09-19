@@ -118,6 +118,9 @@ Phase 3 tamamlandıqdan sonra bütün Master Plan üzrə çəkili tamamlanma fai
 ### 4.7 QR Customization + Export
 ### 4.8 Validation / Security / Abuse Controls
 ### 4.9 QR Analytics Architecture
+
+Phase 3.16/3.17-də quraşdırılmış consent-aware GA4 inteqrasiyasının üzərində — yeni Admin Analytics dashboard (Phase 9.4) və ya yeni D1 cədvəli deyil, `CLAUDE.md` §12-də adlandırılmış `qr_generate`/`qr_scan` hadisələrinin arxitekturası. `src/lib/analytics.ts`-ə generic, consent-aware `trackEvent(name, params)` əlavə olundu (eyni `initialized`/`disabled`/production-host/`/admin` mühafizələri ilə). Yeni, ayrıca `src/lib/qr-analytics.ts` faylı `trackQrGenerate(kind)`/`trackQrScan(kind)` tipli wrapper-lərini təqdim edir — hər ikisi yalnız qapalı literal union ("text"|"url"|"wifi"|"vcard" generasiya üçün; `shared/qr/classify.ts`-in `ScannedQrContentKind`-i skan üçün) qəbul edir, heç vaxt xam mətn/decode edilmiş məzmun deyil — bu, tip səviyyəsində məcburiyyətdir, sadəcə konvensiya deyil. `QrCodeGeneratorTool.tsx`/`QrCodeScannerTool.tsx` uğurlu generasiya/skan nöqtələrində bu funksiyaları çağırır. Görün: `PROJECT_STATE.md`-in "QR Analytics Architecture status (Phase 4.9)" bölməsi tam detal üçün.
+
 ### 4.10 QR Tools QA + Production Release
 
 ---

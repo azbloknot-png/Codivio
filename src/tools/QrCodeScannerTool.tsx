@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "reac
 import { AlertTriangle, Camera, Check, Copy, ImageOff, RotateCcw, ScanLine, Upload, VideoOff } from "lucide-react";
 import { decodeQrFromImageData } from "../lib/qr-scanner-engine";
 import { classifyScannedQrContent } from "../../shared/qr";
+import { trackQrScan } from "../lib/qr-analytics";
 
 /**
  * Phase 4.6 — QR Code Scanner. Loaded via its own lazy chunk from
@@ -121,6 +122,9 @@ function QrCodeScannerTool() {
       setDecodedText(result.data);
       setCopyState("idle");
       setPhase("success");
+      // Phase 4.9 — metadata only (the classified content *kind*, e.g.
+      // "url"/"wifi"/"text"), never the decoded text itself.
+      trackQrScan(classifyScannedQrContent(result.data).kind);
       return;
     }
     rafRef.current = requestAnimationFrame(scanFrame);
@@ -223,6 +227,9 @@ function QrCodeScannerTool() {
         setDecodedText(result.data);
         setCopyState("idle");
         setPhase("success");
+        // Phase 4.9 — metadata only, see the matching comment in the
+        // camera-path success branch above.
+        trackQrScan(classifyScannedQrContent(result.data).kind);
       } else {
         setPhase("no-code-found");
       }

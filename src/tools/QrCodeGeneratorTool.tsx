@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Download, Eye, EyeOff } from "lucide-react";
 import { generateQrCode, QrGenerationError, type QrGenerateResult, type QrOutputFormat } from "../lib/qr-engine";
 import { downloadTextAsFile, triggerDownload } from "../lib/download-file";
+import { trackQrGenerate } from "../lib/qr-analytics";
 import { MAX_QR_PAYLOAD_LENGTH, type QrErrorCorrectionLevel, type QrPayload, type QrWifiSecurity } from "../../shared/qr";
 
 /**
@@ -131,6 +132,10 @@ function QrCodeGeneratorTool() {
           if (!isMountedRef.current || requestIdRef.current !== requestId) return;
           setResult(generated);
           setErrors([]);
+          // Phase 4.9 — metadata only (payload.kind is a closed literal
+          // union: "text"|"url"|"wifi"|"vcard"), never the actual text/
+          // WiFi credentials/vCard fields the user entered.
+          trackQrGenerate(payload.kind);
         })
         .catch((error: unknown) => {
           if (!isMountedRef.current || requestIdRef.current !== requestId) return;

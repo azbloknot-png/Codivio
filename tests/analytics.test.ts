@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import fs from "node:fs";
 import {
   disableAnalytics,
@@ -6,6 +6,7 @@ import {
   GA4_MEASUREMENT_ID,
   isProductionHost,
   isTrackablePath,
+  trackEvent,
   trackPageView,
 } from "../src/lib/analytics";
 
@@ -67,6 +68,70 @@ describe("enableAnalytics / disableAnalytics / trackPageView — safe outside a 
     // internal `!initialized` guard is exercised here, not just asserted
     // to exist — see src/lib/analytics.ts's `initialized`/`disabled` state.
     expect(() => trackPageView("/tools")).not.toThrow();
+  });
+
+  it("trackEvent sends nothing before enableAnalytics has ever run", () => {
+    expect(() => trackEvent("qr_generate", { content_kind: "text" })).not.toThrow();
+  });
+});
+
+// Phase 4.9 — QR Analytics Architecture. Real, executed consent/admin-
+// exclusion behavior for the new generic trackEvent primitive, using a
+// minimal stubbed window/document (same technique as tests/consent.test.ts
+// and the App.tsx-review task's own deleted scratch simulation) rather
+// than only asserting the guard clauses exist in source.
+describe("trackEvent — real executed consent + /admin gating", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  function stubBrowser(pathname: string) {
+    const calls: unknown[][] = [];
+    vi.stubGlobal("window", {
+      location: { hostname: "codivio.online", pathname, href: `https://codivio.online${pathname}` },
+    });
+    vi.stubGlobal("document", {
+      cookie: "",
+      head: { appendChild: () => undefined },
+      createElement: () => ({ async: false, src: "" }),
+    });
+    window.gtag = (...args: unknown[]) => calls.push(args);
+    window.dataLayer = [];
+    return calls;
+  }
+
+  it("sends nothing before consent is granted", () => {
+    const calls = stubBrowser("/tools/qr-code-generator");
+    trackEvent("qr_generate", { content_kind: "text" });
+    expect(calls).toHaveLength(0);
+  });
+
+  it("sends the exact event name and params once consent is granted, on a trackable path", () => {
+    stubBrowser("/tools/qr-code-generator");
+    enableAnalytics();
+    // enableAnalytics installs its own real gtag on first init; re-stub it
+    // afterward so this test observes calls regardless of call order.
+    const calls: unknown[][] = [];
+    window.gtag = (...args: unknown[]) => calls.push(args);
+    trackEvent("qr_generate", { content_kind: "wifi" });
+    expect(calls).toEqual([["event", "qr_generate", { content_kind: "wifi" }]]);
+  });
+
+  it("sends nothing on an /admin path even with consent granted", () => {
+    stubBrowser("/admin/tools");
+    enableAnalytics();
+    const calls: unknown[][] = [];
+    window.gtag = (...args: unknown[]) => calls.push(args);
+    trackEvent("qr_scan", { content_kind: "url" });
+    expect(calls).toHaveLength(0);
+  });
+
+  it("sends nothing after consent is withdrawn", () => {
+    stubBrowser("/tools/qr-code-scanner");
+    enableAnalytics();
+    disableAnalytics();
+    const calls: unknown[][] = [];
+    window.gtag = (...args: unknown[]) => calls.push(args);
+    trackEvent("qr_scan", { content_kind: "text" });
+    expect(calls).toHaveLength(0);
   });
 });
 

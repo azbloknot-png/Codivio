@@ -165,3 +165,27 @@ export function trackPageView(pathname: string): void {
     page_location: window.location.href,
   });
 }
+
+/**
+ * Sends a generic custom GA4 event (Phase 4.9 — QR Analytics Architecture's
+ * `qr_generate`/`qr_scan` are its first callers; see `src/lib/qr-analytics.ts`
+ * for those typed wrappers). Applies exactly the same guards as
+ * `trackPageView` above: no-ops unless consent has been granted via
+ * `enableAnalytics()` and not since withdrawn, and excludes `/admin/*` (via
+ * the current `window.location.pathname`, since a generic event has no
+ * pathname parameter of its own the way a page view does).
+ *
+ * This function itself is content-agnostic — it will send whatever `params`
+ * it's given. It is deliberately NOT exported for direct use by tool
+ * components; callers should go through a typed wrapper (like
+ * `src/lib/qr-analytics.ts`'s functions) that restricts `params` to a
+ * closed shape known not to contain payload/personal content, rather than
+ * calling this with a free-form object built ad hoc at the call site.
+ */
+export function trackEvent(name: string, params: Record<string, string> = {}): void {
+  if (!initialized || disabled) return;
+  if (typeof window === "undefined" || typeof window.gtag !== "function") return;
+  if (!isTrackablePath(window.location.pathname)) return;
+
+  window.gtag("event", name, params);
+}

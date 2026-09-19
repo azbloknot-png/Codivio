@@ -671,7 +671,7 @@ Deferred (require real browser/screenshot verification): tool-card height/width 
 
 ## Phase 3.16 — GA4 Analytics Foundation (2026-09-19)
 
-**Implemented and tested — NOT YET committed, pushed, or deployed** (awaiting explicit authorization). Retroactively numbered into Phase 3 (see `CODIVIO_MASTER_PLAN.md` and `PROJECT_STATE.md`'s "GA4 Analytics Foundation status (Phase 3.16)") — Phase 3's own original scope (`CLAUDE.md` §4: "Google / SEO / Analytics... GA4/GTM where appropriate") always included this; it was simply delivered later, after Phase 3.15's closure, as its own explicitly-scoped task.
+**COMPLETE — implemented, tested, committed, pushed, AND DEPLOYED.** Retroactively numbered into Phase 3 (see `CODIVIO_MASTER_PLAN.md` and `PROJECT_STATE.md`'s "GA4 Analytics Foundation status (Phase 3.16)") — Phase 3's own original scope (`CLAUDE.md` §4: "Google / SEO / Analytics... GA4/GTM where appropriate") always included this; it was simply delivered later, after Phase 3.15's closure, as its own explicitly-scoped task.
 
 - New `src/lib/analytics.ts`: the only file that talks to gtag.js. Hardcoded public `GA4_MEASUREMENT_ID` (not a secret). `isProductionHost`/`isTrackablePath` gate GA4 to the real `codivio.online` apex and exclude `/admin/*`. gtag.js loads via a dynamically-appended `<script src=...>` tag — never inline, no CSP `'unsafe-inline'` exception needed.
 - `src/App.tsx` gained a small `Analytics` component (mirrors the existing `ScrollRestoration` single-render-point pattern) sending one `page_view` per route change.
@@ -679,11 +679,11 @@ Deferred (require real browser/screenshot verification): tool-card height/width 
 - Fixed a pre-existing Phase 3.8 test false positive (`tests/technical-seo-3.8.test.ts`) that a legitimate new CSP comment tripped — now checks the actual computed CSP header value instead of raw file text.
 - Test/build: `npm run typecheck` — PASS. `npm run typecheck:tests` — PASS. `npm test` — PASS, **446/446** (438 previous + 8 new). `npm run build` — PASS.
 - **Real compliance finding, resolved by 3.17 (next), not left open**: shipping GA4 unconditionally would have contradicted the already-published `/cookies` page's own promise of a future consent interface.
-- **Git**: not committed. **Deploy**: not performed.
+- **Git**: commit `f0b9aa0` ("feat: add consent-aware GA4 analytics and cookie preferences"), pushed to `origin/main`. **Deployed**: `npx wrangler deploy` — **Cloudflare Version ID `cb557da9-b1aa-4908-a4fc-392395936590`**, production URL `https://codivio.online`. Live-verified: raw HTML contains zero static `gtag`/`googletagmanager` references (GA4 only loads dynamically post-consent); the live main JS bundle confirmed byte-for-byte identical to the local build and confirmed to contain `G-NFMYHQX593`, the `gtag/js` URL, and the `ga-disable-` flag; CSP present on every response with exactly the expected widened hosts.
 
 ## Phase 3.17 — Cookie Consent & Privacy Foundation (2026-09-19)
 
-**Implemented and tested — NOT YET committed, pushed, or deployed** (awaiting explicit authorization). Direct, immediate follow-up to 3.16 — gates GA4 behind real, granular consent and makes `/cookies` describe real behavior for the first time.
+**COMPLETE — implemented, tested, committed, pushed, AND DEPLOYED.** Direct, immediate follow-up to 3.16 — gates GA4 behind real, granular consent and makes `/cookies` describe real behavior for the first time.
 
 - New `src/lib/consent.ts`: generic, analytics-agnostic, `localStorage`-only consent store (same try/catch-degrades-gracefully pattern as `src/i18n/LanguageContext.tsx`). `advertising`/`preferences` are always forced `false` internally regardless of what's requested or stored — neither is a real feature yet.
 - New `src/consent/ConsentContext.tsx` (Context/Provider, same shape as `LanguageProvider`) — the one place that calls `enableAnalytics()`/`disableAnalytics()` (3.16's module, extended this task with Google's documented `ga-disable-<id>` opt-out flag + best-effort GA cookie cleanup on revoke) in reaction to a consent change.
@@ -691,7 +691,7 @@ Deferred (require real browser/screenshot verification): tool-card height/width 
 - `CookiePolicyPage` updated to real, present-tense behavior with a working "Manage cookie preferences" button. New `shared/i18n/cookieConsent` section — genuinely distinct AZ/TR/EN copy for the banner, modal, and all 4 categories.
 - Test/build: `npm run typecheck` — PASS. `npm run typecheck:tests` — PASS. `npm test` — PASS, **470/470** (446 previous + 24 new). `npm run build` — PASS.
 - **Real, executed end-to-end verification** (minimal DOM-stubbed Vitest run, written and deleted within this task, not part of the permanent suite): first visit loads no script and sends nothing; Accept All loads gtag.js and a real page view is sent; `/admin` excluded even with consent granted; Reject Optional stops all further events; re-enabling after a disable works without a reload; host-gating confirmed correct.
-- **Git**: not committed. **Deploy**: not performed.
+- **Git**: commit `f0b9aa0`, pushed to `origin/main`. **Deployed**: Cloudflare Version ID `cb557da9-b1aa-4908-a4fc-392395936590` (same release as 3.16 above), production URL `https://codivio.online`. Live-verified: `/cookies`/`/privacy` both `200`; the real AZ banner/category strings ("Hamısını qəbul et", "İstəyə bağlıları rədd et", "Cookie ayarları", "Reserved for future use") confirmed present in the live bundle; `/admin/login` still reachable and the `/admin` exclusion string confirmed present in the live bundle; `https://www.codivio.online/` still correctly `301`s to the apex.
 
 ## Mandatory Documentation & Phase Management Rule established (2026-09-19)
 
@@ -702,10 +702,24 @@ Deferred (require real browser/screenshot verification): tool-card height/width 
 
 ## Phase 3.17 review — PrivacyPage wording + regression pass (2026-09-19)
 
-**Implemented and tested — NOT YET committed, pushed, or deployed** (review/fix pass on top of the still-pending 3.16/3.17, not a separate release).
+**COMPLETE — implemented, tested, committed, pushed, AND DEPLOYED** as part of the same `f0b9aa0` commit and `cb557da9-b1aa-4908-a4fc-392395936590` deployment as 3.16/3.17 above (a review/fix pass folded into that same release, not a separate one).
 
 - `PrivacyPage`'s "Analytics and advertising" paragraph rewritten from generic future-tense copy to accurately describe 3.17's real behavior: GA4 named explicitly, off by default and not loaded until consent is given, Advertising named as a reserved/inactive placeholder, with a pointer to the Cookie Policy page.
 - Regression review: `src/lib/analytics.ts`, `src/lib/consent.ts`, `src/consent/ConsentContext.tsx` re-read fresh and confirmed unchanged since 3.16/3.17; no test asserted the old `PrivacyPage` wording, so none needed updating for the wording change itself.
 - Test/build: `npm run typecheck` — PASS. `npm run typecheck:tests` — PASS. `npm test` — PASS, **470/470** (unchanged count). `npm run build` — PASS.
 - Documentation sync check (`CLAUDE.md` §27): `CLAUDE.md`/`CODIVIO_MASTER_PLAN.md` needed no change (wording fix within 3.17's already-recorded scope). `PROJECT_STATE.md` had one stale sentence from 3.17's original entry, corrected in place (see "Phase 3.17 review — PrivacyPage wording + regression pass" there).
+- **Git**: committed as part of `f0b9aa0`. **Deployed**: live, Cloudflare Version ID `cb557da9-b1aa-4908-a4fc-392395936590` — the updated `PrivacyPage` wording ("off by default") confirmed present in the live bundle.
+
+## Phase 4.9 — QR Analytics Architecture (2026-09-19)
+
+**Implemented and tested — NOT YET committed, pushed, or deployed** (awaiting explicit authorization). Builds directly on the consent-aware GA4 integration from Phase 3.16/3.17 — no new D1 table, no Admin dashboard (Phase 9.4 remains separate), no new backend route.
+
+- New generic `src/lib/analytics.ts#trackEvent(name, params)`: applies the exact same guards `trackPageView` already uses (consent-gated via `initialized`/`disabled`, `/admin/*` excluded via `window.location.pathname`).
+- New `src/lib/qr-analytics.ts`: `trackQrGenerate(contentKind: QrPayload["kind"])` / `trackQrScan(contentKind: ScannedQrContentKind)` — typed wrappers around `trackEvent`, kept in their own QR-specific file (mirrors the existing `qr-engine.ts`/`qr-scanner-engine.ts` separation).
+- **Privacy enforced by the type system**: both functions accept only a closed-union "kind" literal — no parameter shape exists that could accept raw payload text or decoded content. Proven with two `@ts-expect-error` compile-time checks in `tests/qr-analytics.test.ts` attempting to pass free-form strings — `npm run typecheck:tests` would fail with "Unused '@ts-expect-error' directive" if either stopped being a real type error.
+- `QrCodeGeneratorTool.tsx` calls `trackQrGenerate(payload.kind)` at its live-preview success point; `QrCodeScannerTool.tsx` calls `trackQrScan(classifyScannedQrContent(result.data).kind)` at both its success points (camera + upload) — never the entered text/credentials/vCard fields or the decoded content itself.
+- No CSP change needed — custom events reuse the exact hosts already whitelisted for `page_view` in Phase 3.16.
+- Test/build: `npm run typecheck` — PASS. `npm run typecheck:tests` — PASS (including the 2 compile-time privacy checks). `npm test` — PASS, **482/482** (470 previous + 12 new). `npm run build` — PASS.
+- **Real, executed verification** (part of the permanent suite): `trackEvent`/`trackQrGenerate`/`trackQrScan` confirmed to send nothing before consent, send the exact `{content_kind}` payload once granted, send nothing on `/admin` even with consent granted, and send nothing after consent is withdrawn.
+- Bundle impact: Worker unchanged. `qr-analytics.ts` split into its own tiny shared chunk (0.14 kB, imported by both the generator and scanner lazy chunks). `QrCodeGeneratorTool` +0.07 kB, `QrCodeScannerTool` +0.08 kB.
 - **Git**: not committed. **Deploy**: not performed.
