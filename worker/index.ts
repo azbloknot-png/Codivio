@@ -21,6 +21,7 @@ import {
 } from "./auth";
 import { isKnownPublicRoute, isPageNavigationCandidate, normalizePathname } from "./route-guard";
 import { injectStaticSeoMetadata } from "./seo-rewrite";
+import { CANONICAL_DOMAIN } from "../shared/seo/site";
 import { handleGetSettings, handlePatchSettings, handlePublicSettings } from "./settings";
 import {
   handleCreatePage,
@@ -56,6 +57,12 @@ import { withSecurityHeaders } from "./security-headers";
 
 export type { Env };
 
+/** Derived from the same CANONICAL_DOMAIN source of truth shared/seo/site.ts
+ * already uses for canonical/OG URLs, rather than a second hardcoded
+ * "codivio.online" string — see the www-consolidation redirect in route(). */
+const CANONICAL_HOSTNAME = new URL(CANONICAL_DOMAIN).hostname;
+const WWW_HOSTNAME = `www.${CANONICAL_HOSTNAME}`;
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     return withSecurityHeaders(await route(request, env), request);
@@ -67,6 +74,20 @@ export default {
  * or static asset, without needing to touch each handler individually. */
 async function route(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
+
+    // Phase 3.15 SEO canonicalization follow-up — consolidate the www
+    // subdomain onto the canonical apex domain with a permanent redirect,
+    // preserving the full path and query string. Scoped to an exact
+    // hostname match: never fires for codivio.online itself, the
+    // codivio.azbloknot.workers.dev host, localhost, or any other host, and
+    // can never loop, since the redirect target's own hostname (the apex)
+    // never matches this check again. Runs first, before any other
+    // routing, so it applies uniformly to every path (static pages, tool
+    // routes, and /api/*) rather than needing a second copy per branch.
+    if (url.hostname === WWW_HOSTNAME) {
+      const target = new URL(`${url.pathname}${url.search}`, CANONICAL_DOMAIN);
+      return Response.redirect(target.toString(), 301);
+    }
 
     if (url.pathname === "/api/health") {
       return handleHealth(env);
