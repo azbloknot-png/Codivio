@@ -312,4 +312,36 @@ export const tr: Translations = {
     faqFreeQuestion: "Free araçlar ücretsiz kalacak mı?",
     faqFreeAnswer: "Codivio'nun araçları varsayılan olarak ücretsiz öncelikli kalır; gelecekteki herhangi bir ücretli katman bir değişiklik değil, ek olarak planlanmaktadır.",
   },
+  cookieConsent: {
+    bannerMessage: "Codivio, temel site işlevleri için ve yalnızca izninizle analitik için çerez kullanır.",
+    bannerLearnMore: "Daha fazla bilgi",
+    acceptAll: "Tümünü kabul et",
+    rejectOptional: "İsteğe bağlıları reddet",
+    openSettings: "Çerez ayarları",
+    modalTitle: "Çerez ayarları",
+    modalIntro: "Codivio'nun kullanabileceği isteğe bağlı çerez kategorilerini seçin. Gerekli çerezler her zaman etkindir çünkü site onlar olmadan doğru çalışamaz.",
+    alwaysActive: "Her zaman etkin",
+    reservedForFuture: "Gelecek için ayrılmıştır — henüz etkin değil",
+    savePreferences: "Tercihleri kaydet",
+    closeSettings: "Kapat",
+    categories: {
+      necessary: {
+        name: "Gerekli",
+        description: "Dilinizi ve çerez tercihlerinizi hatırlamak gibi temel site işlevleri için gereklidir. Devre dışı bırakılamaz.",
+      },
+      analytics: {
+        name: "Analitik",
+        description: "Codivio'nun sitenin nasıl kullanıldığını anlamasına yardımcı olur (Google Analytics 4), böylece geliştirilebilir. Varsayılan olarak kapalıdır.",
+      },
+      advertising: {
+        name: "Reklam",
+        description: "Gelecekte reklam kişiselleştirmesini destekleyebilir. Codivio'da bugün hiçbir reklam teknolojisi etkin değildir.",
+      },
+      preferences: {
+        name: "Tercihler",
+        description: "Dil dışında isteğe bağlı site tercihlerini hatırlayabilir. Codivio'da bugün böyle bir özellik bulunmamaktadır.",
+      },
+    },
+    managePreferencesButton: "Çerez tercihlerini yönet",
+  },
 };

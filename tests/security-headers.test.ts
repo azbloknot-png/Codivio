@@ -32,4 +32,22 @@ describe("security headers baseline (Phase 2.11)", () => {
     expect(wrapped.status).toBe(404);
     expect(wrapped.headers.get("Set-Cookie")).toBe("codivio_session=; Max-Age=0");
   });
+
+  // GA4 foundational integration: the CSP was widened by exactly the hosts
+  // Google's own gtag.js CSP guidance names, nothing broader, and with no
+  // new 'unsafe-inline'/'unsafe-eval' exception introduced alongside it.
+  it("allows exactly the GA4/gtag.js hosts needed, with no broader script/style exception", () => {
+    const csp = withSecurityHeaders(Response.json({}), new Request("http://localhost/")).headers.get(
+      "Content-Security-Policy",
+    );
+    expect(csp).toContain("script-src 'self' https://www.googletagmanager.com");
+    expect(csp).toContain("https://www.google-analytics.com");
+    expect(csp).toContain("https://*.google-analytics.com");
+    expect(csp).toContain("https://*.analytics.google.com");
+    expect(csp).toMatch(/connect-src[^;]*https:\/\/www\.googletagmanager\.com/);
+    expect(csp).not.toContain("unsafe-inline");
+    expect(csp).not.toContain("unsafe-eval");
+    // style-src stays untouched by the GA4 widening — gtag.js needs no CSS.
+    expect(csp).toContain("style-src 'self'");
+  });
 });

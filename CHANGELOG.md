@@ -666,5 +666,46 @@ Deferred (require real browser/screenshot verification): tool-card height/width 
 - `worker/index.ts#route()` now checks the request hostname first: an exact match on `www.codivio.online` (derived from `shared/seo/site.ts#CANONICAL_DOMAIN`, not a second hardcoded string) issues a `301` to the same path+query on the apex. Every other host (the apex itself, `codivio.azbloknot.workers.dev`, `localhost`) is unaffected. No loop is possible — the redirect target's hostname never matches the same check again.
 - New `tests/www-redirect.test.ts` (5 tests, same `worker.fetch()` + `makeEnv()` pattern as `tests/route-guard.test.ts`): www homepage redirect, nested-route redirect, query-string preservation, non-www hosts unaffected, no redirect loop.
 - Test/build: `npm run typecheck` — PASS. `npm run typecheck:tests` — PASS. `npm test` — PASS, **438/438** (433 previous + 5 new). `npm run build` — PASS. Bundle impact: Worker 228.35→228.58 kB (+0.23 kB); client bundle byte-identical (Worker-only change).
-- **Git**: not committed. **Deploy**: not performed. Per explicit instruction, this checkpoint stops at implementation + tests.
+- **Git**: not committed at the time this entry was first written. **Correction, 2026-09-19 (later the same day)**: approved, committed (`b7efd1e`), pushed, and deployed (Cloudflare Version ID `8a652aa1-0633-44a2-8279-cbfa53b5cb77`), all live-verified — see `PROJECT_STATE.md`'s "www → apex canonicalization redirect" section for the corrected, current record. This entry's original text is left in place above rather than rewritten, matching how this file otherwise preserves history.
 - `PROJECT_STATE.md` updated: the stale "`www.codivio.online` → HTTP 525" claims (Phase 3.15 audit, Phase 3.15 remediation, Phase 3.15 Production Release deferred-items list, Phase 3 closure summary, and the Phase 3.2 technical-SEO-audit redirect-behavior note) are each annotated with a dated update pointing to the new "www → apex canonicalization redirect" status section — the original historical findings are preserved as-written, not rewritten, per this project's existing convention for superseded checkpoint records.
+
+## Phase 3.16 — GA4 Analytics Foundation (2026-09-19)
+
+**Implemented and tested — NOT YET committed, pushed, or deployed** (awaiting explicit authorization). Retroactively numbered into Phase 3 (see `CODIVIO_MASTER_PLAN.md` and `PROJECT_STATE.md`'s "GA4 Analytics Foundation status (Phase 3.16)") — Phase 3's own original scope (`CLAUDE.md` §4: "Google / SEO / Analytics... GA4/GTM where appropriate") always included this; it was simply delivered later, after Phase 3.15's closure, as its own explicitly-scoped task.
+
+- New `src/lib/analytics.ts`: the only file that talks to gtag.js. Hardcoded public `GA4_MEASUREMENT_ID` (not a secret). `isProductionHost`/`isTrackablePath` gate GA4 to the real `codivio.online` apex and exclude `/admin/*`. gtag.js loads via a dynamically-appended `<script src=...>` tag — never inline, no CSP `'unsafe-inline'` exception needed.
+- `src/App.tsx` gained a small `Analytics` component (mirrors the existing `ScrollRestoration` single-render-point pattern) sending one `page_view` per route change.
+- `worker/security-headers.ts` CSP widened by exactly the hosts Google's own gtag.js documentation names (`googletagmanager.com`, `google-analytics.com` + regional subdomains) — nothing broader, no `'unsafe-inline'`/`'unsafe-eval'` added.
+- Fixed a pre-existing Phase 3.8 test false positive (`tests/technical-seo-3.8.test.ts`) that a legitimate new CSP comment tripped — now checks the actual computed CSP header value instead of raw file text.
+- Test/build: `npm run typecheck` — PASS. `npm run typecheck:tests` — PASS. `npm test` — PASS, **446/446** (438 previous + 8 new). `npm run build` — PASS.
+- **Real compliance finding, resolved by 3.17 (next), not left open**: shipping GA4 unconditionally would have contradicted the already-published `/cookies` page's own promise of a future consent interface.
+- **Git**: not committed. **Deploy**: not performed.
+
+## Phase 3.17 — Cookie Consent & Privacy Foundation (2026-09-19)
+
+**Implemented and tested — NOT YET committed, pushed, or deployed** (awaiting explicit authorization). Direct, immediate follow-up to 3.16 — gates GA4 behind real, granular consent and makes `/cookies` describe real behavior for the first time.
+
+- New `src/lib/consent.ts`: generic, analytics-agnostic, `localStorage`-only consent store (same try/catch-degrades-gracefully pattern as `src/i18n/LanguageContext.tsx`). `advertising`/`preferences` are always forced `false` internally regardless of what's requested or stored — neither is a real feature yet.
+- New `src/consent/ConsentContext.tsx` (Context/Provider, same shape as `LanguageProvider`) — the one place that calls `enableAnalytics()`/`disableAnalytics()` (3.16's module, extended this task with Google's documented `ga-disable-<id>` opt-out flag + best-effort GA cookie cleanup on revoke) in reaction to a consent change.
+- New `src/consent/CookieConsentBanner.tsx` (Accept All / Reject Optional / Cookie Settings) and `src/consent/CookieSettingsModal.tsx` (4 categories — only Analytics is a real, editable toggle; Necessary is always-on/locked; Advertising/Preferences are visible but locked off, "reserved for future use").
+- `CookiePolicyPage` updated to real, present-tense behavior with a working "Manage cookie preferences" button. New `shared/i18n/cookieConsent` section — genuinely distinct AZ/TR/EN copy for the banner, modal, and all 4 categories.
+- Test/build: `npm run typecheck` — PASS. `npm run typecheck:tests` — PASS. `npm test` — PASS, **470/470** (446 previous + 24 new). `npm run build` — PASS.
+- **Real, executed end-to-end verification** (minimal DOM-stubbed Vitest run, written and deleted within this task, not part of the permanent suite): first visit loads no script and sends nothing; Accept All loads gtag.js and a real page view is sent; `/admin` excluded even with consent granted; Reject Optional stops all further events; re-enabling after a disable works without a reload; host-gating confirmed correct.
+- **Git**: not committed. **Deploy**: not performed.
+
+## Mandatory Documentation & Phase Management Rule established (2026-09-19)
+
+**Process/governance change, no application code touched.** `CLAUDE.md` gained a new §27 making it binding, for every future Codivio task, that a new feature/sub-feature/checkpoint is not done until `CLAUDE.md`, `CODIVIO_MASTER_PLAN.md`, `PROJECT_STATE.md`, and `CHANGELOG.md` all agree with what the code actually does — extending §24's existing memory-file discipline to explicitly cover `CLAUDE.md` itself and `CODIVIO_MASTER_PLAN.md`, which §24 didn't previously name. `CODIVIO_MASTER_PLAN.md`'s own "Roadmap qaydaları" section gained a short cross-reference to the same rule rather than a duplicated copy.
+
+- **Applying the new rule surfaced two real, concrete gaps, both fixed in this same pass**: (1) the just-completed GA4/Cookie Consent work had no phase/sub-phase number anywhere — resolved, with explicit user approval, by retroactively reopening Phase 3 and adding 3.16/3.17 (see above); (2) `PROJECT_STATE.md`'s and this file's own "www → apex canonicalization redirect" entries still said "not committed/deployed" after that work had actually been approved, committed, and deployed in a later turn — corrected in place, with the original stale text preserved and annotated rather than silently rewritten.
+- No new phase was invented for GA4/Cookie Consent — per the new rule's own "don't fragment work belonging to an existing phase" principle, both were added as sub-phases of Phase 3, whose own original description already named this exact scope.
+
+## Phase 3.17 review — PrivacyPage wording + regression pass (2026-09-19)
+
+**Implemented and tested — NOT YET committed, pushed, or deployed** (review/fix pass on top of the still-pending 3.16/3.17, not a separate release).
+
+- `PrivacyPage`'s "Analytics and advertising" paragraph rewritten from generic future-tense copy to accurately describe 3.17's real behavior: GA4 named explicitly, off by default and not loaded until consent is given, Advertising named as a reserved/inactive placeholder, with a pointer to the Cookie Policy page.
+- Regression review: `src/lib/analytics.ts`, `src/lib/consent.ts`, `src/consent/ConsentContext.tsx` re-read fresh and confirmed unchanged since 3.16/3.17; no test asserted the old `PrivacyPage` wording, so none needed updating for the wording change itself.
+- Test/build: `npm run typecheck` — PASS. `npm run typecheck:tests` — PASS. `npm test` — PASS, **470/470** (unchanged count). `npm run build` — PASS.
+- Documentation sync check (`CLAUDE.md` §27): `CLAUDE.md`/`CODIVIO_MASTER_PLAN.md` needed no change (wording fix within 3.17's already-recorded scope). `PROJECT_STATE.md` had one stale sentence from 3.17's original entry, corrected in place (see "Phase 3.17 review — PrivacyPage wording + regression pass" there).
+- **Git**: not committed. **Deploy**: not performed.

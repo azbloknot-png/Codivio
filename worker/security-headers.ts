@@ -15,23 +15,39 @@
  *  - The only inline `style={}` in the whole frontend (the public CMS page
  *    body) was replaced with a CSS class this same checkpoint specifically
  *    so style-src does not need 'unsafe-inline'.
- *  - No analytics/ads/third-party embed exists yet (Phase 3/7 future work)
- *    — this policy is intentionally strict now and should be *loosened*
- *    deliberately, directive by directive, only when a real integration
- *    (e.g. GA4/AdSense) actually needs it, never widened speculatively.
  *  - img-src allows data: because inline data-URI images (e.g. a
  *    client-rendered QR code preview) are a plausible near-term need
  *    (Phase 4) and pose no script-execution risk; nothing else is widened
  *    on spec.
+ *  - GA4 foundational integration: script-src/img-src/connect-src were each
+ *    widened by exactly the hosts Google's own gtag.js CSP guidance names
+ *    (googletagmanager.com, google-analytics.com + its regional
+ *    subdomains) — no broader pattern, and still no 'unsafe-inline'
+ *    anywhere (see src/lib/analytics.ts for why none is needed). AdSense
+ *    remains future work (Phase 7) and has not widened anything here.
  */
 
 const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
-  "script-src 'self'",
+  // Widened for GA4 (foundational analytics integration): gtag.js itself
+  // is loaded from googletagmanager.com. This is the exact host Google's
+  // own gtag.js CSP guidance names — no broader than that, and no
+  // 'unsafe-inline' was added (src/lib/analytics.ts's dataLayer/gtag
+  // bootstrap is same-origin bundled JS, not an inline <script> block).
+  "script-src 'self' https://www.googletagmanager.com",
   "style-src 'self'",
-  "img-src 'self' data:",
+  // googletagmanager.com is also allowed here: gtag.js's own fallback
+  // image-beacon transport can use it, per Google's documented CSP.
+  "img-src 'self' data: https://www.google-analytics.com https://www.googletagmanager.com",
   "font-src 'self'",
-  "connect-src 'self'",
+  // google-analytics.com (+ its regional subdomains) and analytics.google.com
+  // receive the actual measurement hits; googletagmanager.com is also
+  // contacted by gtag.js for its own remote config. Exactly Google's
+  // documented minimum host set for gtag.js — no broader pattern than that.
+  // An incomplete list here would silently drop page views (a blocked
+  // network request, invisible without browser devtools), so this errs
+  // toward Google's full documented set rather than a narrower guess.
+  "connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

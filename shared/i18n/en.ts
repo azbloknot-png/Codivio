@@ -309,4 +309,36 @@ export const en: Translations = {
     faqFreeQuestion: "Will Free tools stay free?",
     faqFreeAnswer: "Codivio's tools remain free-first by default; any future paid tier is planned as an addition, not a replacement.",
   },
+  cookieConsent: {
+    bannerMessage: "Codivio uses cookies for essential site functionality and, only with your consent, for analytics.",
+    bannerLearnMore: "Learn more",
+    acceptAll: "Accept all",
+    rejectOptional: "Reject optional",
+    openSettings: "Cookie settings",
+    modalTitle: "Cookie settings",
+    modalIntro: "Choose which optional cookie categories Codivio may use. Necessary cookies are always active because the site can't function correctly without them.",
+    alwaysActive: "Always active",
+    reservedForFuture: "Reserved for future use — not active yet",
+    savePreferences: "Save preferences",
+    closeSettings: "Close",
+    categories: {
+      necessary: {
+        name: "Necessary",
+        description: "Required for core site functionality, such as remembering your language and cookie preferences. Cannot be disabled.",
+      },
+      analytics: {
+        name: "Analytics",
+        description: "Helps Codivio understand how the site is used (Google Analytics 4), so it can be improved. Off by default.",
+      },
+      advertising: {
+        name: "Advertising",
+        description: "Would support ad personalization in the future. No advertising technology is active on Codivio today.",
+      },
+      preferences: {
+        name: "Preferences",
+        description: "Would remember optional site preferences beyond language. No such feature exists on Codivio today.",
+      },
+    },
+    managePreferencesButton: "Manage cookie preferences",
+  },
 };

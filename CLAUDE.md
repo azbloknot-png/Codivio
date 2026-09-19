@@ -203,6 +203,31 @@ Project memory lives in files, not conversation history: `PROJECT_STATE.md` (cur
 - **Small, reversible, easy-to-review changes.** Prefer changes a human can review quickly and undo cleanly over large, sweeping ones — matches the project's existing "match action scope to what was actually requested" discipline.
 - **Concise handoff reports for Fast Track tasks.** For a small, non-phase-completing change, provide exactly the report §20 already requires (what changed, files changed, tests run, test results, security checks, Git diff summary, known limitations, recommended next step) plus explicit commit/migration/deployment status — kept concise, never padded with unrelated detail. **This does not replace the Mandatory ChatGPT Phase Handoff Report below** — that full, structured 24-item report is still required, unchanged, at the end of every Phase or Sub-phase, regardless of how small the individual changes within it were.
 
+## 27. Mandatory Documentation & Phase Management Rule [CRITICAL]
+
+Every new feature, sub-feature, improvement, or technical checkpoint — no matter how small — is not done when the code works. It is done when the four documents below agree with what the code actually does. This section makes that binding for every future Codivio task; it does not loosen anything §17 (Testing Gate), §18 (Git Workflow), §19 (Change Control), or §24 (Project Memory System) already require — it extends §24's memory-file discipline to also explicitly cover `CLAUDE.md` itself and `CODIVIO_MASTER_PLAN.md`, which §24 does not currently name.
+
+**Before starting any non-trivial task:**
+- Check `CODIVIO_MASTER_PLAN.md` for the phase/sub-phase the work actually belongs to. If none exists yet, say so explicitly before writing code — do not silently invent one, and do not silently proceed as if the work belongs nowhere.
+- Check `PROJECT_STATE.md`'s current position and `CLAUDE.md` §4 for the same. If any of the three disagree with each other or with the real code/Git state, report the conflict per §24's override rule before proceeding.
+
+**After finishing the task, update — in the same pass as the code, not as an afterthought:**
+
+1. **`CLAUDE.md`** — if the work represents roadmap-level scope not yet described anywhere in this file (a genuinely new phase, or a phase's own description needs correcting), update the relevant section (§4 primarily). State the sub-phase's purpose, scope, and dependencies on prior work. Never reorder, merge, or renumber an existing phase to make room — extend the sequence, don't rewrite it.
+2. **`CODIVIO_MASTER_PLAN.md`** — add the new sub-phase under its correct parent phase, using that phase's existing numbering convention (e.g. a QR sub-phase extends Phase 4's `4.x` list, matching how 4.1–4.10 are already structured). Reconcile the phase's own status line if the addition changes it. This file is the authoritative phase list per §26.6 and elsewhere in this document — `CLAUDE.md` itself must never silently duplicate or contradict it.
+3. **`PROJECT_STATE.md`** — update current state, what's now implemented, and the next approved step, per §24 (unchanged rule, restated here for completeness).
+4. **`CHANGELOG.md`** — append one entry for the checkpoint, per §24 (unchanged rule, restated here for completeness).
+
+**Rules that apply to all four together:**
+
+- **Never fragment work that belongs to an existing phase into a new, unnecessary phase.** A sub-phase extends its parent phase's existing numbered list; a genuinely new top-level phase is rare and requires an explicit reason (see next bullet), not a default.
+- **If creating a new phase (as opposed to a sub-phase) is actually justified, state the reason explicitly** in the handoff report — what makes this scope distinct from every existing phase, why it doesn't fit as a sub-phase of one of them. Never create one silently.
+- **No phase or sub-phase is ever silently created or silently removed** from either `CLAUDE.md` or `CODIVIO_MASTER_PLAN.md`. An addition, a status change, or (rare, and only with explicit user approval) a removal is always visible in the diff and named in the handoff report.
+- **Documentation must match code, not aspiration.** Remove or correct stale/contradictory claims in these files when the real implementation has moved past them (matches §24's override rule and §2's no-fabrication principle) — don't leave two documents describing different realities.
+- **Before every commit, review code and documentation changes together**, not as separate passes — the diff review required by §18 covers both.
+
+**Required in every task's final report:** state plainly whether each of the four documents was checked, and whether each was updated or left unchanged and why (e.g. "pure bug fix, no roadmap-level change — `CODIVIO_MASTER_PLAN.md`/`CLAUDE.md` §4 unaffected"). Silence on this point is not acceptable — an explicit "not applicable, here's why" is required whenever a document isn't touched.
+
 ## Mandatory ChatGPT Phase Handoff Report
 
 **[CRITICAL]** At the end of every Phase or Subphase, produce a structured handoff report specifically for ChatGPT review, in addition to whatever other report format the task itself requested.

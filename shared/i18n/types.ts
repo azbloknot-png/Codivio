@@ -291,4 +291,26 @@ export interface Translations {
     faqFreeQuestion: string;
     faqFreeAnswer: string;
   };
+  /** Cookie Consent foundation — banner, Cookie Settings modal, and the
+   * shared category name/description strings the /cookies page also
+   * reuses (single source of truth, matching how other shared UI copy in
+   * this file is never duplicated per surface). */
+  cookieConsent: {
+    bannerMessage: string;
+    bannerLearnMore: string;
+    acceptAll: string;
+    rejectOptional: string;
+    openSettings: string;
+    modalTitle: string;
+    modalIntro: string;
+    alwaysActive: string;
+    reservedForFuture: string;
+    savePreferences: string;
+    closeSettings: string;
+    categories: Record<
+      "necessary" | "analytics" | "advertising" | "preferences",
+      { name: string; description: string }
+    >;
+    managePreferencesButton: string;
+  };
 }

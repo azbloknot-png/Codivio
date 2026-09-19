@@ -19,6 +19,7 @@
 - Git commit / push / deploy ayrıca release checkpoint ilə idarə olunur.
 - Security, SEO, performance, database və production readiness uyğun mərhələlərdə yoxlanılır.
 - Roadmap statusları real nəticələrə əsaslanır; UNKNOWN məlumat uydurularaq PASS edilmir.
+- **Sənədləşmə qaydası (`CLAUDE.md` §27-də tam mətn):** yeni bir sub-phase yarandıqda, o, öz aid olduğu Phase-in mövcud nömrələmə ardıcıllığına (məs. `4.x`) əlavə olunur — mövcud işlər lazımsız yeni Phase-ə bölünmür, və heç bir Phase/sub-phase səssiz yaradılmır və ya silinmir. Yeni Phase yaradılması yalnız aydın əsaslandırma ilə mümkündür. Hər tapşırıqdan sonra bu fayl, `CLAUDE.md`, `PROJECT_STATE.md` və `CHANGELOG.md`-in birlikdə yenilənib-yenilənmədiyi son hesabatda göstərilməlidir.
 
 ---
 
@@ -91,6 +92,14 @@
 ### 3.13 SEO Content Expansion + Topical Authority
 ### 3.14 Free Tool → Premium Monetization Funnel
 ### 3.15 Professional SEO + AI SEO Master Audit
+
+### 3.16 GA4 Analytics Foundation
+
+Phase 3-ün öz təsviri ("Google / SEO / Analytics... GA4/GTM where appropriate") artıq bu işi nəzərdə tuturdu — 3.15-dən sonra, ayrıca, aydın şəkildə əhatə edilmiş tapşırıqla yerinə yetirildi (Phase 3 rəsmi bağlandıqdan — 2026-09-17 — sonra). gtag.js əsaslı GA4 inteqrasiyası, SPA route-dəyişikliklərinə uyğun `page_view` izlənməsi, yalnız `codivio.online` apex domenində işləmə, `/admin` marşrutlarının istisna edilməsi, CSP-nin minimal genişləndirilməsi (yalnız Google-un rəsmi sənədləşdirdiyi host-lar, `unsafe-inline`/`unsafe-eval` olmadan). Görün: `PROJECT_STATE.md`-in "GA4 Analytics Foundation status (Phase 3.16)" bölməsi tam detal üçün.
+
+### 3.17 Cookie Consent & Privacy Foundation
+
+3.16-nın birbaşa davamı — genişləndirilə bilən, privacy-conscious cookie consent sistemi (banner, Cookie Settings modalı, 4 kateqoriya: Necessary/Analytics/Advertising/Preferences), GA4-ü consent-ə bağlayır (razılıq olmadan GA4 script belə yüklənmir), `/cookies` səhifəsini real davranışa uyğunlaşdırır. Advertising/Preferences kateqoriyaları yalnız gələcək texnologiyalar üçün struktur kimi mövcuddur, hələ funksional deyil. Görün: `PROJECT_STATE.md`-in "Cookie Consent & Privacy Foundation status (Phase 3.17)" bölməsi tam detal üçün.
 
 ### 3.x Release / Live Verification Checkpoints
 

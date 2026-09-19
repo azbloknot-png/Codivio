@@ -52,6 +52,10 @@ import AdminSeoPage from "./admin/AdminSeoPage";
 import { useLanguage } from "./i18n/LanguageContext";
 import { LanguageSwitcher } from "./i18n/LanguageSwitcher";
 import { usePageMeta } from "./seo/useSeo";
+import { trackPageView } from "./lib/analytics";
+import { useConsent } from "./consent/ConsentContext";
+import { CookieConsentBanner } from "./consent/CookieConsentBanner";
+import { CookieSettingsModal } from "./consent/CookieSettingsModal";
 import { getPageSeo, getToolSeo, ROBOTS_NOINDEX_NOFOLLOW } from "../shared/seo";
 import { buildStandardPageGraph, buildToolPageGraph } from "../shared/seo/schema";
 import { getVisiblePlansByPriority } from "../shared/monetization/plans";
@@ -1714,9 +1718,14 @@ function PrivacyPage() {
       </p>
       <h2>Analytics and advertising</h2>
       <p>
-        Codivio may use analytics and advertising services in the future. When
-        these services require user consent, they will be controlled through
-        the site's cookie preferences.
+        Codivio uses Google Analytics 4 to understand how the site is used,
+        but only after you have given consent — analytics cookies are off by
+        default, and no analytics script is loaded until you accept them
+        through the cookie consent banner or Cookie Settings. No advertising
+        technology is active on Codivio today; an Advertising category
+        appears in Cookie Settings only as a reserved placeholder for a
+        possible future integration. You can review or change your choice at
+        any time from the Cookie Policy page.
       </p>
       <h2>Contact</h2>
       <p>
@@ -1753,29 +1762,37 @@ function TermsPage() {
 }
 
 function CookiePolicyPage() {
+  const { t } = useLanguage();
+  const { openSettings } = useConsent();
+  const categories = t.cookieConsent.categories;
+
   return (
     <LegalPage title="Cookie Policy" seoKey="cookies" eyebrow="COOKIES">
       <h2>How Codivio uses cookies</h2>
       <p>
-        Codivio may use cookies or similar technologies for essential website
-        functionality, analytics and advertising.
+        Codivio uses cookies and similar browser storage for essential
+        website functionality and, only with your consent, for analytics.
+        Advertising and additional preference cookies are described below
+        as reserved categories for future use — no such technology is
+        active on Codivio today.
       </p>
-      <h2>Necessary cookies</h2>
-      <p>
-        Necessary technologies help the website operate correctly. These
-        cannot be disabled through the optional cookie settings.
-      </p>
-      <h2>Optional cookies</h2>
-      <p>
-        Analytics and advertising technologies will be optional where consent
-        is legally required. Your preferences will be respected by the
-        platform.
-      </p>
+      <h2>{categories.necessary.name}</h2>
+      <p>{categories.necessary.description}</p>
+      <h2>{categories.analytics.name}</h2>
+      <p>{categories.analytics.description}</p>
+      <h2>{categories.advertising.name}</h2>
+      <p>{categories.advertising.description}</p>
+      <h2>{categories.preferences.name}</h2>
+      <p>{categories.preferences.description}</p>
       <h2>Changing your preferences</h2>
       <p>
-        Codivio will provide a cookie settings interface that allows you to
-        change optional cookie preferences.
+        You can change your cookie preferences at any time using the button
+        below. Your choice is stored only in your own browser, not on
+        Codivio's servers.
       </p>
+      <button type="button" className="cookie-consent-button cookie-consent-button--primary" onClick={openSettings}>
+        {t.cookieConsent.managePreferencesButton}
+      </button>
     </LegalPage>
   );
 }
@@ -2010,10 +2027,43 @@ function ScrollRestoration() {
   return null;
 }
 
+/**
+ * GA4 foundational page-view tracking.
+ *
+ * Mirrors ScrollRestoration's own single-point, side-effect-only component
+ * pattern: rendered once at the top of <App>, reacting to route changes via
+ * useLocation, rather than every page component wiring this up itself. See
+ * src/lib/analytics.ts for the actual gtag.js integration, the
+ * production-host guard, and the /admin exclusion.
+ *
+ * Enabling/disabling gtag.js itself in response to a consent change is
+ * handled centrally by ConsentProvider (src/consent/ConsentContext.tsx),
+ * not here — this component only ever decides whether *this specific
+ * route change* should send a page_view, based on the current consent.
+ * Without analytics consent, trackPageView is never even called, which is
+ * a second, independently-verifiable guarantee on top of trackPageView's
+ * own internal enabled/disabled check in src/lib/analytics.ts.
+ */
+function Analytics() {
+  const location = useLocation();
+  const { consent } = useConsent();
+
+  useEffect(() => {
+    if (consent?.analytics) {
+      trackPageView(location.pathname);
+    }
+  }, [location.pathname, consent?.analytics]);
+
+  return null;
+}
+
 function App() {
   return (
     <>
       <ScrollRestoration />
+      <Analytics />
+      <CookieConsentBanner />
+      <CookieSettingsModal />
       <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/tools" element={<ToolsPage />} />

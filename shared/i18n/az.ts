@@ -313,4 +313,36 @@ export const az: Translations = {
     faqFreeQuestion: "Free alətlər pulsuz qalacaqmı?",
     faqFreeAnswer: "Codivio-nun alətləri standart olaraq pulsuz qalır; gələcək ödənişli səviyyə əvəzetmə deyil, əlavə kimi planlaşdırılır.",
   },
+  cookieConsent: {
+    bannerMessage: "Codivio zəruri sayt funksiyaları üçün, yalnız sizin razılığınızla isə analitika üçün cookie-lərdən istifadə edir.",
+    bannerLearnMore: "Ətraflı öyrənin",
+    acceptAll: "Hamısını qəbul et",
+    rejectOptional: "İstəyə bağlıları rədd et",
+    openSettings: "Cookie ayarları",
+    modalTitle: "Cookie ayarları",
+    modalIntro: "Codivio-nun istifadə edə biləcəyi istəyə bağlı cookie kateqoriyalarını seçin. Zəruri cookie-lər həmişə aktivdir, çünki sayt onlarsız düzgün işləyə bilmir.",
+    alwaysActive: "Həmişə aktiv",
+    reservedForFuture: "Gələcək üçün ayrılıb — hələ aktiv deyil",
+    savePreferences: "Seçimləri yadda saxla",
+    closeSettings: "Bağla",
+    categories: {
+      necessary: {
+        name: "Zəruri",
+        description: "Dilinizi və cookie seçimlərinizi xatırlamaq kimi əsas sayt funksionallığı üçün lazımdır. Deaktiv edilə bilməz.",
+      },
+      analytics: {
+        name: "Analitika",
+        description: "Codivio-ya saytın necə istifadə olunduğunu anlamağa kömək edir (Google Analytics 4), beləliklə sayt təkmilləşdirilə bilər. Standart olaraq deaktivdir.",
+      },
+      advertising: {
+        name: "Reklam",
+        description: "Gələcəkdə reklamların fərdiləşdirilməsini dəstəkləyə bilər. Hazırda Codivio-da heç bir reklam texnologiyası aktiv deyil.",
+      },
+      preferences: {
+        name: "Seçimlər",
+        description: "Dildən əlavə istəyə bağlı sayt seçimlərini xatırlaya bilər. Hazırda Codivio-da belə bir funksiya mövcud deyil.",
+      },
+    },
+    managePreferencesButton: "Cookie seçimlərini idarə et",
+  },
 };

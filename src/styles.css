@@ -521,3 +521,52 @@
 @media(max-width:650px){
 .pricing-grid{grid-template-columns:1fr}
 }
+
+/* Cookie Consent foundation — banner, Cookie Settings modal, and the
+   shared toggle-switch control. Reuses the existing design tokens
+   (--color-primary/--color-ink/--color-muted/--radius-md) and the same
+   :focus-visible convention used everywhere else in this file, rather than
+   introducing a parallel style system. z-index sits above the existing
+   scale (header 20, admin-sidebar 25, admin-header 30, skip-link 50) since
+   the banner/modal must stay above every page's content and the Admin
+   shell alike. */
+.cookie-consent-banner{position:fixed;left:0;right:0;bottom:0;z-index:60;background:#fff;border-top:1px solid #e1e8f2;box-shadow:0 -12px 30px rgba(20,40,70,.12);padding:16px}
+.cookie-consent-banner-inner{width:min(1180px,calc(100% - 32px));margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap}
+.cookie-consent-banner-inner p{margin:0;color:var(--color-ink);font-size:13px;max-width:640px;line-height:1.6}
+.cookie-consent-banner-inner p a{color:var(--color-primary);font-weight:700;text-decoration:none}
+.cookie-consent-banner-inner p a:hover{text-decoration:underline}
+.cookie-consent-actions{display:flex;gap:10px;flex-wrap:wrap}
+.cookie-consent-button{min-height:42px;padding:0 16px;border-radius:10px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
+.cookie-consent-button--primary{border:1px solid var(--color-primary);background:var(--color-primary);color:#fff}
+.cookie-consent-button--primary:hover{background:#125bc4}
+.cookie-consent-button--secondary{border:1px solid #dfe6ef;background:#fff;color:var(--color-ink)}
+.cookie-consent-button--secondary:hover{border-color:#9fc3ed;color:var(--color-primary)}
+.cookie-consent-button--ghost{border:1px solid transparent;background:transparent;color:var(--color-muted)}
+.cookie-consent-button--ghost:hover{color:var(--color-ink)}
+.cookie-consent-button:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px}
+
+.cookie-settings-backdrop{position:fixed;inset:0;z-index:70;background:rgba(15,23,42,.45);display:flex;align-items:center;justify-content:center;padding:20px}
+.cookie-settings-modal{width:min(560px,100%);max-height:calc(100vh - 40px);overflow-y:auto;background:#fff;border-radius:var(--radius-md);padding:26px;box-shadow:0 30px 70px rgba(15,30,55,.25)}
+.cookie-settings-modal:focus{outline:none}
+.cookie-settings-modal h2{margin:0 0 8px;font-size:20px;color:var(--color-ink)}
+.cookie-settings-intro{margin:0 0 18px;color:var(--color-muted);font-size:13px;line-height:1.6}
+.cookie-settings-category{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:14px 0;border-top:1px solid #eef2f7}
+.cookie-settings-category h3{margin:0 0 4px;font-size:14px;color:var(--color-ink)}
+.cookie-settings-category p{margin:0;font-size:12px;color:var(--color-muted);line-height:1.6;max-width:400px}
+.cookie-settings-status{display:inline-block;margin-top:6px;font-size:11px;font-weight:700;color:#8290a3;text-transform:uppercase;letter-spacing:.04em}
+.cookie-settings-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+
+.cookie-switch{flex-shrink:0;width:46px;height:26px;border-radius:999px;border:1px solid #dfe6ef;background:#e4eaf2;padding:2px;cursor:pointer;transition:background .15s ease,border-color .15s ease}
+.cookie-switch[data-checked="true"]{background:var(--color-primary);border-color:var(--color-primary)}
+.cookie-switch:disabled{cursor:default;opacity:.55}
+.cookie-switch:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px}
+.cookie-switch-thumb{display:block;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(15,30,55,.3);transition:transform .15s ease}
+.cookie-switch[data-checked="true"] .cookie-switch-thumb{transform:translateX(20px)}
+
+@media(max-width:650px){
+.cookie-consent-banner-inner{flex-direction:column;align-items:stretch;gap:14px}
+.cookie-consent-actions{flex-direction:column}
+.cookie-consent-actions .cookie-consent-button{width:100%}
+.cookie-settings-modal{padding:20px}
+.cookie-settings-category{flex-direction:column;gap:10px}
+}

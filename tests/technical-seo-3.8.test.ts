@@ -6,6 +6,7 @@ import { LANGUAGES } from "../shared/i18n";
 import { TOOL_SEO } from "../shared/seo";
 import { getToolDisplayName } from "../shared/seo/ai";
 import { buildToolPageGraph } from "../shared/seo/schema";
+import { withSecurityHeaders } from "../worker/security-headers";
 
 /**
  * Phase 3.8 — technical SEO + performance regression fix.
@@ -92,13 +93,21 @@ describe("representative public page still produces correct schema after the ref
 });
 
 describe("CSP is unchanged and remains compatible with JSON-LD (no unsafe-inline added)", () => {
-  it("worker/security-headers.ts still uses strict script-src 'self' with no unsafe-inline, and JSON-LD uses a non-executable script type CSP doesn't restrict", () => {
-    const headersSource = fs.readFileSync(new URL("../worker/security-headers.ts", import.meta.url), "utf8");
-    expect(headersSource).toContain("script-src 'self'");
-    // The file's own comment explains (correctly) that 'unsafe-inline' is
-    // NOT needed — check the actual CSP directive string doesn't grant it,
-    // not the literal substring (which the explanatory comment contains).
-    expect(headersSource).not.toMatch(/script-src[^;]*unsafe-inline/);
+  it("worker/security-headers.ts still uses strict script-src with no unsafe-inline, and JSON-LD uses a non-executable script type CSP doesn't restrict", () => {
+    // Checks the actual computed CSP header's own script-src directive
+    // (split out by ";", not a raw-text regex over the whole file) — a
+    // raw-text regex is fragile against legitimate comment prose that
+    // happens to mention both "script-src" and "unsafe-inline" nearby
+    // (e.g. explaining why a later CSP widening still needs neither), which
+    // is exactly what a prior version of this test tripped on.
+    const csp = withSecurityHeaders(Response.json({}), new Request("http://localhost/")).headers.get(
+      "Content-Security-Policy",
+    );
+    const scriptSrc = csp?.split(";").find((directive) => directive.trim().startsWith("script-src"));
+    expect(scriptSrc).toContain("'self'");
+    expect(scriptSrc).not.toContain("unsafe-inline");
+    expect(scriptSrc).not.toContain("unsafe-eval");
+
     const useSeoSource = fs.readFileSync(new URL("../src/seo/useSeo.ts", import.meta.url), "utf8");
     expect(useSeoSource).toContain('script.type = "application/ld+json"');
   });
