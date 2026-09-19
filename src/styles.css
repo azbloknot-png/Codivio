@@ -74,11 +74,17 @@
 .qr-generator-error{width:100%;text-align:left}
 .qr-generator-error p{margin:0}
 .qr-generator-error p+p{margin-top:4px}
+/* Phase 4.7 — download buttons, reusing .primary-button (already used by
+   the Phase 4.6 scanner) rather than introducing a new button style. */
+.qr-generator-export{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:4px}
+.qr-generator-export-error{width:100%;text-align:left;margin:0}
 @media(max-width:900px){
 .qr-generator{grid-template-columns:minmax(0,1fr)}
 }
 @media(max-width:650px){
 .qr-generator-config{grid-template-columns:1fr}
+.qr-generator-export{flex-direction:column;width:100%}
+.qr-generator-export .primary-button{width:100%;justify-content:center}
 }
 
 /* Phase 4.6 — QR Code Scanner workspace. Same specificity-safe pattern as

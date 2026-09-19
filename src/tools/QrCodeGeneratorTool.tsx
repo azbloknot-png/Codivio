@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
-import { generateQrCode, QrGenerationError, type QrGenerateResult } from "../lib/qr-engine";
+import { Download, Eye, EyeOff } from "lucide-react";
+import { generateQrCode, QrGenerationError, type QrGenerateResult, type QrOutputFormat } from "../lib/qr-engine";
+import { downloadTextAsFile, triggerDownload } from "../lib/download-file";
 import { MAX_QR_PAYLOAD_LENGTH, type QrErrorCorrectionLevel, type QrPayload, type QrWifiSecurity } from "../../shared/qr";
 
 /**
@@ -22,10 +23,16 @@ import { MAX_QR_PAYLOAD_LENGTH, type QrErrorCorrectionLevel, type QrPayload, typ
  * formatting and escaping live in shared/qr/wifi.ts and shared/qr/vcard.ts
  * respectively — not duplicated here.
  *
+ * Phase 4.7 added PNG/JPG/SVG download buttons, reusing `generateQrCode`
+ * a second time (on demand, at download-click time) with the exact same
+ * payload/config the on-screen preview already used — no separate export
+ * code path per payload kind, and no new customization controls, since
+ * size/margin/error-correction/colors already existed since Phase 4.2.
+ *
  * Scope: text/URL/WiFi/vCard payloads only — no Email/SMS/etc. builders,
- * no logo embedding, no download/export UI (reserved for Phase 4.7). All
- * generation happens locally; no payload (including WiFi credentials or
- * vCard contact details) is ever logged or sent anywhere.
+ * no logo embedding. All generation happens locally; no payload (including
+ * WiFi credentials or vCard contact details) is ever logged or sent
+ * anywhere, and downloads never touch a server.
  */
 
 type QrInputMode = QrPayload["kind"];
@@ -62,6 +69,7 @@ function QrCodeGeneratorTool() {
   const [result, setResult] = useState<QrGenerateResult | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   const requestIdRef = useRef(0);
   const isMountedRef = useRef(true);
@@ -80,6 +88,28 @@ function QrCodeGeneratorTool() {
         ? vcardFirstName.trim().length > 0 || vcardLastName.trim().length > 0
         : text.trim().length > 0;
 
+  // Shared by the auto-generation effect below and by the Phase 4.7 export
+  // handlers, so a download always encodes exactly what the on-screen
+  // preview is currently showing — never a separately-constructed payload.
+  function buildPayload(): QrPayload {
+    if (mode === "wifi") {
+      return { kind: "wifi", ssid: wifiSsid, password: wifiPassword, security: wifiSecurity, hidden: wifiHidden };
+    }
+    if (mode === "vcard") {
+      return {
+        kind: "vcard",
+        firstName: vcardFirstName,
+        lastName: vcardLastName,
+        organization: vcardOrganization,
+        jobTitle: vcardJobTitle,
+        phone: vcardPhone,
+        email: vcardEmail,
+        website: vcardWebsite,
+      };
+    }
+    return { kind: mode, value: text };
+  }
+
   useEffect(() => {
     if (!hasContent) {
       requestIdRef.current += 1;
@@ -91,22 +121,9 @@ function QrCodeGeneratorTool() {
 
     const requestId = ++requestIdRef.current;
     setIsGenerating(true);
+    setExportError(null);
 
-    const payload: QrPayload =
-      mode === "wifi"
-        ? { kind: "wifi", ssid: wifiSsid, password: wifiPassword, security: wifiSecurity, hidden: wifiHidden }
-        : mode === "vcard"
-          ? {
-              kind: "vcard",
-              firstName: vcardFirstName,
-              lastName: vcardLastName,
-              organization: vcardOrganization,
-              jobTitle: vcardJobTitle,
-              phone: vcardPhone,
-              email: vcardEmail,
-              website: vcardWebsite,
-            }
-          : { kind: mode, value: text };
+    const payload = buildPayload();
 
     const timer = setTimeout(() => {
       generateQrCode(payload, { errorCorrectionLevel, size, margin, foregroundColor, backgroundColor })
@@ -176,6 +193,33 @@ function QrCodeGeneratorTool() {
     setVcardPhone("");
     setVcardEmail("");
     setVcardWebsite("");
+    setExportError(null);
+  }
+
+  // Phase 4.7 — export. Re-runs generateQrCode on demand with the exact
+  // current payload/config (never a stored/duplicated one) so the
+  // downloaded file always matches the on-screen preview exactly, for
+  // whichever payload kind is currently active — no per-kind export logic.
+  async function downloadAs(format: QrOutputFormat) {
+    try {
+      const exported = await generateQrCode(buildPayload(), {
+        errorCorrectionLevel,
+        size,
+        margin,
+        foregroundColor,
+        backgroundColor,
+      }, format);
+      const extension = format === "png-data-url" ? "png" : format === "jpg-data-url" ? "jpg" : "svg";
+      const filename = `codivio-qr-${mode}.${extension}`;
+      if (exported.format === "svg") {
+        downloadTextAsFile(exported.data, filename, "image/svg+xml");
+      } else {
+        triggerDownload(exported.data, filename);
+      }
+      setExportError(null);
+    } catch {
+      setExportError("Couldn't prepare the download. Please try again.");
+    }
   }
 
   return (
@@ -463,21 +507,44 @@ function QrCodeGeneratorTool() {
         {isGenerating && <p className="qr-generator-status">Generating…</p>}
 
         {!isGenerating && result && errors.length === 0 && (
-          <img
-            className="qr-generator-image"
-            src={result.data}
-            alt={
-              mode === "wifi"
-                ? `QR code for Wi-Fi network: ${wifiSsid.trim().slice(0, 120)}`
-                : mode === "vcard"
-                  ? `QR code for contact: ${vcardDisplayName.slice(0, 120)}`
-                  : mode === "url"
-                    ? `QR code linking to: ${text.trim().slice(0, 120)}`
-                    : `QR code for: ${text.trim().slice(0, 120)}`
-            }
-            width={size}
-            height={size}
-          />
+          <>
+            <img
+              className="qr-generator-image"
+              src={result.data}
+              alt={
+                mode === "wifi"
+                  ? `QR code for Wi-Fi network: ${wifiSsid.trim().slice(0, 120)}`
+                  : mode === "vcard"
+                    ? `QR code for contact: ${vcardDisplayName.slice(0, 120)}`
+                    : mode === "url"
+                      ? `QR code linking to: ${text.trim().slice(0, 120)}`
+                      : `QR code for: ${text.trim().slice(0, 120)}`
+              }
+              width={size}
+              height={size}
+            />
+
+            <div className="qr-generator-export" role="group" aria-label="Download QR code">
+              <button type="button" className="primary-button" onClick={() => void downloadAs("png-data-url")}>
+                <Download size={16} aria-hidden="true" />
+                Download PNG
+              </button>
+              <button type="button" className="primary-button" onClick={() => void downloadAs("jpg-data-url")}>
+                <Download size={16} aria-hidden="true" />
+                Download JPG
+              </button>
+              <button type="button" className="primary-button" onClick={() => void downloadAs("svg")}>
+                <Download size={16} aria-hidden="true" />
+                Download SVG
+              </button>
+            </div>
+
+            {exportError && (
+              <p className="admin-auth-error qr-generator-export-error" role="alert">
+                {exportError}
+              </p>
+            )}
+          </>
         )}
       </div>
     </div>

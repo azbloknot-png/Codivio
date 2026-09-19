@@ -84,4 +84,57 @@ describe("generateQrCode", () => {
     const second = await generateQrCode(payload);
     expect(first.data).toBe(second.data);
   });
+
+  // Phase 4.7 — export formats. JPG reuses the exact same validation/
+  // encoding path as PNG, just a different `type` passed to the qrcode
+  // library's own toDataURL — no new branching per payload kind.
+  //
+  // Note on what this test can and cannot verify: `qrcode` resolves to a
+  // different implementation for Node (`lib/index.js`, used here under
+  // Vitest) than for a real browser bundle (`lib/browser.js`, per the
+  // package's own `browser` field — what `vite build` actually ships).
+  // Node's server-side PNG renderer has no JPEG support and silently
+  // substitutes PNG; the real browser renderer (verified by reading
+  // node_modules/qrcode/lib/renderer/canvas.js) passes the requested
+  // `type` straight through to the native, universally-supported
+  // `HTMLCanvasElement#toDataURL(type)` API, which genuinely does encode
+  // JPEG. This test therefore only asserts what's true in both
+  // environments (a correctly-tagged, valid, non-empty image data URL) —
+  // whether the bytes are genuinely JPEG-encoded in a real browser is
+  // `UNKNOWN — NOT VERIFIED` in this Node-based test/dev environment.
+  it("renders a valid payload to a tagged, non-empty image data URL for the jpg-data-url format", async () => {
+    const payload = { kind: "text" as const, value: "https://codivio.online" };
+    const jpg = await generateQrCode(payload, undefined, "jpg-data-url");
+    expect(jpg.format).toBe("jpg-data-url");
+    expect(jpg.data.startsWith("data:image/")).toBe(true);
+    const base64 = jpg.data.split(",")[1];
+    expect(Buffer.from(base64, "base64").length).toBeGreaterThan(0);
+  });
+
+  it("rejects invalid input for the jpg-data-url and svg formats too, not just the default", async () => {
+    await expect(generateQrCode({ kind: "text", value: "" }, undefined, "jpg-data-url")).rejects.toBeInstanceOf(
+      QrGenerationError,
+    );
+    await expect(generateQrCode({ kind: "text", value: "" }, undefined, "svg")).rejects.toBeInstanceOf(
+      QrGenerationError,
+    );
+  });
+
+  // Phase 4.7 export-safety check: the SVG renderer must never embed the
+  // raw encoded text anywhere in its markup (it only ever emits numeric
+  // path/color/size data derived from the QR bit matrix) — verified here
+  // as a permanent regression guard, not just inspected once by hand.
+  it("never embeds the raw encoded payload value inside the exported SVG markup", async () => {
+    const sentinel = "UNIQUE_SENTINEL_VALUE_1234";
+    const svg = await generateQrCode({ kind: "text", value: sentinel }, undefined, "svg");
+    expect(svg.data).not.toContain(sentinel);
+
+    const wifiSvg = await generateQrCode(
+      { kind: "wifi", ssid: "MySensitiveNetwork", password: "supersecretpass1", security: "WPA", hidden: false },
+      undefined,
+      "svg",
+    );
+    expect(wifiSvg.data).not.toContain("MySensitiveNetwork");
+    expect(wifiSvg.data).not.toContain("supersecretpass1");
+  });
 });

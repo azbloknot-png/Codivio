@@ -54,3 +54,42 @@ describe("QR Generator privacy and architecture rules", () => {
     expect(generatorSource).not.toMatch(/from ["']qrcode["']/);
   });
 });
+
+describe("QR Generator export/download (Phase 4.7)", () => {
+  it("offers PNG, JPG, and SVG download actions, and no unsupported format", () => {
+    expect(generatorSource).toContain("Download PNG");
+    expect(generatorSource).toContain("Download JPG");
+    expect(generatorSource).toContain("Download SVG");
+    expect(generatorSource).not.toMatch(/download\s*pdf/i);
+    expect(generatorSource).not.toMatch(/download\s*eps/i);
+  });
+
+  it("exports via the shared engine's generateQrCode, not a duplicated encoder per format", () => {
+    expect(generatorSource).toContain('downloadAs("png-data-url")');
+    expect(generatorSource).toContain('downloadAs("jpg-data-url")');
+    expect(generatorSource).toContain('downloadAs("svg")');
+    // One export function handling all formats/payload kinds, not three
+    // separate per-format (or four separate per-payload-kind) functions.
+    expect(generatorSource.match(/async function downloadAs/g) ?? []).toHaveLength(1);
+    expect(generatorSource).toContain("generateQrCode(buildPayload()");
+  });
+
+  it("reuses the generic, tool-agnostic download utility rather than a bespoke one", () => {
+    expect(generatorSource).toContain('from "../lib/download-file"');
+  });
+
+  it("never embeds raw user-entered payload content in the downloaded filename", () => {
+    // The filename is built only from the fixed `mode` literal and a
+    // format-derived extension — never from text/wifiSsid/vcard* state.
+    expect(generatorSource).toMatch(/`codivio-qr-\$\{mode\}\.\$\{extension\}`/);
+  });
+
+  it("handles a failed export with a visible error instead of a silent or misleading success", () => {
+    expect(generatorSource).toContain("exportError");
+    expect(generatorSource).toContain("Couldn't prepare the download");
+  });
+
+  it("still never logs anything, including export attempts (no console.* call anywhere)", () => {
+    expect(generatorSource).not.toMatch(/console\.(log|info|warn|debug|error)/);
+  });
+});

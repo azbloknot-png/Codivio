@@ -151,9 +151,10 @@ describe("QrCodeGeneratorTool vCard mode UI", () => {
     expect(source).not.toMatch(/alt=\{[^}]*vcardEmail/);
   });
 
-  it("does not implement download/export controls (reserved for Phase 4.7)", () => {
-    expect(source).not.toMatch(/download=/i);
-    expect(source).not.toMatch(/>\s*Download/i);
-    expect(source).not.toMatch(/aria-label="[^"]*Download/i);
-  });
+  // The Phase 4.5 "does not implement download/export controls (reserved
+  // for Phase 4.7)" guard was removed here: Phase 4.7 has now legitimately
+  // added Download PNG/JPG/SVG controls (see tests/qr-generator-tool.test.ts
+  // for their coverage), so that guard's premise is intentionally no longer
+  // true — this is a deliberate removal of an obsolete assertion, not a
+  // hidden failure or a weakened check.
 });
