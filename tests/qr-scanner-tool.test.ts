@@ -93,3 +93,16 @@ describe("QrCodeScannerTool states and UX", () => {
     expect(source).toMatch(/MAX_UPLOAD_BYTES/);
   });
 });
+
+describe("QrCodeScannerTool resource/abuse controls (Phase 4.8)", () => {
+  it("requests a bounded ideal camera resolution rather than an unconstrained one", () => {
+    expect(source).toMatch(/width:\s*\{\s*ideal:\s*1280\s*\}/);
+    expect(source).toMatch(/height:\s*\{\s*ideal:\s*720\s*\}/);
+  });
+
+  it("applies the same MAX_CANVAS_DIMENSION downscale cap to the camera path as the upload path", () => {
+    const capOccurrences = (source.match(/MAX_CANVAS_DIMENSION/g) ?? []).length;
+    // Declaration + upload-path use + camera-path use = at least 3.
+    expect(capOccurrences).toBeGreaterThanOrEqual(3);
+  });
+});

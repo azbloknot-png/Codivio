@@ -95,14 +95,21 @@ function QrCodeScannerTool() {
     }
     lastAttemptRef.current = now;
 
-    const width = video.videoWidth;
-    const height = video.videoHeight;
-    const ctx = width && height ? canvas.getContext("2d", { willReadFrequently: true }) : null;
+    const rawWidth = video.videoWidth;
+    const rawHeight = video.videoHeight;
+    const ctx = rawWidth && rawHeight ? canvas.getContext("2d", { willReadFrequently: true }) : null;
     if (!ctx) {
       rafRef.current = requestAnimationFrame(scanFrame);
       return;
     }
 
+    // Phase 4.8 — mirrors the same downscale cap already applied to the
+    // upload path: the `getUserMedia` call below only requests an *ideal*
+    // resolution, which a device is free to ignore, so this is real
+    // defense-in-depth against an unbounded per-frame canvas/decode cost.
+    const scale = Math.min(1, MAX_CANVAS_DIMENSION / Math.max(rawWidth, rawHeight));
+    const width = Math.max(1, Math.round(rawWidth * scale));
+    const height = Math.max(1, Math.round(rawHeight * scale));
     canvas.width = width;
     canvas.height = height;
     ctx.drawImage(video, 0, 0, width, height);
@@ -128,7 +135,15 @@ function QrCodeScannerTool() {
     }
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+      // Phase 4.8 — request a reasonable resolution rather than whatever
+      // maximum a device might otherwise default to; `ideal` is advisory
+      // (never causes an OverconstrainedError like `min`/`max`/`exact`
+      // would on a lower-resolution device), so this is a preference, not
+      // a hard requirement. The scanFrame downscale cap below still applies
+      // regardless, since a device is free to ignore this hint.
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
+      });
       if (!isMountedRef.current) {
         stream.getTracks().forEach((track) => track.stop());
         return;

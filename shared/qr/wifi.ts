@@ -30,10 +30,14 @@ export const MAX_WIFI_SSID_LENGTH = 32;
 
 /** Real WPA/WPA2 passphrase bounds (8–63 ASCII characters) — genuine spec
  * values, not arbitrary. WEP key length/format rules are stricter and more
- * varied (5/13 ASCII or 10/26 hex characters) and are deliberately NOT
- * enforced here — WEP is legacy/rare, and getting an exact-length WEP rule
- * wrong would itself be an "incorrect restriction"; only a non-empty check
- * applies to WEP passwords. */
+ * varied (5/13 ASCII or 10/26 hex characters) and the exact WEP-specific
+ * rule is deliberately NOT enforced here — WEP is legacy/rare, and getting
+ * an exact-length WEP rule wrong would itself be an "incorrect restriction".
+ * A WEP password is still required to be non-empty and, like WPA, is capped
+ * at MAX_WIFI_PASSWORD_LENGTH below (a shared upper bound against an
+ * unreasonably long value, not a WEP-specific spec rule) — see
+ * validateWifiPayload's shared `password.length > MAX_WIFI_PASSWORD_LENGTH`
+ * check, which applies to both security types. */
 export const MIN_WIFI_WPA_PASSWORD_LENGTH = 8;
 export const MAX_WIFI_PASSWORD_LENGTH = 63;
 

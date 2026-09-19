@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_QR_CONFIG, validateQrRequest } from "../shared/qr";
+import { DEFAULT_QR_CONFIG, MAX_QR_PAYLOAD_LENGTH, validateQrRequest } from "../shared/qr";
 import { generateQrCode, QrGenerationError } from "../src/lib/qr-engine";
 
 describe("validateQrRequest", () => {
@@ -136,5 +136,33 @@ describe("generateQrCode", () => {
     );
     expect(wifiSvg.data).not.toContain("MySensitiveNetwork");
     expect(wifiSvg.data).not.toContain("supersecretpass1");
+  });
+
+  // Phase 4.8 — a real, empirically-confirmed gap: a payload can pass the
+  // flat MAX_QR_PAYLOAD_LENGTH check and still be too much data for the
+  // `qrcode` library to actually encode at a higher error-correction level
+  // (verified directly against the library: a 2000-character payload
+  // throws at "H" but not at "L"/"M"). Without the Phase 4.8 fix this would
+  // reach the caller as a raw, un-wrapped library error instead of the same
+  // clean QrGenerationError every other validation failure uses.
+  it("converts an encoding-time capacity overflow into a clean QrGenerationError, not a raw library error", async () => {
+    const payload = { kind: "text" as const, value: "a".repeat(MAX_QR_PAYLOAD_LENGTH) };
+
+    // Confirmed safe at the default level (M) — this must keep working.
+    const ok = await generateQrCode(payload, { errorCorrectionLevel: "M" });
+    expect(ok.format).toBe("png-data-url");
+
+    // Confirmed to overflow real QR capacity at level "H" — must be a
+    // QrGenerationError with the new, specific code, not an unhandled throw.
+    let caught: unknown;
+    try {
+      await generateQrCode(payload, { errorCorrectionLevel: "H" });
+    } catch (error) {
+      caught = error;
+    }
+    expect(caught).toBeInstanceOf(QrGenerationError);
+    expect((caught as InstanceType<typeof QrGenerationError>).errors.map((e) => e.code)).toContain(
+      "payload_exceeds_capacity",
+    );
   });
 });

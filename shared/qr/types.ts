@@ -99,9 +99,22 @@ export const MAX_QR_SIZE = 2048;
 export const MIN_QR_MARGIN = 0;
 export const MAX_QR_MARGIN = 20;
 
+/**
+ * `payload_exceeds_capacity` (Phase 4.8) is distinct from `payload_too_long`:
+ * a payload can pass the flat character-count check above and still be too
+ * much data for the *specific* QR version/error-correction-level combination
+ * to physically encode (QR capacity depends on error-correction level, not
+ * just character count — e.g. a 2000-character payload fits at level "L" or
+ * "M" but not at "Q" or "H"). This is detected at actual encode time in
+ * src/lib/qr-engine.ts (which already computes real QR capacity via the
+ * `qrcode` library) rather than re-implemented here, since shared/qr/ stays
+ * free of any `qrcode` import so it remains safely importable from the
+ * Worker (see this file's own header comment).
+ */
 export type QrValidationErrorCode =
   | "empty_payload"
   | "payload_too_long"
+  | "payload_exceeds_capacity"
   | "invalid_url"
   | "wifi_ssid_required"
   | "wifi_ssid_too_long"

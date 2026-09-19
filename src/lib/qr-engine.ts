@@ -5,7 +5,9 @@ import type { QrEncodingConfig, QrPayload, QrValidationError } from "../../share
 /**
  * Codivio Shared QR Engine — browser-side rendering wrapper (Phase 4.1,
  * extended Phase 4.3/4.4 to accept every payload kind, extended Phase 4.7
- * to add a JPG export format alongside the existing PNG/SVG ones).
+ * to add a JPG export format alongside the existing PNG/SVG ones, extended
+ * Phase 4.8 to convert an encoding-time "too much data" failure into the
+ * same clean QrGenerationError path as any other validation failure).
  *
  * This is the only file that imports the `qrcode` package. Pure types and
  * validation live in shared/qr/ so they stay importable from the Worker
@@ -63,19 +65,38 @@ export async function generateQrCode(
     },
   };
 
-  if (format === "svg") {
-    const svg = await QRCode.toString(result.encodedValue, { ...options, type: "svg" });
-    return { format: "svg", data: svg };
-  }
+  // Phase 4.8 — the length/config checks above are necessary but not
+  // sufficient: real QR capacity depends on the error-correction level too,
+  // not just character count (e.g. a payload well within
+  // MAX_QR_PAYLOAD_LENGTH can still be too much data to fit at level "Q" or
+  // "H" — verified empirically: a 2000-character text payload throws the
+  // `qrcode` library's own "data too big" error at "H" but not at "L"/"M").
+  // Without this catch, that failure would reach the caller as a raw,
+  // un-wrapped library error instead of the same clean QrGenerationError
+  // path every other validation failure already goes through.
+  try {
+    if (format === "svg") {
+      const svg = await QRCode.toString(result.encodedValue, { ...options, type: "svg" });
+      return { format: "svg", data: svg };
+    }
 
-  if (format === "jpg-data-url") {
-    // JPEG is lossy — acceptable for a casual download, but PNG/SVG remain
-    // the recommended formats for a QR code that must stay reliably
-    // scannable at small sizes or after further compression/printing.
-    const dataUrl = await QRCode.toDataURL(result.encodedValue, { ...options, type: "image/jpeg" });
-    return { format: "jpg-data-url", data: dataUrl };
-  }
+    if (format === "jpg-data-url") {
+      // JPEG is lossy — acceptable for a casual download, but PNG/SVG remain
+      // the recommended formats for a QR code that must stay reliably
+      // scannable at small sizes or after further compression/printing.
+      const dataUrl = await QRCode.toDataURL(result.encodedValue, { ...options, type: "image/jpeg" });
+      return { format: "jpg-data-url", data: dataUrl };
+    }
 
-  const dataUrl = await QRCode.toDataURL(result.encodedValue, options);
-  return { format: "png-data-url", data: dataUrl };
+    const dataUrl = await QRCode.toDataURL(result.encodedValue, options);
+    return { format: "png-data-url", data: dataUrl };
+  } catch {
+    throw new QrGenerationError([
+      {
+        code: "payload_exceeds_capacity",
+        message:
+          "This content is too long to fit in a QR code at the selected error correction level. Try a lower error correction level or shorter content.",
+      },
+    ]);
+  }
 }
