@@ -62,7 +62,7 @@ describe("resolveJsonLdGraph", () => {
     expect(webPage.url).toBe(buildCanonicalUrl("/faq"));
   });
 
-  it("builds a JSON-LD graph (with BreadcrumbList) for a real tool page even though it is noindex,follow", () => {
+  it("builds a JSON-LD graph (with BreadcrumbList) for a real, indexable tool page", () => {
     const graph = resolveJsonLdGraph("/tools/qr-code-generator");
     expect(graph).not.toBeNull();
 

@@ -1,4 +1,4 @@
-import { ROBOTS_NOINDEX_FOLLOW, type SeoEntity } from "./types";
+import { ROBOTS_INDEX_FOLLOW, ROBOTS_NOINDEX_FOLLOW, type SeoEntity } from "./types";
 
 /**
  * Codivio SEO — per-tool metadata (Phase 3.1).
@@ -19,11 +19,18 @@ import { ROBOTS_NOINDEX_FOLLOW, type SeoEntity } from "./types";
  * but excluded from search results until that specific tool ships real
  * functionality — at which point flipping its `robots` to index,follow is
  * a one-line change, not a rewrite.
+ *
+ * SEO follow-up (Phase 4.9): "qr-code-generator" and "qr-code-scanner"
+ * shipped real, working functionality in Phase 4.1/4.6 — their `robots`
+ * entries below are the first to actually flip to `index,follow`, exactly
+ * as this comment always said would happen once a tool ships. Every other
+ * entry below is still a placeholder and stays `noindex,follow` until it,
+ * too, ships real functionality.
  */
 export const TOOL_SEO: Record<string, SeoEntity> = {
   "qr-code-generator": {
     path: "/tools/qr-code-generator",
-    robots: ROBOTS_NOINDEX_FOLLOW,
+    robots: ROBOTS_INDEX_FOLLOW,
     localized: {
       en: {
         title: "QR Code Generator – Create Custom QR Codes Online",
@@ -45,7 +52,7 @@ export const TOOL_SEO: Record<string, SeoEntity> = {
 
   "qr-code-scanner": {
     path: "/tools/qr-code-scanner",
-    robots: ROBOTS_NOINDEX_FOLLOW,
+    robots: ROBOTS_INDEX_FOLLOW,
     localized: {
       en: {
         title: "QR Code Scanner – Scan QR Codes Online",

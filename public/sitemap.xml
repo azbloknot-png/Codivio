@@ -1,13 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Codivio sitemap (Phase 3.1).
+  Codivio sitemap (Phase 3.1; updated for the Phase 4.9 SEO follow-up).
 
-  Lists only real, currently indexable public pages — the 34 tool pages
-  are intentionally excluded (see shared/seo/tools.ts: every tool page is
-  noindex today because ToolPage.tsx renders a "coming soon" placeholder,
-  not real functionality; a sitemap should only list pages meant to be
-  indexed). Update this file when a tool ships real functionality and its
-  shared/seo/tools.ts robots entry flips to index,follow.
+  Lists only real, currently indexable public pages. As of the Phase 4.9
+  follow-up, 2 of the 34 tool pages — QR Code Generator and QR Code
+  Scanner — have shipped real functionality (see shared/seo/tools.ts,
+  whose robots entries for these two flipped to index,follow) and are
+  listed below. The remaining 32 tool pages stay excluded: every one of
+  them is still noindex today because ToolPage.tsx renders a "coming soon"
+  placeholder, not real functionality; a sitemap should only list pages
+  meant to be indexed. Update this file again when another tool ships real
+  functionality and its shared/seo/tools.ts robots entry flips to
+  index,follow.
 
   Static (not worker-generated) for now, matching robots.txt/llms.txt —
   see DECISIONS.md's "SEO Metadata Architecture" entry for why a dynamic,
@@ -23,6 +27,16 @@
     <loc>https://codivio.online/tools</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://codivio.online/tools/qr-code-generator</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://codivio.online/tools/qr-code-scanner</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://codivio.online/blog</loc>

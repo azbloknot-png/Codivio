@@ -136,10 +136,20 @@ describe("canonical URLs and robots directives", () => {
     expect(buildTitle("FAQ")).toBe("FAQ | Codivio");
   });
 
-  it("every tool page is noindex,follow (none has real functionality yet — see shared/seo/tools.ts)", () => {
+  it("every placeholder tool page is noindex,follow (no real functionality yet — see shared/seo/tools.ts)", () => {
+    // Phase 4.9 SEO follow-up: qr-code-generator/qr-code-scanner shipped
+    // real functionality and are the one deliberate exception — checked
+    // separately below, not looped over here.
+    const liveSlugs = new Set(["qr-code-generator", "qr-code-scanner"]);
     for (const [slug, entity] of Object.entries(TOOL_SEO)) {
+      if (liveSlugs.has(slug)) continue;
       expect(robotsToString(entity.robots), slug).toBe("noindex,follow");
     }
+  });
+
+  it("the 2 tools with real functionality (qr-code-generator, qr-code-scanner) are index,follow", () => {
+    expect(robotsToString(TOOL_SEO["qr-code-generator"].robots)).toBe("index,follow");
+    expect(robotsToString(TOOL_SEO["qr-code-scanner"].robots)).toBe("index,follow");
   });
 
   it("every static public page is index,follow (all are real, functioning pages)", () => {
@@ -148,7 +158,7 @@ describe("canonical URLs and robots directives", () => {
     }
   });
 
-  it("ToolPage.tsx genuinely has no real processing yet, confirming the noindex decision is still accurate", () => {
+  it("ToolPage.tsx still renders the placeholder for every non-live tool, confirming their noindex decision is still accurate", () => {
     const toolPageSource = fs.readFileSync(new URL("../src/pages/ToolPage.tsx", import.meta.url), "utf8");
     expect(toolPageSource).toContain("Tool coming soon");
   });
@@ -171,13 +181,21 @@ describe("technical SEO files", () => {
     expect(llmsTxt).not.toContain("codovio.online");
   });
 
-  it("sitemap.xml lists only the 10 real indexable pages, and no noindex tool URL", () => {
+  it("sitemap.xml lists the 10 real static pages plus the 2 live tool pages, and no noindex tool URL", () => {
     const sitemap = fs.readFileSync(new URL("../public/sitemap.xml", import.meta.url), "utf8");
     const locs = [...sitemap.matchAll(/<loc>(.*?)<\/loc>/g)].map((m) => m[1]);
-    expect(locs.length).toBe(10);
+    expect(locs.length).toBe(12);
     for (const path of Object.values(PAGE_SEO).map((entity) => entity.path)) {
       expect(locs).toContain(buildCanonicalUrl(path));
     }
-    expect(sitemap).not.toContain("/tools/");
+    // Phase 4.9 SEO follow-up: exactly the 2 tools that flipped to
+    // index,follow in shared/seo/tools.ts are listed here — no other tool
+    // URL should ever appear while it's still noindex.
+    expect(locs).toContain(buildCanonicalUrl("/tools/qr-code-generator"));
+    expect(locs).toContain(buildCanonicalUrl("/tools/qr-code-scanner"));
+    const toolLocs = locs.filter((loc) => loc.includes("/tools/") && loc !== buildCanonicalUrl("/tools"));
+    expect(toolLocs.sort()).toEqual(
+      [buildCanonicalUrl("/tools/qr-code-generator"), buildCanonicalUrl("/tools/qr-code-scanner")].sort()
+    );
   });
 });

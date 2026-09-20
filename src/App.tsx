@@ -114,7 +114,12 @@ type Tool = {
   description: string;
   category: "QR Tools" | "PDF Tools" | "Image Tools" | "Other Tools";
   icon: React.ReactNode;
-  status: "coming-soon";
+  /** Registry-level status flag — not read by any rendering logic today (a
+   * future Admin Panel will use it, per §23's "Future Admin compatibility"
+   * principle). "live" marks a tool that has shipped real functionality
+   * (see shared/seo/tools.ts's matching robots flip for the same tools);
+   * every other tool stays "coming-soon" until it does. */
+  status: "coming-soon" | "live";
   /** Homepage Featured Tools selection — a view over the Tool Registry, not a
    * separate data source. Toggling this is what the future Admin Panel's
    * "show on Homepage" control will edit; the full registry below is
@@ -138,7 +143,7 @@ const tools: Tool[] = [
     description: "Create custom QR codes for links, text and more.",
     category: "QR Tools",
     icon: <QrCode size={22} />,
-    status: "coming-soon",
+    status: "live",
     featured: true,
     popular: true,
     qr: true,
@@ -149,7 +154,7 @@ const tools: Tool[] = [
     description: "Scan QR codes using your camera or an uploaded image.",
     category: "QR Tools",
     icon: <QrCode size={22} />,
-    status: "coming-soon",
+    status: "live",
     featured: true,
     popular: true,
     qr: true,

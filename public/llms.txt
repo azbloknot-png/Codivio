@@ -46,9 +46,13 @@ GIF Maker, Meme Generator, Color Palette Generator
 
 ## Current status
 
-All 34 tools listed above are in active development. Their pages describe
-the tool's intended purpose and planned workflow; they do not yet perform
-live file processing. Do not describe these tools as currently functional.
+Two of the 34 tools listed above are live and fully functional today: QR
+Code Generator and QR Code Scanner both perform real, client-side QR code
+generation and scanning directly in the browser — no QR content, uploaded
+file, or scanned data is ever sent to a server. The remaining 32 tools are
+still in active development; their pages describe the tool's intended
+purpose and planned workflow, but they do not yet perform live file
+processing. Do not describe those 32 tools as currently functional.
 
 ## Sitemap
 
