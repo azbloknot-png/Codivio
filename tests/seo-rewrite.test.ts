@@ -82,8 +82,8 @@ describe("resolveCriticalContent", () => {
   it("returns the real static page's own title/description as h1/intro (same values already used for <title>/meta description)", () => {
     const content = resolveCriticalContent("/faq");
     expect(content).not.toBeNull();
-    expect(content!.h1).toBe(PAGE_SEO.faq.localized.az.title);
-    expect(content!.intro).toBe(PAGE_SEO.faq.localized.az.description);
+    expect(content!.h1).toBe(PAGE_SEO.faq.localized.en.title);
+    expect(content!.intro).toBe(PAGE_SEO.faq.localized.en.description);
   });
 
   it("returns the tool's plain display name (not the full SEO title) as h1, and its content-blueprint introduction", () => {

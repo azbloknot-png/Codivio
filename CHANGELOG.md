@@ -774,4 +774,24 @@ Follow-up review of `shared/seo/content.ts` found the AI-profile `status` incons
 - Test/build: `npm run typecheck` — PASS. `npm run typecheck:tests` — PASS. `npm test` — PASS, **533/533** (512 previous + 21 new). `npm run build` — PASS. Worker 235.56→236.51 kB, client CSS +1.65 kB, main client JS +6.44 kB.
 - Caught and fixed before commit: 4 title/description length-outlier violations (this project's own existing test) in the first EN/AZ/TR copy drafts, shortened and re-verified; a `SitemapPage`/`RobotsPage` test-source-slice-boundary adjacency issue in `tests/sitemap-page.test.ts` (same class of bug as the earlier `PricingPage`/`ContactPage` one this session), fixed by moving that test's boundary marker.
 - **Known limitations**: no real-browser/JS-executed DOM verification (no browser available in this environment) — the live `fetch("/robots.txt")` behavior is verified only via source-structure tests and the parser's own unit tests against the real file.
+- **Git**: committed `5fed939`, pushed to `main`. **Deploy**: Cloudflare Version ID `79a0d9ad-2db0-48f0-9581-0cbf4f37e03a`. Live: `/robots` 200, `/robots.txt` byte-identical live vs. repo, `/sitemap.xml` well-formed with 14 URLs incl. `/robots`.
+
+## Default-language first-paint flash bug fix (2026-09-22)
+
+**Implemented and tested — NOT YET committed, pushed, or deployed** (awaiting explicit authorization). Fixes a real, user-reported bug: the site rendered in Azerbaijani for a moment on first visit, then flipped to English.
+
+- Root cause: `shared/i18n/languages.ts`'s `DEFAULT_LANGUAGE` was `"az"`, used synchronously as `LanguageContext.tsx`'s initial React state, while the real, live `general.default_language` D1 setting has always been `"en"` (seeded in `migrations/0004_settings.sql`, predating Phase 2.15's i18n system). The async `/api/settings/public` fetch then corrected the state to `"en"` a moment later — a real, code-confirmed two-phase render, not a browser-locale or `localStorage` issue (`navigator.language`/`Accept-Language` are read nowhere in this codebase).
+- Fix: `DEFAULT_LANGUAGE` changed from `"az"` to `"en"` — now matching the real D1 default it was always meant to mirror. `index.html`'s static pre-hydration shell (`lang`, description, `og:locale`, Twitter description) updated to English to match. `worker/seo-rewrite.ts` needed no functional change (it already reads `DEFAULT_LANGUAGE` dynamically) — only a stale comment was corrected.
+- Azerbaijani and Turkish remain fully supported, selectable languages — only the pre-preference default changed.
+- New regression tests (`tests/i18n.test.ts`): `DEFAULT_LANGUAGE` is now asserted against the real value parsed from `migrations/0004_settings.sql` (can't silently diverge again); `index.html`'s `lang`/`og:locale` are asserted against `DEFAULT_LANGUAGE`/`OG_LOCALE`.
+- Test/build: `npm run typecheck` — PASS. `npm run typecheck:tests` — PASS. `npm test` — PASS, **535/535** (533 previous + 2 new). `npm run build` — PASS; built `index.html` verified to contain `lang="en"`/`og:locale="en_US"`. Worker/client bundle sizes unchanged (constant-value + doc/test changes only).
+- Recorded as a correction to `DECISIONS.md`'s existing Multilanguage System (Phase 2.15) entry — no new `CODIVIO_MASTER_PLAN.md` phase, since this is a bug fix to already-shipped functionality, not new scope.
+- **Known limitation**: no real-browser visual confirmation the flash is gone (no browser available); verified via code-level proof (initial and fetched state now provably equal) instead.
+- **Documentation note, resolved 2026-09-22**: `CLAUDE.md` §26.3's "Azerbaijani (az, default)" line was corrected in a dedicated follow-up (see next entry).
+- **Git**: not committed. **Deploy**: not performed.
+
+## Phase 3.19 language-fix documentation correction (2026-09-22)
+
+**Docs-only, no code touched.** `CLAUDE.md` §26.3's "Currently implemented" sentence said "Azerbaijani (`az`, default), Turkish (`tr`), English (`en`)" — stale after the default-language fix above. Corrected to "Azerbaijani (`az`), Turkish (`tr`), English (`en`, default)" — the "default" marker moved to the language that actually is one now, list order and every other word unchanged. Checked for consistency against `DECISIONS.md`'s correction entry and `PROJECT_STATE.md`'s Multilanguage system status section — both already said "en, default" from the prior task, so no further edit was needed there beyond updating their own "flagged for a future correction" notes to say resolved.
+- Test/build (unaffected by a docs-only change, run anyway per the task's own instruction): `npm run typecheck` — PASS. `npm run typecheck:tests` — PASS. `npm test` — PASS, **535/535** (unchanged). `npm run build` — PASS (unchanged).
 - **Git**: not committed. **Deploy**: not performed.

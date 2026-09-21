@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_LANGUAGE, LANGUAGES, LANGUAGE_NATIVE_NAMES, TRANSLATIONS, isValidLanguage } from "../shared/i18n";
 import { validateSettingValue } from "../shared/settings";
+import { OG_LOCALE } from "../shared/seo/site";
 import fs from "node:fs";
 
 /**
@@ -14,9 +15,9 @@ import fs from "node:fs";
 // --- topic: supported languages + default -----------------------------------
 
 describe("supported languages", () => {
-  it("are exactly az (default), tr, en, with real native names", () => {
+  it("are exactly az, tr, en (default: en), with real native names", () => {
     expect(LANGUAGES).toEqual(["az", "tr", "en"]);
-    expect(DEFAULT_LANGUAGE).toBe("az");
+    expect(DEFAULT_LANGUAGE).toBe("en");
     expect(LANGUAGE_NATIVE_NAMES.az).toBe("Azərbaycan dili");
     expect(LANGUAGE_NATIVE_NAMES.tr).toBe("Türkçe");
     expect(LANGUAGE_NATIVE_NAMES.en).toBe("English");
@@ -28,6 +29,13 @@ describe("supported languages", () => {
     expect(isValidLanguage("en")).toBe(true);
     expect(isValidLanguage("ru")).toBe(false);
     expect(isValidLanguage("")).toBe(false);
+  });
+
+  it("DEFAULT_LANGUAGE matches the real, live general.default_language value seeded in migrations/0004_settings.sql — regression guard for the first-paint language-flash bug this exact mismatch caused (2026-09-22)", () => {
+    const migrationSql = fs.readFileSync(new URL("../migrations/0004_settings.sql", import.meta.url), "utf8");
+    const match = migrationSql.match(/'general\.default_language',\s*'([a-z]+)'/);
+    expect(match, "general.default_language seed row not found in migration").not.toBeNull();
+    expect(DEFAULT_LANGUAGE).toBe(match![1]);
   });
 });
 
@@ -124,7 +132,7 @@ describe("general.default_language server-side validation", () => {
 describe("language persistence architecture", () => {
   const contextSource = fs.readFileSync(new URL("../src/i18n/LanguageContext.tsx", import.meta.url), "utf8");
 
-  it("reads/writes a single localStorage key, and falls back to DEFAULT_LANGUAGE (az) when nothing is stored", () => {
+  it("reads/writes a single localStorage key, and falls back to DEFAULT_LANGUAGE (en) when nothing is stored", () => {
     expect(contextSource).toContain('localStorage.getItem(STORAGE_KEY)');
     expect(contextSource).toContain('localStorage.setItem(STORAGE_KEY, lang)');
     expect(contextSource).toContain("readStoredLanguage() ?? DEFAULT_LANGUAGE");
@@ -133,6 +141,22 @@ describe("language persistence architecture", () => {
   it("only consults the site's public default-language setting when no personal choice is stored yet (never overwrites an explicit choice)", () => {
     expect(contextSource).toContain("if (readStoredLanguage()) return;");
     expect(contextSource).toContain('fetch("/api/settings/public")');
+  });
+});
+
+// --- topic: first-paint language consistency (regression guard, 2026-09-22) -
+
+describe("first-paint language matches DEFAULT_LANGUAGE everywhere (no flash-of-wrong-language)", () => {
+  const indexHtml = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
+
+  it("index.html's static pre-hydration shell (lang attribute + og:locale) matches DEFAULT_LANGUAGE, not a hardcoded stale value", () => {
+    const langMatch = indexHtml.match(/<html lang="([a-z]+)">/);
+    expect(langMatch, "index.html <html lang> attribute not found").not.toBeNull();
+    expect(langMatch![1]).toBe(DEFAULT_LANGUAGE);
+
+    const ogLocaleMatch = indexHtml.match(/property="og:locale" content="([a-z_A-Z]+)"/);
+    expect(ogLocaleMatch, "index.html og:locale meta tag not found").not.toBeNull();
+    expect(ogLocaleMatch![1]).toBe(OG_LOCALE[DEFAULT_LANGUAGE]);
   });
 });
 

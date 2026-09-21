@@ -21,11 +21,14 @@ import { DEFAULT_LANGUAGE, TRANSLATIONS, isValidLanguage, type Language, type Tr
  * same relationship every real i18n system (browser locale vs. app
  * default) already has. No new D1 table/column was added for this.
  *
- * The literal "if nothing is configured, use AZ" requirement is satisfied
- * by DEFAULT_LANGUAGE itself — used synchronously as the initial state
- * before the async site-default fetch below ever resolves, so there is
- * never a moment where the UI is blocked on a network request just to
- * pick a language.
+ * The "if nothing is configured, use the site default" requirement is
+ * satisfied by DEFAULT_LANGUAGE itself — used synchronously as the initial
+ * state before the async site-default fetch below ever resolves, so there
+ * is never a moment where the UI is blocked on a network request just to
+ * pick a language. DEFAULT_LANGUAGE must always match the real, live
+ * `general.default_language` D1 value ("en") — see that constant's own
+ * comment in shared/i18n/languages.ts for the real first-paint-language
+ * flash bug this exact mismatch caused when it didn't.
  */
 
 const STORAGE_KEY = "codivio_language";

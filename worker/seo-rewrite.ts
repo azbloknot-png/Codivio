@@ -288,7 +288,7 @@ export async function injectStaticSeoMetadata(response: Response, normalizedPath
    * in-app choice (and is not read anywhere in this codebase today). Using
    * it here would be a new, separate, unreviewed signal, and a wrong guess
    * would be worse than a consistent, honest default. Every route is
-   * therefore rewritten using the same fixed DEFAULT_LANGUAGE ("az") that
+   * therefore rewritten using the same fixed DEFAULT_LANGUAGE ("en") that
    * index.html's own static shell already hardcodes — this keeps the
    * raw-HTML default internally consistent (still one language sitewide,
    * same as before this change) rather than introducing a second,
