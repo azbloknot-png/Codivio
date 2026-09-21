@@ -1,7 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="/sitemap.xsl"?>
 <!--
-  Codivio sitemap (Phase 3.1; updated for the Phase 4.9 SEO follow-up and
-  Phase 3.18 HTML Site Map).
+  Codivio sitemap (Phase 3.1; updated for the Phase 4.9 SEO follow-up,
+  Phase 3.18 HTML Site Map, and Phase 3.18's XSLT visual-design follow-up).
+
+  The <?xml-stylesheet?> line above is presentation-only: a browser that
+  opens this URL directly renders it via public/sitemap.xsl + sitemap.css
+  (Codivio-branded HTML view). Search engines ignore this instruction and
+  read the urlset/url structure below exactly as before — the file
+  remains valid XML per the sitemaps.org schema, unchanged in every way
+  that matters for crawling. See public/sitemap.xsl's own header comment
+  for why the styling is a linked file rather than inline (CSP).
 
   Lists only real, currently indexable public pages. As of the Phase 4.9
   follow-up, 2 of the 34 tool pages — QR Code Generator and QR Code

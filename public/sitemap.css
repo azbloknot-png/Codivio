@@ -1,0 +1,291 @@
+/*
+ * Codivio sitemap.xsl visual layer — Phase 3.18 follow-up.
+ *
+ * A separate, local, same-origin file (not an inline <style> block) so the
+ * XSLT-rendered view of /sitemap.xml renders correctly under the site-wide
+ * CSP (worker/security-headers.ts sets `style-src 'self'` with no
+ * `'unsafe-inline'`) without requiring any CSP change — a same-origin
+ * <link rel="stylesheet"> is already permitted by `style-src 'self'`.
+ *
+ * Colors/font mirror src/styles.css's real tokens (--color-primary,
+ * --color-ink, --color-muted, --radius-md, Inter font stack) so this page
+ * looks like the rest of Codivio rather than a generic XML viewer.
+ */
+
+:root {
+  --color-primary: #1769e0;
+  --color-ink: #172b49;
+  --color-muted: #68778d;
+  --color-navy: #0b1830;
+  --radius-md: 14px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #f7f9fc;
+  color: #26364a;
+  line-height: 1.5;
+}
+
+a {
+  color: inherit;
+}
+
+.xsl-skip-link {
+  position: absolute;
+  top: -48px;
+  left: 12px;
+  z-index: 50;
+  background: var(--color-primary);
+  color: #fff;
+  padding: 12px 18px;
+  border-radius: 0 0 10px 10px;
+  font-weight: 700;
+  font-size: 14px;
+  text-decoration: none;
+  transition: top 0.15s ease;
+}
+.xsl-skip-link:focus {
+  top: 0;
+}
+
+.xsl-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.xsl-header {
+  background: linear-gradient(135deg, var(--color-navy) 0%, #132a52 55%, var(--color-primary) 150%);
+  color: #fff;
+  padding: 44px 20px 38px;
+}
+
+.xsl-wrap {
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+.xsl-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.xsl-header h1 {
+  margin: 0 0 10px;
+  font-size: clamp(24px, 4vw, 34px);
+  letter-spacing: -0.02em;
+}
+
+.xsl-header p {
+  margin: 0;
+  color: #c7d6ef;
+  font-size: 15px;
+  max-width: 640px;
+  line-height: 1.6;
+}
+
+.xsl-stats {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
+
+.xsl-stat {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-md);
+  padding: 14px 22px;
+  min-width: 150px;
+}
+
+.xsl-stat-n {
+  display: block;
+  font-size: 26px;
+  font-weight: 800;
+}
+
+.xsl-stat-l {
+  font-size: 11px;
+  color: #c7d6ef;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+main {
+  padding: 34px 20px 60px;
+}
+
+.xsl-note {
+  background: #fff;
+  border: 1px solid #e4eaf2;
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  margin: 0 0 22px;
+  font-size: 14px;
+  color: var(--color-muted);
+}
+
+.xsl-note a {
+  color: var(--color-primary);
+  font-weight: 700;
+  text-decoration: none;
+}
+.xsl-note a:hover {
+  text-decoration: underline;
+}
+.xsl-note a:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.xsl-table-wrap {
+  background: #fff;
+  border: 1px solid #e4eaf2;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead th {
+  text-align: left;
+  background: #eef3fb;
+  color: var(--color-ink);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 14px 16px;
+  border-bottom: 1px solid #e4eaf2;
+  white-space: nowrap;
+}
+
+tbody td {
+  padding: 13px 16px;
+  border-bottom: 1px solid #eef1f6;
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+tbody tr:hover {
+  background: #f7faff;
+}
+
+.xsl-loc a {
+  color: var(--color-primary);
+  font-weight: 700;
+  text-decoration: none;
+  word-break: break-all;
+}
+.xsl-loc a:hover {
+  text-decoration: underline;
+}
+.xsl-loc a:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.xsl-pill {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #edf5ff;
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.xsl-priority {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+footer {
+  padding: 24px 20px 50px;
+  text-align: center;
+  color: var(--color-muted);
+  font-size: 13px;
+}
+footer a {
+  color: var(--color-primary);
+  font-weight: 700;
+  text-decoration: none;
+}
+footer a:hover {
+  text-decoration: underline;
+}
+footer a:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (max-width: 720px) {
+  thead {
+    display: none;
+  }
+  table,
+  tbody,
+  tr,
+  td {
+    display: block;
+    width: 100%;
+  }
+  tbody tr {
+    border-bottom: 1px solid #e4eaf2;
+    padding: 14px 16px;
+  }
+  tbody td {
+    border: 0;
+    padding: 4px 0;
+  }
+  tbody td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-muted);
+    margin-bottom: 2px;
+  }
+}

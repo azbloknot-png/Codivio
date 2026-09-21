@@ -726,7 +726,7 @@ Deferred (require real browser/screenshot verification): tool-card height/width 
 
 ## Phase 3.18 — HTML Site Map (2026-09-20)
 
-**Implemented and tested — NOT YET committed, pushed, or deployed** (awaiting explicit authorization). Closes a real gap found during a technical-SEO audit series: `public/sitemap.xml` is machine-readable only, with no human-readable directory page.
+**Implemented, tested, committed (`0626b89`), pushed, and deployed** (Cloudflare Version ID `8731a9bc-737c-442a-94fe-bd8aafd69a02`, live-verified 2026-09-21). Closed a real gap found during a technical-SEO audit series: `public/sitemap.xml` is machine-readable only, with no human-readable directory page.
 
 - New route `/sitemap` → `SitemapPage` (`src/App.tsx`), positioned between `ContactPage` and `LegalPage` (deliberately not between `PricingPage`/`ContactPage`, to avoid colliding with an existing source-slice test assumption). 6 category cards (Main Pages, Tools, Blog, Information, Legal & Policies, Resources) — every link is a real route or real static asset (`/sitemap.xml`, `/robots.txt` correctly use a plain `<a>`, never `<Link>`).
 - Tools card is fully registry-driven — all 34 tools, grouped by the existing `categories` array, generated via `tools.filter(...).map(...)`, never a hand-typed slug.
@@ -737,7 +737,7 @@ Deferred (require real browser/screenshot verification): tool-card height/width 
 - Test/build: `npm run typecheck` — PASS. `npm run typecheck:tests` — PASS. `npm test` — PASS, **498/498** (483 previous + 15 new). `npm run build` — PASS.
 - Bundle impact: Worker 233.88→235.56 kB, client CSS +1.26 kB, main client JS +5.88 kB.
 - **Known limitations**: no real-browser/JS-executed DOM verification (local Worker preview did not stay bound in this environment; partially verified via a static-file server instead).
-- **Git**: not committed. **Deploy**: not performed.
+- **Git**: committed `0626b89`, pushed to `main`. **Deploy**: Cloudflare Version ID `8731a9bc-737c-442a-94fe-bd8aafd69a02`. Live URLs verified: `/sitemap` 200, `/sitemap.xml` 200 (13 URLs incl. `/sitemap`), `/tools/qr-code-generator` and `/tools/qr-code-scanner` 200 with correct canonical/`robots: index,follow`.
 
 ### Content status consistency fix (2026-09-21, same phase)
 
@@ -747,4 +747,16 @@ Follow-up review of `shared/seo/content.ts` found the AI-profile `status` incons
 - New `TOOL_LIVE_NOTE`/`SHARED_TRUST_MESSAGE_LIVE` constants (honest, verifiable claims only); `getContentBlueprint` now picks the live or coming-soon pair based on the same signal.
 - `qr-code-generator`/`qr-code-scanner`'s `valueProposition` and final FAQ answer rewritten in EN/AZ/TR (12 text edits) to honestly reflect that they're live; the other 32 tools' identical-shaped content is untouched.
 - Test/build: `npm run typecheck` — PASS. `npm run typecheck:tests` — PASS. `npm test` — PASS, **501/501** (498 previous + 3 net new). `npm run build` — PASS. `ToolPage` lazy chunk +1.21 kB; main bundle unaffected.
+- **Git**: committed `0626b89`, pushed to `main`. **Deploy**: Cloudflare Version ID `8731a9bc-737c-442a-94fe-bd8aafd69a02`.
+
+### XSLT visual design for sitemap.xml (2026-09-21, same phase)
+
+`public/sitemap.xml` gains a `<?xml-stylesheet type="text/xsl" href="/sitemap.xsl"?>` processing instruction so a browser opening it directly renders a Codivio-branded HTML view (dark navy/blue header, total-URL count, responsive table of every URL's `changefreq`/`priority`), while search engines keep reading the exact same `<urlset>/<url>` XML unchanged — the same technique WordPress/Yoast use for their own sitemaps.
+
+- New `public/sitemap.xsl` (XSLT 1.0, bound to the real sitemaps.org namespace) and `public/sitemap.css` (Codivio's real brand tokens — `#1769e0`/`#172b49`/`#68778d`, Inter font — no CDN, no JavaScript).
+- **Deliberate deviation from the literal "CSS inside the XSL file" brief**: the site's CSP (`worker/security-headers.ts`) sets `style-src 'self'` with no `'unsafe-inline'`, applied to every response including `/sitemap.xml`. An inline `<style>` block in the XSLT output would be silently blocked by that CSP in production (invisible in a local build check, only visible in a real browser under the live header) — rather than weaken the CSP for one feature, the CSS lives in a separate local file loaded via a same-origin `<link rel="stylesheet">`, which `style-src 'self'` already permits with zero header changes.
+- `public/sitemap.xml` itself: only the new PI line + updated header comment — all 13 `<url>` entries, the namespace, and every field are byte-identical to before (verified via a real `System.Xml.XmlDocument` parse).
+- New `tests/sitemap-xsl.test.ts` (11 tests): PI placement, namespace/URL-count/no-duplicate regression guards, XSLT well-formedness/field-rendering checks, and CDN/inline-style/script absence checks.
+- Test/build: `npm run typecheck` — PASS. `npm run typecheck:tests` — PASS. `npm test` — PASS, **512/512** (501 previous + 11 new). `npm run build` — PASS; Worker bundle unchanged (pure static assets).
+- **Known limitation**: Cloudflare's static-asset MIME mapping for `.xsl` has not been live-verified to serve `text/xsl` (no `public/_headers` override exists) — verify after a future deploy and add one only if actually wrong.
 - **Git**: not committed. **Deploy**: not performed.
