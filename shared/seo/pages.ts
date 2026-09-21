@@ -6,14 +6,24 @@ import { ROBOTS_INDEX_FOLLOW, type SeoEntity } from "./types";
  * One entry per real, currently-routed static page in src/App.tsx. Every
  * title/description below is hand-written per language (not a mechanical
  * translation of the English copy) — see DECISIONS.md's "SEO Metadata
- * Architecture" entry. All nine are real, functioning pages, so all use
- * the standard index,follow default.
+ * Architecture" entry. All are real, functioning pages, so all use the
+ * standard index,follow default.
  *
  * Keys match the route's purpose, not its literal path, so callers read
  * naturally (`PAGE_SEO.home`, not `PAGE_SEO["/"]`).
  */
 export const PAGE_SEO: Record<
-  "home" | "tools" | "blog" | "faq" | "about" | "contact" | "privacy" | "terms" | "cookies" | "pricing",
+  | "home"
+  | "tools"
+  | "blog"
+  | "faq"
+  | "about"
+  | "contact"
+  | "privacy"
+  | "terms"
+  | "cookies"
+  | "pricing"
+  | "sitemap",
   SeoEntity
 > = {
   home: {
@@ -232,6 +242,28 @@ export const PAGE_SEO: Record<
         title: "Fiyatlandırma – Free, Pro, Business ve API Planları",
         description:
           "Codivio'nun planlanan Free, Pro, Business ve API planlarını ve araçlar kullanıma sunuldukça her birinin neler sunacağını görün.",
+      },
+    },
+  },
+
+  sitemap: {
+    path: "/sitemap",
+    robots: ROBOTS_INDEX_FOLLOW,
+    localized: {
+      en: {
+        title: "Site Map – All Codivio Pages and Tools",
+        description:
+          "Browse an organized directory of every Codivio page and tool, including which tools are already live and which are still in development.",
+      },
+      az: {
+        title: "Sayt Xəritəsi – Bütün Codivio Səhifələri və Alətləri",
+        description:
+          "Codivio-nun bütün səhifə və alətlərinin təşkil olunmuş siyahısına baxın — hansı alətlərin artıq hazır, hansılarının hələ inkişafda olduğunu görün.",
+      },
+      tr: {
+        title: "Site Haritası – Tüm Codivio Sayfaları ve Araçları",
+        description:
+          "Codivio'nun tüm sayfa ve araçlarının düzenli listesine göz atın — hangi araçların zaten hazır, hangilerinin hâlâ geliştirme aşamasında olduğunu görün.",
       },
     },
   },

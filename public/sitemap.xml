@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Codivio sitemap (Phase 3.1; updated for the Phase 4.9 SEO follow-up).
+  Codivio sitemap (Phase 3.1; updated for the Phase 4.9 SEO follow-up and
+  Phase 3.18 HTML Site Map).
 
   Lists only real, currently indexable public pages. As of the Phase 4.9
   follow-up, 2 of the 34 tool pages — QR Code Generator and QR Code
@@ -12,6 +13,12 @@
   meant to be indexed. Update this file again when another tool ships real
   functionality and its shared/seo/tools.ts robots entry flips to
   index,follow.
+
+  Phase 3.18 adds /sitemap itself — the real, index,follow, human-readable
+  HTML directory of every page/tool (see shared/seo/pages.ts's PAGE_SEO.sitemap
+  and src/App.tsx's SitemapPage) — at the same priority tier as /faq and
+  /pricing (0.5/monthly): a useful secondary navigation page, not core like
+  the homepage or the tools hub.
 
   Static (not worker-generated) for now, matching robots.txt/llms.txt —
   see DECISIONS.md's "SEO Metadata Architecture" entry for why a dynamic,
@@ -75,6 +82,11 @@
   </url>
   <url>
     <loc>https://codivio.online/pricing</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://codivio.online/sitemap</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>

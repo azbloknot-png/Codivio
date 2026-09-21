@@ -101,6 +101,10 @@ Phase 3-ün öz təsviri ("Google / SEO / Analytics... GA4/GTM where appropriate
 
 3.16-nın birbaşa davamı — genişləndirilə bilən, privacy-conscious cookie consent sistemi (banner, Cookie Settings modalı, 4 kateqoriya: Necessary/Analytics/Advertising/Preferences), GA4-ü consent-ə bağlayır (razılıq olmadan GA4 script belə yüklənmir), `/cookies` səhifəsini real davranışa uyğunlaşdırır. Advertising/Preferences kateqoriyaları yalnız gələcək texnologiyalar üçün struktur kimi mövcuddur, hələ funksional deyil. Görün: `PROJECT_STATE.md`-in "Cookie Consent & Privacy Foundation status (Phase 3.17)" bölməsi tam detal üçün.
 
+### 3.18 HTML Site Map (Human-Readable Sitemap Page)
+
+Codivio-nun texniki SEO auditləri zamanı (Phase 4.9-dan sonrakı ayrıca SEO review) tapılan bir boşluğu bağlayır: `public/sitemap.xml` yalnız maşın-oxunaqlı formatdadır, saytda real ziyarətçilər üçün insan-oxunaqlı bir sayt xəritəsi yox idi. Yeni `/sitemap` route-u (`src/App.tsx`-də `SitemapPage`) 6 kateqoriya kartı ilə (Main Pages, Tools, Blog, Information, Legal & Policies, Resources) bütün real səhifə və 34 aləti göstərir — Tools kartı birbaşa mövcud `tools[]`/`categories` registrindən generasiya olunur (əl ilə yazılmış link yoxdur). Hər hazır olmayan (`status: "coming-soon"`) alət üçün aydın **"Coming soon"** etiketi göstərilir ki, istifadəçidə bütün alətlərin hazır olduğu təəssüratı yaranmasın. `shared/seo/pages.ts`-ə yeni `PAGE_SEO.sitemap` girişi (`index,follow`, 3 dildə real, differensasiya olunmuş mətn), `shared/seo/schema.ts`-ə statik səhifələr üçün opt-in `BreadcrumbList` dəstəyi (yalnız `/sitemap` üçün aktivdir, digər 10 səhifəyə təsir etmir) əlavə olundu. `/sitemap` özü də `public/sitemap.xml`-ə əlavə edilib (`priority: 0.5`, `changefreq: monthly` — `/faq`/`pricing` ilə eyni səviyyə). Görün: `PROJECT_STATE.md`-in "HTML Site Map status (Phase 3.18)" bölməsi tam detal üçün.
+
 ### 3.x Release / Live Verification Checkpoints
 
 Phase 3 tamamlandıqdan sonra bütün Master Plan üzrə çəkili tamamlanma faizi yenidən hesablanmalıdır.

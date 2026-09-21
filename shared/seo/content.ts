@@ -13,18 +13,25 @@ import { TOOL_INTRODUCTIONS } from "./tool-intro";
  * shared/seo/keywords.ts's relatedToolOpportunity/futureContentOpportunity
  * rather than duplicating them (see getContentBlueprint in this file).
  *
- * CRITICAL constraint honored throughout: every one of the 34 tools in
- * src/pages/ToolPage.tsx currently renders only a "Tool coming soon"
- * placeholder — none has real file processing yet. howToSteps below
- * describe the general real-world workflow (how PDF merging, QR
- * generation, etc. work conceptually), not a claim that Codivio's own
- * implementation performs them today. TOOL_STATUS_NOTE and
- * SHARED_TRUST_MESSAGE make that distinction explicit and reusable rather
- * than repeating a disclaimer 34 times. No banned phrase from this
- * checkpoint's brief ("upload your file and download instantly", "we
- * process your file", "automatically deleted after X minutes",
- * "unlimited", "100% private", "no files are stored", "fastest/best
- * tool") appears anywhere below — test-enforced in tests/seo-content.test.ts.
+ * CRITICAL constraint honored throughout: as of Phase 3.4, every one of the
+ * 34 tools in src/pages/ToolPage.tsx rendered only a "Tool coming soon"
+ * placeholder. As of Phase 4.1/4.6, 2 of the 34 — "qr-code-generator" and
+ * "qr-code-scanner" — have shipped real, working functionality; their
+ * content below is worded accordingly (present tense, no "once available"
+ * framing) and TOOL_SEO[slug].robots.index (already the site's one real
+ * signal for "is this tool live") is what getContentBlueprint/
+ * getAiToolProfile below key off of, rather than hand-maintaining a second
+ * live/coming-soon list. Every other tool's howToSteps below describe the
+ * general real-world workflow (how PDF merging, QR generation, etc. work
+ * conceptually), not a claim that Codivio's own implementation performs
+ * them today. TOOL_STATUS_NOTE/TOOL_LIVE_NOTE and
+ * SHARED_TRUST_MESSAGE/SHARED_TRUST_MESSAGE_LIVE make that distinction
+ * explicit and reusable rather than repeating a disclaimer 34 times. No
+ * banned phrase from this checkpoint's brief ("upload your file and
+ * download instantly", "we process your file", "automatically deleted
+ * after X minutes", "unlimited", "100% private", "no files are stored",
+ * "fastest/best tool") appears anywhere below — test-enforced in
+ * tests/seo-content.test.ts.
  */
 
 export interface FaqTopic {
@@ -53,6 +60,19 @@ export const TOOL_STATUS_NOTE: Record<Language, string> = {
   tr: "Bu araç şu anda geliştirilme aşamasındadır ve henüz dosya işlemiyor. Yukarıdaki adımlar, araç kullanıma sunulduğunda nasıl çalışacağını açıklar.",
 };
 
+/** The live counterpart to TOOL_STATUS_NOTE — shown instead of it, via
+ * getContentBlueprint's TOOL_SEO[slug].robots.index check, for a tool that
+ * has actually shipped (today: "qr-code-generator"/"qr-code-scanner").
+ * States only what's independently verifiable elsewhere in this codebase
+ * (client-side-only processing — see src/lib/qr-engine.ts/
+ * qr-scanner-engine.ts and the confirmed absence of any /api/qr* route),
+ * never a fabricated capability. */
+export const TOOL_LIVE_NOTE: Record<Language, string> = {
+  en: "This tool is live and fully functional — everything above happens directly in your browser, with nothing uploaded to a server.",
+  az: "Bu alət canlıdır və tam funksionaldır — yuxarıdakı hər şey birbaşa brauzerinizdə baş verir, heç nə serverə yüklənmir.",
+  tr: "Bu araç canlıdır ve tamamen işlevseldir — yukarıdaki her şey doğrudan tarayıcınızda gerçekleşir, hiçbir şey sunucuya yüklenmez.",
+};
+
 /** A single, sitewide, honest trust/privacy statement — reused rather than
  * inventing 34 unique privacy claims for tools with no live processing
  * architecture to describe yet. Points to the real Privacy Policy instead
@@ -64,11 +84,20 @@ export const SHARED_TRUST_MESSAGE: Record<Language, string> = {
   tr: "Codivio'nun araçları ücretsizdir. Araçlar kullanıma sunuldukça Codivio'nun veri ve gizliliğe nasıl yaklaştığını Gizlilik Politikası'ndan öğrenebilirsiniz.",
 };
 
+/** The live counterpart to SHARED_TRUST_MESSAGE — same statement minus the
+ * "as tools become available" forward-looking clause, which no longer
+ * describes a live tool accurately. */
+export const SHARED_TRUST_MESSAGE_LIVE: Record<Language, string> = {
+  en: "Codivio's tools are free to use. See the Privacy Policy for how Codivio approaches data and privacy.",
+  az: "Codivio-nun alətləri pulsuzdur. Codivio-nun məlumat və məxfiliyə necə yanaşdığını Məxfilik Siyasətindən öyrənə bilərsiniz.",
+  tr: "Codivio'nun araçları ücretsizdir. Codivio'nun veri ve gizliliğe nasıl yaklaştığını Gizlilik Politikası'ndan öğrenebilirsiniz.",
+};
+
 export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
   "qr-code-generator": {
     en: {
       introduction: TOOL_INTRODUCTIONS["qr-code-generator"].en,
-      valueProposition: "Create a QR code for any purpose in seconds, once the tool is live.",
+      valueProposition: "Create a QR code for any purpose in seconds, directly in your browser.",
       benefits: ["Works for links, text and more", "No design skills needed", "Free to use"],
       howToSteps: ["Choose what the QR code should contain", "Customize the code if needed", "Download the finished QR code"],
       useCases: ["Sharing a website on printed materials", "Adding a QR code to a business card", "Linking a menu or flyer to a webpage"],
@@ -78,12 +107,12 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
         { question: "What does the downloaded QR code look like?", answer: "The result is a square, scannable image file that can be saved and reused wherever needed." },
         { question: "Can a QR code be used on printed materials like flyers or business cards?", answer: "Yes, that's one of the most common uses — a QR code printed on paper works the same way as one shown on a screen." },
         { question: "Is there a different Codivio tool for turning a link specifically into a QR code?", answer: "Yes, the URL to QR Code tool focuses specifically on website links, while this generator also covers text and more." },
-        { question: "Is this tool available to use right now?", answer: "Not yet — it is currently in development, like the rest of Codivio's tools." },
+        { question: "Is this tool available to use right now?", answer: "Yes — this tool is live and fully functional, with everything happening directly in your browser and no file ever uploaded to a server." },
       ],
     },
     az: {
       introduction: TOOL_INTRODUCTIONS["qr-code-generator"].az,
-      valueProposition: "Alət aktiv olduqdan sonra istənilən məqsəd üçün saniyələr ərzində QR kod yaradın.",
+      valueProposition: "İstənilən məqsəd üçün saniyələr ərzində, birbaşa brauzerinizdə QR kod yaradın.",
       benefits: ["Link, mətn və s. üçün işləyir", "Dizayn bacarığı tələb etmir", "Pulsuz istifadə"],
       howToSteps: ["QR kodun nə saxlayacağını seçin", "Lazım olsa kodu fərdiləşdirin", "Hazır QR kodu yükləyin"],
       useCases: ["Çap materiallarında veb sayt paylaşmaq", "Vizit kartına QR kod əlavə etmək", "Menyu və ya vərəqəni veb səhifəyə bağlamaq"],
@@ -93,12 +122,12 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
         { question: "Yüklənmiş QR kod necə görünür?", answer: "Nəticə kvadrat, skan edilə bilən şəkil faylıdır və lazım olan yerdə saxlanıla və yenidən istifadə edilə bilər." },
         { question: "QR kod vərəqə və ya vizit kartı kimi çap materiallarında istifadə edilə bilər?", answer: "Bəli, bu ən geniş yayılmış istifadələrdən biridir — kağıza çap edilmiş QR kod ekranda göstərilən kimi işləyir." },
         { question: "Konkret olaraq linki QR koda çevirmək üçün ayrıca Codivio aləti varmı?", answer: "Bəli, URL-dən QR koda aləti xüsusilə veb sayt linkləri üçündür, bu generator isə həm də mətn və digərlərini əhatə edir." },
-        { question: "Bu alət hazırda istifadə üçün mövcuddur?", answer: "Hələ yox — Codivio-nun digər alətləri kimi, bu da hazırlanma mərhələsindədir." },
+        { question: "Bu alət hazırda istifadə üçün mövcuddur?", answer: "Bəli — bu alət canlıdır və tam funksionaldır, hər şey birbaşa brauzerinizdə baş verir və heç bir fayl serverə yüklənmir." },
       ],
     },
     tr: {
       introduction: TOOL_INTRODUCTIONS["qr-code-generator"].tr,
-      valueProposition: "Araç yayına girdiğinde herhangi bir amaç için saniyeler içinde QR kod oluşturun.",
+      valueProposition: "Herhangi bir amaç için saniyeler içinde, doğrudan tarayıcınızda QR kod oluşturun.",
       benefits: ["Bağlantı, metin ve daha fazlası için çalışır", "Tasarım bilgisi gerektirmez", "Ücretsiz kullanım"],
       howToSteps: ["QR kodun neyi içereceğini seçin", "Gerekirse kodu özelleştirin", "Hazır QR kodu indirin"],
       useCases: ["Basılı materyallerde web sitesi paylaşma", "Kartvizite QR kod ekleme", "Menü veya broşürü web sayfasına bağlama"],
@@ -108,7 +137,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
         { question: "İndirilen QR kod nasıl görünür?", answer: "Sonuç, kare şeklinde, taranabilir bir görsel dosyasıdır ve gerektiğinde kaydedilip yeniden kullanılabilir." },
         { question: "QR kod, broşür veya kartvizit gibi basılı materyallerde kullanılabilir mi?", answer: "Evet, bu en yaygın kullanımlardan biridir — kağıda basılan bir QR kod, ekranda gösterilenle aynı şekilde çalışır." },
         { question: "Bir bağlantıyı özellikle QR koda çevirmek için ayrı bir Codivio aracı var mı?", answer: "Evet, URL'den QR Koda aracı özellikle web sitesi bağlantıları içindir; bu oluşturucu ise ayrıca metin ve daha fazlasını da kapsar." },
-        { question: "Bu araç şu anda kullanılabilir mi?", answer: "Henüz değil — Codivio'nun diğer araçları gibi bu da şu anda geliştirilme aşamasındadır." },
+        { question: "Bu araç şu anda kullanılabilir mi?", answer: "Evet — bu araç canlıdır ve tamamen işlevseldir; her şey doğrudan tarayıcınızda gerçekleşir ve hiçbir dosya sunucuya yüklenmez." },
       ],
     },
   },
@@ -116,7 +145,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
   "qr-code-scanner": {
     en: {
       introduction: TOOL_INTRODUCTIONS["qr-code-scanner"].en,
-      valueProposition: "Scan any QR code instantly once the tool is live, no extra app needed.",
+      valueProposition: "Scan any QR code instantly, directly in your browser, no extra app needed.",
       benefits: ["Works with camera or an image file", "No app installation needed", "Free to use"],
       howToSteps: ["Point the camera at a QR code or upload an image", "Let the scanner read the code", "View the decoded content"],
       useCases: ["Checking a QR code before opening a link", "Scanning a code from a printed poster", "Reading a QR code sent as an image"],
@@ -126,12 +155,12 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
         { question: "What happens after a QR code is scanned?", answer: "The decoded content, such as a link or text, is shown so it can be viewed or opened." },
         { question: "Can a blurry or damaged QR code still be scanned?", answer: "QR codes include some built-in error correction, but a badly damaged or very blurry code may not scan reliably." },
         { question: "What if I need to create a QR code instead of scanning one?", answer: "The QR Code Generator tool is designed for creating new QR codes." },
-        { question: "Is this tool available to use right now?", answer: "Not yet — it is currently in development, like the rest of Codivio's tools." },
+        { question: "Is this tool available to use right now?", answer: "Yes — this tool is live and fully functional, whether you use the camera or upload an image, with nothing uploaded to a server." },
       ],
     },
     az: {
       introduction: TOOL_INTRODUCTIONS["qr-code-scanner"].az,
-      valueProposition: "Alət aktiv olduqda əlavə tətbiqə ehtiyac olmadan istənilən QR kodu anında skan edin.",
+      valueProposition: "Əlavə tətbiqə ehtiyac olmadan, birbaşa brauzerinizdə istənilən QR kodu anında skan edin.",
       benefits: ["Kamera və ya şəkil faylı ilə işləyir", "Tətbiq quraşdırmaq lazım deyil", "Pulsuz istifadə"],
       howToSteps: ["Kameranı QR koda yönəldin və ya şəkil yükləyin", "Skanerin kodu oxumasına icazə verin", "Deşifr edilmiş məzmuna baxın"],
       useCases: ["Link açmadan əvvəl QR kodu yoxlamaq", "Çap edilmiş plakatdan kod skan etmək", "Şəkil kimi göndərilmiş QR kodu oxumaq"],
@@ -141,12 +170,12 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
         { question: "QR kod skan edildikdən sonra nə baş verir?", answer: "Deşifr edilmiş məzmun, məsələn link və ya mətn, baxmaq və ya açmaq üçün göstərilir." },
         { question: "Bulanıq və ya zədəli QR kod yenə skan edilə bilər?", answer: "QR kodlarda daxili xəta düzəltmə var, lakin ciddi zədəli və ya çox bulanıq kod etibarlı skan olunmaya bilər." },
         { question: "QR kod skan etmək əvəzinə yaratmaq lazımdırsa nə etməliyəm?", answer: "QR Kod Generatoru aləti yeni QR kod yaratmaq üçün nəzərdə tutulub." },
-        { question: "Bu alət hazırda istifadə üçün mövcuddur?", answer: "Hələ yox — Codivio-nun digər alətləri kimi, bu da hazırlanma mərhələsindədir." },
+        { question: "Bu alət hazırda istifadə üçün mövcuddur?", answer: "Bəli — bu alət canlıdır və tam funksionaldır, istər kamera ilə, istərsə də şəkil yükləməklə; heç nə serverə göndərilmir." },
       ],
     },
     tr: {
       introduction: TOOL_INTRODUCTIONS["qr-code-scanner"].tr,
-      valueProposition: "Araç yayına girdiğinde ek bir uygulamaya gerek kalmadan herhangi bir QR kodu anında okutun.",
+      valueProposition: "Ek bir uygulamaya gerek kalmadan, doğrudan tarayıcınızda herhangi bir QR kodu anında okutun.",
       benefits: ["Kamera veya görsel dosyasıyla çalışır", "Uygulama kurmaya gerek yok", "Ücretsiz kullanım"],
       howToSteps: ["Kamerayı QR koda yöneltin veya bir görsel yükleyin", "Okuyucunun kodu okumasına izin verin", "Çözülen içeriği görüntüleyin"],
       useCases: ["Bir bağlantıyı açmadan önce QR kodu kontrol etme", "Basılı bir afişten kod okutma", "Görsel olarak gönderilen QR kodu okuma"],
@@ -156,7 +185,7 @@ export const TOOL_CONTENT: Record<string, LocalizedToolContent> = {
         { question: "Bir QR kod okutulduktan sonra ne olur?", answer: "Bir bağlantı veya metin gibi çözülen içerik, görüntülenip açılabilmesi için gösterilir." },
         { question: "Bulanık veya hasarlı bir QR kod yine de okutulabilir mi?", answer: "QR kodlarda bir miktar hata düzeltme bulunur, ancak ciddi hasarlı veya çok bulanık bir kod güvenilir şekilde okunmayabilir." },
         { question: "QR kod okutmak yerine oluşturmam gerekirse ne yapmalıyım?", answer: "QR Kod Oluşturucu aracı yeni QR kodlar oluşturmak için tasarlanmıştır." },
-        { question: "Bu araç şu anda kullanılabilir mi?", answer: "Henüz değil — Codivio'nun diğer araçları gibi bu da şu anda geliştirilme aşamasındadır." },
+        { question: "Bu araç şu anda kullanılabilir mi?", answer: "Evet — bu araç canlıdır ve tamamen işlevseldir; ister kamerayla ister görsel yükleyerek kullanın, hiçbir şey sunucuya gönderilmez." },
       ],
     },
   },
@@ -1771,11 +1800,16 @@ export function getContentBlueprint(slug: string, lang: Language) {
   const content = TOOL_CONTENT[slug]?.[lang];
   const keywordProfile = getToolKeywordProfile(slug, lang);
   if (!content || !keywordProfile) return null;
+  // The one real, already-established signal for "is this tool live" —
+  // TOOL_SEO[slug].robots.index (see shared/seo/tools.ts's own header
+  // comment) — rather than a second, separately-maintained live/coming-soon
+  // list that could drift out of sync with it.
+  const isLive = TOOL_SEO[slug]?.robots.index === true;
   return {
     ...content,
     ...keywordProfile,
-    trustMessage: SHARED_TRUST_MESSAGE[lang],
-    statusNote: TOOL_STATUS_NOTE[lang],
+    trustMessage: isLive ? SHARED_TRUST_MESSAGE_LIVE[lang] : SHARED_TRUST_MESSAGE[lang],
+    statusNote: isLive ? TOOL_LIVE_NOTE[lang] : TOOL_STATUS_NOTE[lang],
   };
 }
 
@@ -1835,7 +1869,7 @@ export interface AiToolProfile {
   purpose: string;
   description: string;
   primarySearchIntent: string;
-  status: "coming-soon";
+  status: "coming-soon" | "live";
   supportedLanguages: readonly Language[];
   benefits: string[];
   generalWorkflow: string[];
@@ -1847,7 +1881,9 @@ export interface AiToolProfile {
 /** Reads a tool's AI-readable profile from the already-audited Phase 3.1
  * (title/description), 3.3 (keywords/related tools) and 3.4 (content)
  * data. Returns null for any slug not in the real registry — never
- * fabricates a profile for a tool that doesn't exist. */
+ * fabricates a profile for a tool that doesn't exist. `status` is derived
+ * from TOOL_SEO[slug].robots.index — the same real signal
+ * getContentBlueprint uses — not a second, separately-maintained flag. */
 export function getAiToolProfile(slug: string, lang: Language): AiToolProfile | null {
   const seoEntity = TOOL_SEO[slug];
   const blueprint = getContentBlueprint(slug, lang);
@@ -1860,7 +1896,7 @@ export function getAiToolProfile(slug: string, lang: Language): AiToolProfile | 
     purpose: blueprint.valueProposition,
     description: blueprint.introduction,
     primarySearchIntent: blueprint.primaryKeyword,
-    status: "coming-soon",
+    status: seoEntity.robots.index ? "live" : "coming-soon",
     supportedLanguages: LANGUAGES,
     benefits: blueprint.benefits,
     generalWorkflow: blueprint.howToSteps,

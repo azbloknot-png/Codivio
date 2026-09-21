@@ -22,10 +22,11 @@ import {
  */
 
 describe("route safety — the single gate every link in this module passes through", () => {
-  it("only allows the real homepage, the 9 static pages, /tools, and /tools/:slug for a real tool slug", () => {
+  it("only allows the real homepage, the 10 static pages, /tools, and /tools/:slug for a real tool slug", () => {
     expect(isLinkableRoute("/")).toBe(true);
     expect(isLinkableRoute("/tools")).toBe(true);
     expect(isLinkableRoute("/faq")).toBe(true);
+    expect(isLinkableRoute("/sitemap")).toBe(true);
     expect(isLinkableRoute("/tools/pdf-merge")).toBe(true);
   });
 

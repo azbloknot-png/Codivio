@@ -34,11 +34,15 @@ describe("AI content structure covers the real 34-tool / 4-category registry", (
   it("every one of the 34 real tools has an AI-readable profile in all 3 languages", () => {
     const slugs = getAllToolSlugs();
     expect(slugs.length).toBe(34);
+    // Phase 3.18 content-consistency fix: qr-code-generator/qr-code-scanner
+    // shipped real functionality (Phase 4.1/4.6) — their AI profile status
+    // is the one deliberate exception, checked separately below.
+    const liveSlugs = new Set(["qr-code-generator", "qr-code-scanner"]);
     for (const slug of slugs) {
       for (const lang of LANGUAGES) {
         const profile = getAiToolProfile(slug, lang);
         expect(profile, `${slug} [${lang}]`).not.toBeNull();
-        expect(profile?.status).toBe("coming-soon");
+        expect(profile?.status, slug).toBe(liveSlugs.has(slug) ? "live" : "coming-soon");
         expect(profile?.name.trim().length).toBeGreaterThan(0);
         expect(profile?.benefits.length).toBeGreaterThan(0);
       }
@@ -95,6 +99,12 @@ describe("deterministic answer builders work in AZ/TR/EN and never fabricate", (
     expect(answerToolCategory("not-a-real-tool")).toBeNull();
     expect(answerSupportedLanguages()).toContain("Azərbaycan dili");
     expect(answerRelatedTools("pdf-merge")).toContain("pdf-split");
+  });
+
+  it("answerWhatIsTool reports the real status honestly — 'in development' for a placeholder tool, 'live' for a shipped one", () => {
+    expect(answerWhatIsTool("pdf-merge", "en")).toContain("Status: in development, not yet processing files.");
+    expect(answerWhatIsTool("qr-code-generator", "en")).toContain("Status: live.");
+    expect(answerWhatIsTool("qr-code-scanner", "en")).toContain("Status: live.");
   });
 });
 

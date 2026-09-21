@@ -253,4 +253,9 @@ export const PAGE_INTENT: Record<string, Record<Language, PageIntent>> = {
     az: { primary: "codivio qiymətləri və planları" },
     tr: { primary: "codivio fiyatlandırma ve planları" },
   },
+  sitemap: {
+    en: { primary: "codivio site map" },
+    az: { primary: "codivio sayt xəritəsi" },
+    tr: { primary: "codivio site haritası" },
+  },
 };

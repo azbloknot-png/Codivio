@@ -723,3 +723,28 @@ Deferred (require real browser/screenshot verification): tool-card height/width 
 - **Real, executed verification** (part of the permanent suite): `trackEvent`/`trackQrGenerate`/`trackQrScan` confirmed to send nothing before consent, send the exact `{content_kind}` payload once granted, send nothing on `/admin` even with consent granted, and send nothing after consent is withdrawn.
 - Bundle impact: Worker unchanged. `qr-analytics.ts` split into its own tiny shared chunk (0.14 kB, imported by both the generator and scanner lazy chunks). `QrCodeGeneratorTool` +0.07 kB, `QrCodeScannerTool` +0.08 kB.
 - **Git**: not committed. **Deploy**: not performed.
+
+## Phase 3.18 — HTML Site Map (2026-09-20)
+
+**Implemented and tested — NOT YET committed, pushed, or deployed** (awaiting explicit authorization). Closes a real gap found during a technical-SEO audit series: `public/sitemap.xml` is machine-readable only, with no human-readable directory page.
+
+- New route `/sitemap` → `SitemapPage` (`src/App.tsx`), positioned between `ContactPage` and `LegalPage` (deliberately not between `PricingPage`/`ContactPage`, to avoid colliding with an existing source-slice test assumption). 6 category cards (Main Pages, Tools, Blog, Information, Legal & Policies, Resources) — every link is a real route or real static asset (`/sitemap.xml`, `/robots.txt` correctly use a plain `<a>`, never `<Link>`).
+- Tools card is fully registry-driven — all 34 tools, grouped by the existing `categories` array, generated via `tools.filter(...).map(...)`, never a hand-typed slug.
+- **"Coming soon" status badge** on each of the 32 not-yet-shipped tools (`tool.status === "coming-soon"`); the 2 live tools (`qr-code-generator`, `qr-code-scanner`) render with no badge. Added after a final-review finding that presenting all 34 uniformly risked implying every tool works today — page intro copy and `PAGE_SEO.sitemap`'s meta description were reworded to match (no more "every real page and tool"; now explicitly notes which tools are live vs. in development).
+- New `PAGE_SEO.sitemap` (`shared/seo/pages.ts`, real EN/AZ/TR copy, `index,follow`) and matching `PAGE_INTENT.sitemap` (`shared/seo/intent.ts`) entries.
+- New **opt-in BreadcrumbList support for standard pages** in `shared/seo/schema.ts` (`PAGE_BREADCRUMB` map + exported `getStandardPageBreadcrumb()`) — used only by `/sitemap` (Home → Site Map); the other 10 standard pages are unaffected (verified by a dedicated regression test). Canonical/robots/JSON-LD are otherwise fully automatic via the existing generic `PAGE_SEO`-driven mechanism — no `worker/` changes needed.
+- `public/sitemap.xml` now includes `/sitemap` itself (`priority: 0.5`, `changefreq: monthly`, same tier as `/faq`/`/pricing`) — 13 URLs total, no duplicates, verified well-formed via a real XML parser (not just regex).
+- Test/build: `npm run typecheck` — PASS. `npm run typecheck:tests` — PASS. `npm test` — PASS, **498/498** (483 previous + 15 new). `npm run build` — PASS.
+- Bundle impact: Worker 233.88→235.56 kB, client CSS +1.26 kB, main client JS +5.88 kB.
+- **Known limitations**: no real-browser/JS-executed DOM verification (local Worker preview did not stay bound in this environment; partially verified via a static-file server instead).
+- **Git**: not committed. **Deploy**: not performed.
+
+### Content status consistency fix (2026-09-21, same phase)
+
+Follow-up review of `shared/seo/content.ts` found the AI-profile `status` inconsistency flagged above was the smaller half of a real, user-facing bug: `getContentBlueprint()` (rendered unconditionally by `ToolPage.tsx` on every tool page, including the 2 live ones) was showing "this tool is currently in development" text and, more seriously, each tool's own final FAQ answer literally said "Not yet — it is currently in development" — directly on the real, working QR Code Generator/Scanner pages.
+
+- `AiToolProfile.status` now derived from `TOOL_SEO[slug].robots.index` (same real signal `shared/seo/tools.ts` already uses) instead of a hardcoded literal.
+- New `TOOL_LIVE_NOTE`/`SHARED_TRUST_MESSAGE_LIVE` constants (honest, verifiable claims only); `getContentBlueprint` now picks the live or coming-soon pair based on the same signal.
+- `qr-code-generator`/`qr-code-scanner`'s `valueProposition` and final FAQ answer rewritten in EN/AZ/TR (12 text edits) to honestly reflect that they're live; the other 32 tools' identical-shaped content is untouched.
+- Test/build: `npm run typecheck` — PASS. `npm run typecheck:tests` — PASS. `npm test` — PASS, **501/501** (498 previous + 3 net new). `npm run build` — PASS. `ToolPage` lazy chunk +1.21 kB; main bundle unaffected.
+- **Git**: not committed. **Deploy**: not performed.

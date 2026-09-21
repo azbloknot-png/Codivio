@@ -65,11 +65,26 @@ describe("getToolFaqs is a lightweight, correct, deterministic accessor", () => 
 });
 
 describe("the new availability-status FAQ is present and consistently honest", () => {
-  it("every tool's FAQ list includes a status question whose answer says the tool is not yet available", () => {
+  it("every placeholder tool's FAQ list includes a status question whose answer says the tool is not yet available", () => {
+    // Phase 3.18 content-consistency fix: qr-code-generator/qr-code-scanner
+    // shipped real functionality (Phase 4.1/4.6) — their final FAQ answer is
+    // the one deliberate exception, checked separately below.
+    const liveSlugs = new Set(["qr-code-generator", "qr-code-scanner"]);
     for (const [slug, byLang] of Object.entries(TOOL_CONTENT)) {
+      if (liveSlugs.has(slug)) continue;
       for (const lang of LANGUAGES) {
         const lastFaq = byLang[lang].faq[byLang[lang].faq.length - 1];
         expect(lastFaq.answer.toLowerCase(), `${slug} [${lang}] final FAQ`).toMatch(/not yet|hələ yox|henüz değil/i);
+      }
+    }
+  });
+
+  it("the 2 live tools' final FAQ answer honestly says the tool is available now, in all 3 languages", () => {
+    for (const slug of ["qr-code-generator", "qr-code-scanner"]) {
+      for (const lang of LANGUAGES) {
+        const lastFaq = TOOL_CONTENT[slug][lang].faq[TOOL_CONTENT[slug][lang].faq.length - 1];
+        expect(lastFaq.answer.toLowerCase(), `${slug} [${lang}] final FAQ`).not.toMatch(/not yet|hələ yox|henüz değil/i);
+        expect(lastFaq.answer.toLowerCase(), `${slug} [${lang}] final FAQ`).toMatch(/yes|bəli|evet/i);
       }
     }
   });

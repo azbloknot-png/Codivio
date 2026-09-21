@@ -38,7 +38,7 @@ describe("SEO metadata coverage matches the real route/tool inventory", () => {
     expect(seoSlugs).toEqual([...registryMatches].sort());
   });
 
-  it("all 10 real static public pages have a shared/seo/pages.ts entry with the correct path", () => {
+  it("all 11 real static public pages have a shared/seo/pages.ts entry with the correct path", () => {
     const expected: Record<string, string> = {
       home: "/",
       tools: "/tools",
@@ -50,6 +50,7 @@ describe("SEO metadata coverage matches the real route/tool inventory", () => {
       terms: "/terms",
       cookies: "/cookies",
       pricing: "/pricing",
+      sitemap: "/sitemap",
     };
     expect(Object.keys(PAGE_SEO).sort()).toEqual(Object.keys(expected).sort());
     for (const [key, path] of Object.entries(expected)) {
@@ -68,7 +69,7 @@ describe("no duplicate SEO titles/descriptions across pages and tools", () => {
     ];
   }
 
-  it("every language has zero duplicate titles and zero duplicate descriptions across all 43 entities", () => {
+  it("every language has zero duplicate titles and zero duplicate descriptions across all 45 entities", () => {
     const refs = allRefs();
     for (const lang of LANGUAGES) {
       expect(findDuplicateTitles(refs, lang), `duplicate titles in ${lang}`).toEqual([]);
@@ -181,12 +182,16 @@ describe("technical SEO files", () => {
     expect(llmsTxt).not.toContain("codovio.online");
   });
 
-  it("sitemap.xml lists the 10 real static pages plus the 2 live tool pages, and no noindex tool URL", () => {
+  it("sitemap.xml lists all 11 real static pages plus the 2 live tool pages, and no noindex tool URL", () => {
     const sitemap = fs.readFileSync(new URL("../public/sitemap.xml", import.meta.url), "utf8");
     const locs = [...sitemap.matchAll(/<loc>(.*?)<\/loc>/g)].map((m) => m[1]);
-    expect(locs.length).toBe(12);
-    for (const path of Object.values(PAGE_SEO).map((entity) => entity.path)) {
-      expect(locs).toContain(buildCanonicalUrl(path));
+    expect(locs.length).toBe(13);
+    // No duplicate URLs anywhere in the file.
+    expect(new Set(locs).size).toBe(locs.length);
+    // Phase 3.18: /sitemap (the HTML Site Map page) is now included — every
+    // PAGE_SEO path, with no exceptions, must appear here.
+    for (const [key, entity] of Object.entries(PAGE_SEO)) {
+      expect(locs, key).toContain(buildCanonicalUrl(entity.path));
     }
     // Phase 4.9 SEO follow-up: exactly the 2 tools that flipped to
     // index,follow in shared/seo/tools.ts are listed here — no other tool

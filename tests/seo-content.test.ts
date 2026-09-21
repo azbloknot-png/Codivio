@@ -5,7 +5,9 @@ import {
   TOOL_CONTENT,
   CATEGORY_CONTENT_BLUEPRINT,
   SHARED_TRUST_MESSAGE,
+  SHARED_TRUST_MESSAGE_LIVE,
   TOOL_STATUS_NOTE,
+  TOOL_LIVE_NOTE,
   getContentBlueprint,
 } from "../shared/seo/content";
 
@@ -74,7 +76,7 @@ describe("no unsupported functionality claims (Phase 3.4's explicit banned phras
       /\bfastest tool\b/i,
       /\bbest tool\b/i,
     ];
-    const allText: string[] = [SHARED_TRUST_MESSAGE.en, TOOL_STATUS_NOTE.en];
+    const allText: string[] = [SHARED_TRUST_MESSAGE.en, TOOL_STATUS_NOTE.en, SHARED_TRUST_MESSAGE_LIVE.en, TOOL_LIVE_NOTE.en];
     for (const byLang of Object.values(TOOL_CONTENT)) {
       const en = byLang.en;
       allText.push(en.introduction, en.valueProposition, ...en.benefits, ...en.howToSteps, ...en.useCases);
@@ -100,6 +102,17 @@ describe("getContentBlueprint combines content + keyword data without broken ref
 
   it("returns null for a tool that doesn't exist — no invented tool is ever silently served", () => {
     expect(getContentBlueprint("not-a-real-tool", "en")).toBeNull();
+  });
+
+  it("Phase 3.18: uses the live trust/status messages for the 2 shipped tools, keyed off TOOL_SEO's real robots.index signal, and the coming-soon ones for everything else", () => {
+    for (const slug of ["qr-code-generator", "qr-code-scanner"]) {
+      const blueprint = getContentBlueprint(slug, "en");
+      expect(blueprint?.trustMessage, slug).toBe(SHARED_TRUST_MESSAGE_LIVE.en);
+      expect(blueprint?.statusNote, slug).toBe(TOOL_LIVE_NOTE.en);
+    }
+    const placeholder = getContentBlueprint("pdf-merge", "en");
+    expect(placeholder?.trustMessage).toBe(SHARED_TRUST_MESSAGE.en);
+    expect(placeholder?.statusNote).toBe(TOOL_STATUS_NOTE.en);
   });
 
   it("every related-tool reference resolves to a real tool with its own content blueprint", () => {

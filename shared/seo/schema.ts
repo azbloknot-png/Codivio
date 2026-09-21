@@ -154,10 +154,34 @@ const PAGE_SCHEMA_TYPE: Partial<Record<PageSeoKey, JsonLdWebPage["@type"]>> = {
   contact: "ContactPage",
 };
 
+/** Breadcrumb for a static page — opt-in, per page key, deliberately NOT
+ * added to every standard page (most have no meaningful hierarchy beyond
+ * "Home"). Added for "sitemap" (Site Map Phase — SEO follow-up) so its
+ * schema matches the real, visible on-page breadcrumb nav; the labels are
+ * plain English, matching that page's own English-only content decision
+ * (see src/App.tsx's SitemapPage), not translated per `lang` — same
+ * precedent as ToolsPage/BlogPage's hardcoded-English visible body text
+ * already has, regardless of the site's active language. */
+const PAGE_BREADCRUMB: Partial<Record<PageSeoKey, BreadcrumbEntry[]>> = {
+  sitemap: [
+    { label: "Home", path: "/" },
+    { label: "Site Map", path: null },
+  ],
+};
+
+/** Exposes the same breadcrumb data `buildStandardPageGraph` uses for its
+ * JSON-LD, so a page's own visible breadcrumb nav (e.g. SitemapPage in
+ * src/App.tsx) can render the identical entries — one source of truth,
+ * never two independently-maintained breadcrumb lists that could drift. */
+export function getStandardPageBreadcrumb(pageKey: PageSeoKey): BreadcrumbEntry[] | undefined {
+  return PAGE_BREADCRUMB[pageKey];
+}
+
 export function buildStandardPageGraph(pageKey: PageSeoKey, lang: Language): JsonLdGraph {
   const entity = PAGE_SEO[pageKey];
   const copy = entity.localized[lang];
   const url = buildCanonicalUrl(entity.path);
+  const breadcrumbEntries = PAGE_BREADCRUMB[pageKey];
   const webPage: JsonLdWebPage = {
     "@type": PAGE_SCHEMA_TYPE[pageKey] ?? "WebPage",
     "@id": `${url}#webpage`,
@@ -166,6 +190,7 @@ export function buildStandardPageGraph(pageKey: PageSeoKey, lang: Language): Jso
     description: copy.description,
     isPartOf: { "@id": WEBSITE_ID },
     inLanguage: lang,
+    ...(breadcrumbEntries ? { breadcrumb: toBreadcrumbList(breadcrumbEntries) } : {}),
   };
   return {
     "@context": "https://schema.org",

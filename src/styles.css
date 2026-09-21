@@ -233,6 +233,20 @@
 .about-grid h2{margin:0 0 9px;color:var(--color-ink);font-size:18px}
 .about-grid p{margin:0;color:var(--color-muted);font-size:14px;line-height:1.7}
 
+.sitemap-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;align-items:start;margin-top:8px}
+.sitemap-card{padding:24px;background:#fff;border:1px solid #e1e8f2;border-radius:18px;box-shadow:0 8px 25px rgba(26,52,84,.035)}
+.sitemap-card h2{margin:0 0 14px;color:var(--color-ink);font-size:18px}
+.sitemap-card h3{margin:18px 0 8px;color:var(--color-muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.sitemap-card h3:first-of-type{margin-top:6px}
+.sitemap-card ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:11px}
+.sitemap-card li{display:flex;flex-direction:column;gap:2px}
+.sitemap-card a{color:var(--color-primary);text-decoration:none;font-weight:700;font-size:14px}
+.sitemap-card a:hover{text-decoration:underline}
+.sitemap-card a:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px;border-radius:4px}
+.sitemap-link-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.sitemap-status-badge{display:inline-block;padding:2px 9px;border-radius:999px;background:#f1f4f9;color:var(--color-muted);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+.sitemap-link-desc{color:var(--color-muted);font-size:12px;line-height:1.5}
+
 .seo-content{max-width:900px;margin:32px auto 0;padding:28px;background:#fff;border:1px solid #e1e8f2;border-radius:18px}
 .seo-content h2{margin:0 0 12px;color:var(--color-ink);font-size:24px}
 .seo-content p{margin:0 0 14px;color:var(--color-muted);font-size:14px;line-height:1.75}

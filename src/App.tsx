@@ -57,7 +57,7 @@ import { useConsent } from "./consent/ConsentContext";
 import { CookieConsentBanner } from "./consent/CookieConsentBanner";
 import { CookieSettingsModal } from "./consent/CookieSettingsModal";
 import { getPageSeo, getToolSeo, ROBOTS_NOINDEX_NOFOLLOW } from "../shared/seo";
-import { buildStandardPageGraph, buildToolPageGraph } from "../shared/seo/schema";
+import { buildStandardPageGraph, buildToolPageGraph, getStandardPageBreadcrumb } from "../shared/seo/schema";
 import { getVisiblePlansByPriority } from "../shared/monetization/plans";
 import { ENTITLEMENTS, getPlanEntitlementKeys } from "../shared/monetization/entitlements";
 import { getGlobalFaqs, type GlobalFaqItem } from "../shared/seo/global-faq";
@@ -1669,6 +1669,181 @@ function ContactPage() {
   );
 }
 
+/**
+ * Site Map — SEO follow-up (Phase 4.9). A real, human-readable HTML
+ * directory of every real page and tool — separate from the
+ * machine-readable `public/sitemap.xml`, which this page never touches or
+ * duplicates: `/sitemap.xml` keeps being served as raw XML via the Worker's
+ * ASSETS binding, completely unaffected by this route.
+ *
+ * English-only visible body content by deliberate choice, matching the
+ * same precedent `ToolsPage`/`BlogPage` already set above (their visible
+ * body text is hardcoded English regardless of the active site language) —
+ * only `<title>`/meta description are localized, via `PAGE_SEO.sitemap`,
+ * same as those two pages. The breadcrumb (visible nav + JSON-LD) is
+ * likewise fixed English — see `shared/seo/schema.ts`'s `PAGE_BREADCRUMB`
+ * for why, and note both places read from the exact same
+ * `getStandardPageBreadcrumb("sitemap")` call, so they can never drift.
+ *
+ * Every link below is a real, existing route (cross-checked against the
+ * `tools`/`categories` registry this same file already defines, and the
+ * static routes already registered in the `<Routes>` block below) or a
+ * real, existing static asset — nothing here is fabricated. `/sitemap.xml`
+ * and `/robots.txt` deliberately use a plain `<a>`, not `<Link>`: they are
+ * real static files served by the Worker's ASSETS binding, not React
+ * Router routes — a `<Link>` would hand them to the client-side router
+ * instead, which has no matching route and would render `CmsPageRoute`'s
+ * "does this CMS slug exist" lookup (wrong) rather than a real navigation.
+ */
+function SitemapPage() {
+  const { language } = useLanguage();
+  const seo = getPageSeo("sitemap", language).copy;
+  const breadcrumb = getStandardPageBreadcrumb("sitemap") ?? [];
+  usePageMeta(seo.title, seo.description, { schemaGraph: buildStandardPageGraph("sitemap", language) });
+
+  return (
+    <PageShell>
+      <main className="inner-page">
+        <div className="container">
+          <nav className="tool-breadcrumb" aria-label="Breadcrumb">
+            <ol>
+              {breadcrumb.map((crumb, index) => {
+                const isLast = index === breadcrumb.length - 1;
+                return (
+                  <li key={`${crumb.label}-${index}`}>
+                    {crumb.path ? (
+                      <Link to={crumb.path}>{crumb.label}</Link>
+                    ) : (
+                      <span aria-current={isLast ? "page" : undefined}>{crumb.label}</span>
+                    )}
+                  </li>
+                );
+              })}
+            </ol>
+          </nav>
+
+          <section className="page-intro">
+            <span className="eyebrow">SITE MAP</span>
+            <h1>All Codivio pages and tools</h1>
+            <p>
+              A complete, organized directory of every page and tool on
+              Codivio. Tools still in development are marked{" "}
+              <strong>Coming soon</strong>. Looking for the machine-readable
+              version instead? See the <a href="/sitemap.xml">XML sitemap</a>.
+            </p>
+          </section>
+
+          <div className="sitemap-grid">
+            <section className="sitemap-card" aria-labelledby="sitemap-main-pages">
+              <h2 id="sitemap-main-pages">Main Pages</h2>
+              <ul>
+                <li>
+                  <Link to="/">Home</Link>
+                  <span className="sitemap-link-desc">Codivio's homepage and featured tools.</span>
+                </li>
+                <li>
+                  <Link to="/about">About</Link>
+                  <span className="sitemap-link-desc">Codivio's mission and approach.</span>
+                </li>
+                <li>
+                  <Link to="/contact">Contact</Link>
+                  <span className="sitemap-link-desc">Get in touch with questions or feedback.</span>
+                </li>
+              </ul>
+            </section>
+
+            <section className="sitemap-card" aria-labelledby="sitemap-tools">
+              <h2 id="sitemap-tools">Tools</h2>
+              <ul>
+                <li>
+                  <Link to="/tools">All Tools</Link>
+                  <span className="sitemap-link-desc">Browse the full tools catalog by category.</span>
+                </li>
+              </ul>
+              {categories.map((category) => (
+                <div key={category}>
+                  <h3>{category}</h3>
+                  <ul>
+                    {tools
+                      .filter((tool) => tool.category === category)
+                      .map((tool) => (
+                        <li key={tool.slug}>
+                          <span className="sitemap-link-row">
+                            <Link to={`/tools/${tool.slug}`}>{tool.name}</Link>
+                            {tool.status === "coming-soon" && (
+                              <span className="sitemap-status-badge">Coming soon</span>
+                            )}
+                          </span>
+                          <span className="sitemap-link-desc">{tool.description}</span>
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+              ))}
+            </section>
+
+            <section className="sitemap-card" aria-labelledby="sitemap-blog">
+              <h2 id="sitemap-blog">Blog</h2>
+              <ul>
+                <li>
+                  <Link to="/blog">Blog</Link>
+                  <span className="sitemap-link-desc">Guides and tips about QR codes, PDFs and images.</span>
+                </li>
+              </ul>
+            </section>
+
+            <section className="sitemap-card" aria-labelledby="sitemap-information">
+              <h2 id="sitemap-information">Information</h2>
+              <ul>
+                <li>
+                  <Link to="/faq">FAQ</Link>
+                  <span className="sitemap-link-desc">Answers to common questions about Codivio.</span>
+                </li>
+                <li>
+                  <Link to="/pricing">Pricing</Link>
+                  <span className="sitemap-link-desc">Planned Free, Pro, Business and API plans.</span>
+                </li>
+              </ul>
+            </section>
+
+            <section className="sitemap-card" aria-labelledby="sitemap-legal">
+              <h2 id="sitemap-legal">Legal & Policies</h2>
+              <ul>
+                <li>
+                  <Link to="/privacy">Privacy Policy</Link>
+                  <span className="sitemap-link-desc">How Codivio handles data and minimizes collection.</span>
+                </li>
+                <li>
+                  <Link to="/terms">Terms of Service</Link>
+                  <span className="sitemap-link-desc">Terms governing lawful use of Codivio's tools.</span>
+                </li>
+                <li>
+                  <Link to="/cookies">Cookie Policy</Link>
+                  <span className="sitemap-link-desc">How Codivio uses cookies and how to manage them.</span>
+                </li>
+              </ul>
+            </section>
+
+            <section className="sitemap-card" aria-labelledby="sitemap-resources">
+              <h2 id="sitemap-resources">Resources</h2>
+              <ul>
+                <li>
+                  <a href="/sitemap.xml">XML Sitemap</a>
+                  <span className="sitemap-link-desc">Machine-readable sitemap for search engines.</span>
+                </li>
+                <li>
+                  <a href="/robots.txt">Robots.txt</a>
+                  <span className="sitemap-link-desc">Crawler access rules for search engines.</span>
+                </li>
+              </ul>
+            </section>
+          </div>
+        </div>
+      </main>
+    </PageShell>
+  );
+}
+
 function LegalPage({
   title,
   seoKey,
@@ -2081,6 +2256,7 @@ function App() {
       <Route path="/terms" element={<TermsPage />} />
       <Route path="/cookies" element={<CookiePolicyPage />} />
       <Route path="/pricing" element={<PricingPage />} />
+      <Route path="/sitemap" element={<SitemapPage />} />
       <Route path="/admin/login" element={<AdminLoginPage />} />
       <Route path="/admin" element={<ProtectedAdminRoute />}>
         <Route index element={<AdminDashboardPlaceholder />} />

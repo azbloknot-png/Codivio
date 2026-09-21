@@ -7,6 +7,7 @@ import {
   buildWebSiteNode,
   buildStandardPageGraph,
   buildToolPageGraph,
+  getStandardPageBreadcrumb,
 } from "../shared/seo/schema";
 
 /**
@@ -60,6 +61,46 @@ describe("standard page graphs cover all 9 real static pages + homepage, AZ/TR/E
         expect(page.url).toBe(`${CANONICAL_DOMAIN}${PAGE_SEO[key as keyof typeof PAGE_SEO].path === "/" ? "/" : PAGE_SEO[key as keyof typeof PAGE_SEO].path}`);
         expect(page.name).toBe(PAGE_SEO[key as keyof typeof PAGE_SEO].localized[lang].title);
       }
+    }
+  });
+});
+
+describe("the Site Map page (SEO follow-up) has a real WebPage graph with an opt-in breadcrumb", () => {
+  it("buildStandardPageGraph('sitemap', lang) produces WebPage with the correct url/name and a Home -> Site Map breadcrumb, in all 3 languages", () => {
+    for (const lang of LANGUAGES) {
+      const graph = buildStandardPageGraph("sitemap", lang);
+      const webPage = graph["@graph"][2] as {
+        "@type": string;
+        url: string;
+        name: string;
+        breadcrumb?: { itemListElement: Array<{ item?: string; name: string }> };
+      };
+      expect(webPage["@type"]).toBe("WebPage");
+      expect(webPage.url).toBe(`${CANONICAL_DOMAIN}/sitemap`);
+      expect(webPage.name).toBe(PAGE_SEO.sitemap.localized[lang].title);
+      expect(webPage.breadcrumb).toBeDefined();
+      const items = webPage.breadcrumb!.itemListElement;
+      expect(items.length).toBe(2);
+      expect(items[0]).toEqual({ "@type": "ListItem", position: 1, name: "Home", item: `${CANONICAL_DOMAIN}/` });
+      // Current-page entry: no self-link, matching every other breadcrumb's
+      // last-entry convention (buildToolPageGraph's own last entry above).
+      expect(items[1].item).toBeUndefined();
+      expect(items[1].name).toBe("Site Map");
+    }
+  });
+
+  it("getStandardPageBreadcrumb exposes the exact same entries src/App.tsx's SitemapPage renders for its visible nav — one source of truth", () => {
+    const entries = getStandardPageBreadcrumb("sitemap");
+    expect(entries).toEqual([
+      { label: "Home", path: "/" },
+      { label: "Site Map", path: null },
+    ]);
+  });
+
+  it("returns undefined for every other standard page (breadcrumb stays opt-in, not silently added everywhere)", () => {
+    for (const key of ["home", "tools", "blog", "faq", "about", "contact", "privacy", "terms", "cookies", "pricing"] as const) {
+      expect(getStandardPageBreadcrumb(key), key).toBeUndefined();
+      expect((buildStandardPageGraph(key, "en")["@graph"][2] as { breadcrumb?: unknown }).breadcrumb, key).toBeUndefined();
     }
   });
 });
