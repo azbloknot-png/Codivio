@@ -41,7 +41,7 @@ describe("SitemapPage — route registration", () => {
 describe("SitemapPage — no fabricated links (the reference design's own mistake, not repeated here)", () => {
   const sitemapPageSource = appSource.slice(
     appSource.indexOf("function SitemapPage()"),
-    appSource.indexOf("function LegalPage({")
+    appSource.indexOf("function useRobotsPolicy()")
   );
 
   it("never links to a per-post blog route or an RSS feed — neither exists in this codebase", () => {
@@ -64,8 +64,8 @@ describe("SitemapPage — no fabricated links (the reference design's own mistak
     expect(sitemapPageSource).not.toContain('Link to="/robots.txt"');
   });
 
-  it("links only to real static routes already registered elsewhere in <Routes> (Home/About/Contact/Tools/Blog/FAQ/Pricing/Privacy/Terms/Cookies)", () => {
-    const realStaticPaths = ["/", "/about", "/contact", "/tools", "/blog", "/faq", "/pricing", "/privacy", "/terms", "/cookies"];
+  it("links only to real static routes already registered elsewhere in <Routes> (Home/About/Contact/Tools/Blog/FAQ/Pricing/Privacy/Terms/Cookies/Robots)", () => {
+    const realStaticPaths = ["/", "/about", "/contact", "/tools", "/blog", "/faq", "/pricing", "/privacy", "/terms", "/cookies", "/robots"];
     const linkedPaths = [...sitemapPageSource.matchAll(/Link to="([^"]+)"/g)].map((m) => m[1]);
     for (const path of linkedPaths) {
       expect(realStaticPaths, `unexpected Link target: ${path}`).toContain(path);
@@ -76,7 +76,7 @@ describe("SitemapPage — no fabricated links (the reference design's own mistak
 describe("SitemapPage — Coming soon badge for not-yet-shipped tools", () => {
   const sitemapPageSource = appSource.slice(
     appSource.indexOf("function SitemapPage()"),
-    appSource.indexOf("function LegalPage({")
+    appSource.indexOf("function useRobotsPolicy()")
   );
 
   it("renders the badge conditionally on tool.status, not hardcoded for a fixed slug list", () => {

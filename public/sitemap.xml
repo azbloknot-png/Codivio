@@ -29,6 +29,14 @@
   /pricing (0.5/monthly): a useful secondary navigation page, not core like
   the homepage or the tools hub.
 
+  The Human-Readable Robots Policy Page follow-up adds /robots the same
+  way — the real, index,follow HTML explanation of robots.txt (see
+  shared/seo/pages.ts's PAGE_SEO.robots and src/App.tsx's RobotsPage) — at
+  the same 0.5/monthly tier as /sitemap. This does not touch robots.txt
+  itself in any way; it only lists the new /robots explainer page here,
+  exactly like every other real PAGE_SEO entry must be (see the existing
+  test enforcing that below).
+
   Static (not worker-generated) for now, matching robots.txt/llms.txt —
   see DECISIONS.md's "SEO Metadata Architecture" entry for why a dynamic,
   D1-driven sitemap is future work rather than being built here.
@@ -96,6 +104,11 @@
   </url>
   <url>
     <loc>https://codivio.online/sitemap</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://codivio.online/robots</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>

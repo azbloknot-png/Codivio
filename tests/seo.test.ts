@@ -38,7 +38,7 @@ describe("SEO metadata coverage matches the real route/tool inventory", () => {
     expect(seoSlugs).toEqual([...registryMatches].sort());
   });
 
-  it("all 11 real static public pages have a shared/seo/pages.ts entry with the correct path", () => {
+  it("all 12 real static public pages have a shared/seo/pages.ts entry with the correct path", () => {
     const expected: Record<string, string> = {
       home: "/",
       tools: "/tools",
@@ -51,6 +51,7 @@ describe("SEO metadata coverage matches the real route/tool inventory", () => {
       cookies: "/cookies",
       pricing: "/pricing",
       sitemap: "/sitemap",
+      robots: "/robots",
     };
     expect(Object.keys(PAGE_SEO).sort()).toEqual(Object.keys(expected).sort());
     for (const [key, path] of Object.entries(expected)) {
@@ -182,10 +183,10 @@ describe("technical SEO files", () => {
     expect(llmsTxt).not.toContain("codovio.online");
   });
 
-  it("sitemap.xml lists all 11 real static pages plus the 2 live tool pages, and no noindex tool URL", () => {
+  it("sitemap.xml lists all 12 real static pages plus the 2 live tool pages, and no noindex tool URL", () => {
     const sitemap = fs.readFileSync(new URL("../public/sitemap.xml", import.meta.url), "utf8");
     const locs = [...sitemap.matchAll(/<loc>(.*?)<\/loc>/g)].map((m) => m[1]);
-    expect(locs.length).toBe(13);
+    expect(locs.length).toBe(14);
     // No duplicate URLs anywhere in the file.
     expect(new Set(locs).size).toBe(locs.length);
     // Phase 3.18: /sitemap (the HTML Site Map page) is now included — every

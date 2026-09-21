@@ -32,7 +32,7 @@ describe("search-intent audit coverage", () => {
     }
   });
 
-  it("every one of the 10 real static pages has a primary intent entry in all 3 languages", () => {
+  it("every one of the 12 real static pages has a primary intent entry in all 3 languages", () => {
     const pageKeys = Object.keys(PAGE_SEO).sort();
     const intentKeys = Object.keys(PAGE_INTENT).sort();
     expect(intentKeys).toEqual(pageKeys);

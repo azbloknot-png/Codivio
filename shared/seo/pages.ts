@@ -23,7 +23,8 @@ export const PAGE_SEO: Record<
   | "terms"
   | "cookies"
   | "pricing"
-  | "sitemap",
+  | "sitemap"
+  | "robots",
   SeoEntity
 > = {
   home: {
@@ -264,6 +265,28 @@ export const PAGE_SEO: Record<
         title: "Site Haritası – Tüm Codivio Sayfaları ve Araçları",
         description:
           "Codivio'nun tüm sayfa ve araçlarının düzenli listesine göz atın — hangi araçların zaten hazır, hangilerinin hâlâ geliştirme aşamasında olduğunu görün.",
+      },
+    },
+  },
+
+  robots: {
+    path: "/robots",
+    robots: ROBOTS_INDEX_FOLLOW,
+    localized: {
+      en: {
+        title: "Robots Policy – How Crawlers Access Codivio",
+        description:
+          "A plain explanation of Codivio's robots.txt: what crawlers can access, what is off-limits, and where the sitemap lives.",
+      },
+      az: {
+        title: "Robots Siyasəti – Axtarış Botları üçün Qaydalar",
+        description:
+          "Codivio-nun robots.txt faylının sadə izahı: botların nəyə çıxışı var, nə qadağandır və sayt xəritəsi harada yerləşir.",
+      },
+      tr: {
+        title: "Robots Politikası – Arama Botları için Kurallar",
+        description:
+          "Codivio'nun robots.txt dosyasının sade açıklaması: botların neye erişebildiği, nelerin yasak olduğu ve site haritasının yeri.",
       },
     },
   },

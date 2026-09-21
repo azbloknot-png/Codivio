@@ -759,4 +759,19 @@ Follow-up review of `shared/seo/content.ts` found the AI-profile `status` incons
 - New `tests/sitemap-xsl.test.ts` (11 tests): PI placement, namespace/URL-count/no-duplicate regression guards, XSLT well-formedness/field-rendering checks, and CDN/inline-style/script absence checks.
 - Test/build: `npm run typecheck` — PASS. `npm run typecheck:tests` — PASS. `npm test` — PASS, **512/512** (501 previous + 11 new). `npm run build` — PASS; Worker bundle unchanged (pure static assets).
 - **Known limitation**: Cloudflare's static-asset MIME mapping for `.xsl` has not been live-verified to serve `text/xsl` (no `public/_headers` override exists) — verify after a future deploy and add one only if actually wrong.
+- **Git**: committed `dabe342`, pushed to `main`. **Deploy**: Cloudflare Version ID `dea82484-6f53-4797-8bc1-7bcbf334ec64`. Live: `/sitemap.xml`/`/sitemap.xsl`/`/sitemap.css` all 200; `.xsl` served as `application/xml` (judged correct — see PROJECT_STATE.md for the reasoning; no `_headers` override added).
+
+## Phase 3.19 — Human-Readable Robots Policy Page (2026-09-21)
+
+**Implemented and tested — NOT YET committed, pushed, or deployed** (awaiting explicit authorization). Applies Phase 3.18's HTML Site Map idea to `robots.txt`: `public/robots.txt` stays byte-identical (confirmed via `git diff --quiet`) — plain-text, machine-readable only — while a new `/robots` page explains the same policy for human visitors.
+
+- New `shared/seo/robots-policy.ts` — a pure parser (`parseRobotsTxt`, `getUniqueAllowedPaths`, `getUniqueDisallowedPaths`) for this project's real robots.txt format (one User-agent per group, by design).
+- New route `/robots` → `RobotsPage` (`src/App.tsx`, right after `SitemapPage`). Zero rule is hand-retyped: a `useRobotsPolicy()` hook fetches the live `/robots.txt` at runtime and parses it with the shared parser — the page can never drift from the real file. Falls back to a plain "view the raw file" link (never fabricated content) if the fetch fails.
+- 5 cards: Sitemap Reference, Allowed Crawling Areas, Disallowed Areas (deduped across all 6 groups), User-agent Groups (each of the 6 real crawlers as its own independent rule set), Robots.txt Raw File.
+- New `PAGE_SEO.robots` (real, short EN/AZ/TR copy, `index,follow` — same decision as `/sitemap`) and matching `PAGE_INTENT.robots` entries. New opt-in `PAGE_BREADCRUMB.robots` (Home → Robots Policy), same pattern as `/sitemap`.
+- `public/sitemap.xml` now includes `/robots` (`priority: 0.5`, `changefreq: monthly`) — required by this project's own pre-existing test enforcing that every `PAGE_SEO` path appears in the sitemap. 14 URLs total, no duplicates.
+- Small directly-connected addition: `SitemapPage`'s own "Resources" card now also links to `/robots`, so its "every page on Codivio" claim doesn't go stale.
+- Test/build: `npm run typecheck` — PASS. `npm run typecheck:tests` — PASS. `npm test` — PASS, **533/533** (512 previous + 21 new). `npm run build` — PASS. Worker 235.56→236.51 kB, client CSS +1.65 kB, main client JS +6.44 kB.
+- Caught and fixed before commit: 4 title/description length-outlier violations (this project's own existing test) in the first EN/AZ/TR copy drafts, shortened and re-verified; a `SitemapPage`/`RobotsPage` test-source-slice-boundary adjacency issue in `tests/sitemap-page.test.ts` (same class of bug as the earlier `PricingPage`/`ContactPage` one this session), fixed by moving that test's boundary marker.
+- **Known limitations**: no real-browser/JS-executed DOM verification (no browser available in this environment) — the live `fetch("/robots.txt")` behavior is verified only via source-structure tests and the parser's own unit tests against the real file.
 - **Git**: not committed. **Deploy**: not performed.

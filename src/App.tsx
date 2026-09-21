@@ -61,6 +61,12 @@ import { buildStandardPageGraph, buildToolPageGraph, getStandardPageBreadcrumb }
 import { getVisiblePlansByPriority } from "../shared/monetization/plans";
 import { ENTITLEMENTS, getPlanEntitlementKeys } from "../shared/monetization/entitlements";
 import { getGlobalFaqs, type GlobalFaqItem } from "../shared/seo/global-faq";
+import {
+  parseRobotsTxt,
+  getUniqueAllowedPaths,
+  getUniqueDisallowedPaths,
+  type RobotsPolicy,
+} from "../shared/seo/robots-policy";
 import type { Language } from "../shared/i18n/languages";
 
 /**
@@ -1835,9 +1841,187 @@ function SitemapPage() {
                   <a href="/robots.txt">Robots.txt</a>
                   <span className="sitemap-link-desc">Crawler access rules for search engines.</span>
                 </li>
+                <li>
+                  <Link to="/robots">Robots Policy</Link>
+                  <span className="sitemap-link-desc">A human-readable explanation of the crawler rules above.</span>
+                </li>
               </ul>
             </section>
           </div>
+        </div>
+      </main>
+    </PageShell>
+  );
+}
+
+type RobotsPolicyState =
+  | { status: "loading" }
+  | { status: "ready"; policy: RobotsPolicy }
+  | { status: "error" };
+
+/** Fetches the real, live public/robots.txt at runtime and parses it with
+ * shared/seo/robots-policy.ts — the only way RobotsPage's data can never
+ * drift from the actual file (no rule is ever hand-retyped here). Falls
+ * back to a plain "view the raw file" link if the fetch fails, never to a
+ * fabricated/cached copy of the rules. */
+function useRobotsPolicy(): RobotsPolicyState {
+  const [state, setState] = useState<RobotsPolicyState>({ status: "loading" });
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/robots.txt")
+      .then((response) => (response.ok ? response.text() : Promise.reject(new Error("robots.txt fetch failed"))))
+      .then((raw) => {
+        if (cancelled) return;
+        setState({ status: "ready", policy: parseRobotsTxt(raw) });
+      })
+      .catch(() => {
+        if (!cancelled) setState({ status: "error" });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return state;
+}
+
+function RobotsPage() {
+  const { language } = useLanguage();
+  const seo = getPageSeo("robots", language).copy;
+  const breadcrumb = getStandardPageBreadcrumb("robots") ?? [];
+  usePageMeta(seo.title, seo.description, { schemaGraph: buildStandardPageGraph("robots", language) });
+  const state = useRobotsPolicy();
+
+  return (
+    <PageShell>
+      <main className="inner-page">
+        <div className="container">
+          <nav className="tool-breadcrumb" aria-label="Breadcrumb">
+            <ol>
+              {breadcrumb.map((crumb, index) => {
+                const isLast = index === breadcrumb.length - 1;
+                return (
+                  <li key={`${crumb.label}-${index}`}>
+                    {crumb.path ? (
+                      <Link to={crumb.path}>{crumb.label}</Link>
+                    ) : (
+                      <span aria-current={isLast ? "page" : undefined}>{crumb.label}</span>
+                    )}
+                  </li>
+                );
+              })}
+            </ol>
+          </nav>
+
+          <section className="page-intro">
+            <span className="eyebrow">CRAWLER POLICY</span>
+            <h1>Codivio Robots Policy</h1>
+            <p>
+              <code className="robots-code">robots.txt</code> is a small text
+              file that tells search and AI crawlers which parts of a website
+              they may visit. It is a public, voluntary request that
+              well-behaved crawlers choose to respect — not a security
+              boundary. This page explains, in plain language, exactly what
+              Codivio's own <a href="/robots.txt">robots.txt</a> file says,
+              parsed directly from the live file so it can never drift out of
+              date.
+            </p>
+          </section>
+
+          {state.status === "loading" && <p className="robots-status-note">Loading the current crawler policy…</p>}
+
+          {state.status === "error" && (
+            <p className="robots-status-note">
+              Couldn't load the live policy right now. You can always{" "}
+              <a href="/robots.txt">view the raw file directly</a>.
+            </p>
+          )}
+
+          {state.status === "ready" && (
+            <div className="robots-grid">
+              <section className="robots-card" aria-labelledby="robots-sitemap">
+                <h2 id="robots-sitemap">Sitemap Reference</h2>
+                <p className="robots-card-desc">
+                  robots.txt points crawlers to Codivio's XML sitemap — the full,
+                  machine-readable list of pages worth indexing.
+                </p>
+                <ul className="robots-path-list">
+                  {state.policy.sitemaps.map((url) => (
+                    <li key={url}>
+                      <a href={url}>{url}</a>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+
+              <section className="robots-card" aria-labelledby="robots-allowed">
+                <h2 id="robots-allowed">Allowed Crawling Areas</h2>
+                <p className="robots-card-desc">Paths every listed crawler is explicitly allowed to visit.</p>
+                <ul className="robots-path-list">
+                  {getUniqueAllowedPaths(state.policy).map((path) => (
+                    <li key={path}>
+                      <code className="robots-code">{path}</code>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+
+              <section className="robots-card" aria-labelledby="robots-disallowed">
+                <h2 id="robots-disallowed">Disallowed Areas</h2>
+                <p className="robots-card-desc">
+                  Paths kept out of crawling. Admin and private API routes are also
+                  protected by real server-side authorization, never by robots.txt alone.
+                </p>
+                <ul className="robots-path-list">
+                  {getUniqueDisallowedPaths(state.policy).map((path) => (
+                    <li key={path}>
+                      <code className="robots-code">{path}</code>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+
+              <section className="robots-card robots-card-wide" aria-labelledby="robots-groups">
+                <h2 id="robots-groups">User-agent Groups</h2>
+                <p className="robots-card-desc">
+                  Each crawler below is its own independent group with its own complete
+                  rule set — a group follows only its own rules, never another group's.
+                </p>
+                <div className="robots-group-list">
+                  {state.policy.groups.map((group) => (
+                    <div className="robots-group" key={group.userAgent}>
+                      <span className="robots-agent-pill">{group.userAgent}</span>
+                      <div className="robots-group-rules">
+                        {group.allow.map((path) => (
+                          <span className="robots-rule robots-rule-allow" key={`allow-${path}`}>
+                            Allow: <code className="robots-code">{path}</code>
+                          </span>
+                        ))}
+                        {group.disallow.map((path) => (
+                          <span className="robots-rule robots-rule-disallow" key={`disallow-${path}`}>
+                            Disallow: <code className="robots-code">{path}</code>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section className="robots-card" aria-labelledby="robots-raw">
+                <h2 id="robots-raw">Robots.txt Raw File</h2>
+                <p className="robots-card-desc">
+                  Search engines and crawlers read the plain-text file directly, not this page.
+                </p>
+                <ul className="robots-path-list">
+                  <li>
+                    <a href="/robots.txt">View the raw robots.txt file</a>
+                  </li>
+                </ul>
+              </section>
+            </div>
+          )}
         </div>
       </main>
     </PageShell>
@@ -2257,6 +2441,7 @@ function App() {
       <Route path="/cookies" element={<CookiePolicyPage />} />
       <Route path="/pricing" element={<PricingPage />} />
       <Route path="/sitemap" element={<SitemapPage />} />
+      <Route path="/robots" element={<RobotsPage />} />
       <Route path="/admin/login" element={<AdminLoginPage />} />
       <Route path="/admin" element={<ProtectedAdminRoute />}>
         <Route index element={<AdminDashboardPlaceholder />} />

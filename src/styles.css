@@ -247,6 +247,25 @@
 .sitemap-status-badge{display:inline-block;padding:2px 9px;border-radius:999px;background:#f1f4f9;color:var(--color-muted);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
 .sitemap-link-desc{color:var(--color-muted);font-size:12px;line-height:1.5}
 
+.robots-code{background:#eef3fb;color:var(--color-ink);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.92em;padding:2px 6px;border-radius:6px}
+.robots-status-note{color:var(--color-muted);font-size:14px;margin:8px 0 0}
+.robots-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;align-items:start;margin-top:8px}
+.robots-card{padding:24px;background:#fff;border:1px solid #e1e8f2;border-radius:18px;box-shadow:0 8px 25px rgba(26,52,84,.035)}
+.robots-card-wide{grid-column:1/-1}
+.robots-card h2{margin:0 0 10px;color:var(--color-ink);font-size:18px}
+.robots-card-desc{margin:0 0 14px;color:var(--color-muted);font-size:13px;line-height:1.6}
+.robots-path-list{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:9px}
+.robots-path-list a{color:var(--color-primary);text-decoration:none;font-weight:700;font-size:14px;word-break:break-all}
+.robots-path-list a:hover{text-decoration:underline}
+.robots-path-list a:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px;border-radius:4px}
+.robots-group-list{display:flex;flex-direction:column;gap:14px}
+.robots-group{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:12px 14px;background:#f7f9fc;border:1px solid #eef1f6;border-radius:12px}
+.robots-agent-pill{display:inline-block;padding:5px 12px;border-radius:999px;background:var(--color-primary);color:#fff;font-size:12px;font-weight:800;white-space:nowrap}
+.robots-group-rules{display:flex;flex-wrap:wrap;gap:8px 16px}
+.robots-rule{font-size:12px;color:var(--color-muted);white-space:nowrap}
+.robots-rule-allow{color:#1a7f4d}
+.robots-rule-disallow{color:#b3401f}
+
 .seo-content{max-width:900px;margin:32px auto 0;padding:28px;background:#fff;border:1px solid #e1e8f2;border-radius:18px}
 .seo-content h2{margin:0 0 12px;color:var(--color-ink);font-size:24px}
 .seo-content p{margin:0 0 14px;color:var(--color-muted);font-size:14px;line-height:1.75}

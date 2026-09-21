@@ -24,7 +24,7 @@ import { TOOL_KEYWORDS } from "./keywords";
  * kept light in this fix.
  *
  * Route safety: `isLinkableRoute` is the single gate every link path in
- * this file passes through. It only ever returns true for "/", the 9 real
+ * this file passes through. It only ever returns true for "/", the 10 real
  * static pages, "/tools", and "/tools/:slug" for a slug that actually
  * exists in TOOL_SEO — /admin, /api, and any nonexistent route always
  * return false, so this module can never produce a link into a private or

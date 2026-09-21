@@ -156,16 +156,21 @@ const PAGE_SCHEMA_TYPE: Partial<Record<PageSeoKey, JsonLdWebPage["@type"]>> = {
 
 /** Breadcrumb for a static page — opt-in, per page key, deliberately NOT
  * added to every standard page (most have no meaningful hierarchy beyond
- * "Home"). Added for "sitemap" (Site Map Phase — SEO follow-up) so its
- * schema matches the real, visible on-page breadcrumb nav; the labels are
- * plain English, matching that page's own English-only content decision
- * (see src/App.tsx's SitemapPage), not translated per `lang` — same
+ * "Home"). Added for "sitemap" (Site Map Phase — SEO follow-up) and
+ * "robots" (Robots Policy Page follow-up) so each page's schema matches
+ * its own real, visible on-page breadcrumb nav; the labels are plain
+ * English, matching each page's own English-only content decision (see
+ * src/App.tsx's SitemapPage/RobotsPage), not translated per `lang` — same
  * precedent as ToolsPage/BlogPage's hardcoded-English visible body text
  * already has, regardless of the site's active language. */
 const PAGE_BREADCRUMB: Partial<Record<PageSeoKey, BreadcrumbEntry[]>> = {
   sitemap: [
     { label: "Home", path: "/" },
     { label: "Site Map", path: null },
+  ],
+  robots: [
+    { label: "Home", path: "/" },
+    { label: "Robots Policy", path: null },
   ],
 };
 

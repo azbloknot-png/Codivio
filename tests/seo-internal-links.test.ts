@@ -27,6 +27,7 @@ describe("route safety — the single gate every link in this module passes thro
     expect(isLinkableRoute("/tools")).toBe(true);
     expect(isLinkableRoute("/faq")).toBe(true);
     expect(isLinkableRoute("/sitemap")).toBe(true);
+    expect(isLinkableRoute("/robots")).toBe(true);
     expect(isLinkableRoute("/tools/pdf-merge")).toBe(true);
   });
 

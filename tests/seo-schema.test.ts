@@ -105,6 +105,37 @@ describe("the Site Map page (SEO follow-up) has a real WebPage graph with an opt
   });
 });
 
+describe("the Robots Policy page (SEO follow-up) has a real WebPage graph with an opt-in breadcrumb", () => {
+  it("buildStandardPageGraph('robots', lang) produces WebPage with the correct url/name and a Home -> Robots Policy breadcrumb, in all 3 languages", () => {
+    for (const lang of LANGUAGES) {
+      const graph = buildStandardPageGraph("robots", lang);
+      const webPage = graph["@graph"][2] as {
+        "@type": string;
+        url: string;
+        name: string;
+        breadcrumb?: { itemListElement: Array<{ item?: string; name: string }> };
+      };
+      expect(webPage["@type"]).toBe("WebPage");
+      expect(webPage.url).toBe(`${CANONICAL_DOMAIN}/robots`);
+      expect(webPage.name).toBe(PAGE_SEO.robots.localized[lang].title);
+      expect(webPage.breadcrumb).toBeDefined();
+      const items = webPage.breadcrumb!.itemListElement;
+      expect(items.length).toBe(2);
+      expect(items[0]).toEqual({ "@type": "ListItem", position: 1, name: "Home", item: `${CANONICAL_DOMAIN}/` });
+      expect(items[1].item).toBeUndefined();
+      expect(items[1].name).toBe("Robots Policy");
+    }
+  });
+
+  it("getStandardPageBreadcrumb exposes the exact same entries src/App.tsx's RobotsPage renders for its visible nav — one source of truth", () => {
+    const entries = getStandardPageBreadcrumb("robots");
+    expect(entries).toEqual([
+      { label: "Home", path: "/" },
+      { label: "Robots Policy", path: null },
+    ]);
+  });
+});
+
 describe("tool page graphs use plain WebPage (never WebApplication/SoftwareApplication) and a route-safe breadcrumb", () => {
   it("all 34 tools produce a valid graph in AZ/TR/EN with WebPage type and no fabricated software properties", () => {
     for (const slug of Object.keys(TOOL_SEO)) {
