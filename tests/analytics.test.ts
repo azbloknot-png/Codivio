@@ -4,6 +4,7 @@ import {
   disableAnalytics,
   enableAnalytics,
   GA4_MEASUREMENT_ID,
+  isAnalyticsConfigured,
   isProductionHost,
   isTrackablePath,
   trackEvent,
@@ -22,11 +23,26 @@ import {
  * `typeof window === "undefined"`, which is itself a genuine, meaningful
  * assertion (proves the SSR/Worker-safety guard actually works, not just
  * that it exists in source).
+ *
+ * Phase 3.21 — the Measurement ID moved from a hardcoded literal to
+ * `import.meta.env.VITE_GA4_MEASUREMENT_ID` (see src/vite-env.d.ts /
+ * .env.example). This test run has no `.env`/`.env.test` file, so the env
+ * var is genuinely unset here — exercising the real "missing config" path,
+ * not a mock of it.
  */
 
-describe("GA4 measurement ID", () => {
-  it("is the real, provided measurement ID, not a placeholder", () => {
-    expect(GA4_MEASUREMENT_ID).toBe("G-NFMYHQX593");
+describe("GA4 measurement ID — configurable via VITE_GA4_MEASUREMENT_ID, never hardcoded", () => {
+  it("is not hardcoded in source — src/lib/analytics.ts reads it from import.meta.env", () => {
+    const source = fs.readFileSync(new URL("../src/lib/analytics.ts", import.meta.url), "utf8");
+    expect(source).toContain("import.meta.env.VITE_GA4_MEASUREMENT_ID");
+    // Regression guard: no literal "G-XXXXXXX"-shaped string is hardcoded
+    // as the actual measurement ID anywhere in this file.
+    expect(source).not.toMatch(/["']G-[A-Z0-9]{4,}["']/);
+  });
+
+  it("resolves to null in this test environment (no env var configured) — the real, honest missing-config state, not a mock", () => {
+    expect(GA4_MEASUREMENT_ID).toBeNull();
+    expect(isAnalyticsConfigured()).toBe(false);
   });
 });
 
@@ -104,15 +120,14 @@ describe("trackEvent — real executed consent + /admin gating", () => {
     expect(calls).toHaveLength(0);
   });
 
-  it("sends the exact event name and params once consent is granted, on a trackable path", () => {
-    stubBrowser("/tools/qr-code-generator");
+  it("enableAnalytics is a real, deliberate no-op when no Measurement ID is configured (this test environment's actual state) — never calls gtag, even indirectly", () => {
+    const calls = stubBrowser("/tools/qr-code-generator");
     enableAnalytics();
-    // enableAnalytics installs its own real gtag on first init; re-stub it
-    // afterward so this test observes calls regardless of call order.
-    const calls: unknown[][] = [];
-    window.gtag = (...args: unknown[]) => calls.push(args);
-    trackEvent("qr_generate", { content_kind: "wifi" });
-    expect(calls).toEqual([["event", "qr_generate", { content_kind: "wifi" }]]);
+    // If enableAnalytics had proceeded past its GA4_MEASUREMENT_ID guard,
+    // it would overwrite window.gtag with its own bootstrap function and
+    // immediately call gtag("js", ...)/gtag("config", ...) through it —
+    // both would show up in `calls`. An empty array proves it never did.
+    expect(calls).toHaveLength(0);
   });
 
   it("sends nothing on an /admin path even with consent granted", () => {
@@ -132,6 +147,57 @@ describe("trackEvent — real executed consent + /admin gating", () => {
     window.gtag = (...args: unknown[]) => calls.push(args);
     trackEvent("qr_scan", { content_kind: "text" });
     expect(calls).toHaveLength(0);
+  });
+});
+
+// Phase 3.21 — proves the OTHER half of the config-driven design actually
+// works too: when a real-looking Measurement ID IS configured, analytics
+// behaves exactly as it did before this change (real gtag bootstrap, real
+// event delivery). `import.meta.env.VITE_GA4_MEASUREMENT_ID` is resolved
+// once, at module load, so this requires `vi.stubEnv` + `vi.resetModules()`
+// + a fresh dynamic import to actually exercise the "configured" branch —
+// the module-level top-level import used everywhere else in this file
+// stays permanently bound to the real (unset) value from before any test
+// ran, which is exactly why those tests are a genuine, not mocked, "missing
+// config" check.
+describe("enableAnalytics / trackEvent — real executed behavior when a Measurement ID IS configured", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+    vi.resetModules();
+  });
+
+  async function loadConfiguredAnalytics() {
+    vi.stubEnv("VITE_GA4_MEASUREMENT_ID", "G-TEST0000001");
+    vi.resetModules();
+    return import("../src/lib/analytics");
+  }
+
+  function stubBrowser(pathname: string) {
+    vi.stubGlobal("window", {
+      location: { hostname: "codivio.online", pathname, href: `https://codivio.online${pathname}` },
+    });
+    vi.stubGlobal("document", {
+      cookie: "",
+      head: { appendChild: () => undefined },
+      createElement: () => ({ async: false, src: "" }),
+    });
+  }
+
+  it("resolves the configured value as GA4_MEASUREMENT_ID and reports itself configured", async () => {
+    const configured = await loadConfiguredAnalytics();
+    expect(configured.GA4_MEASUREMENT_ID).toBe("G-TEST0000001");
+    expect(configured.isAnalyticsConfigured()).toBe(true);
+  });
+
+  it("enableAnalytics installs a real gtag and trackEvent actually delivers the event", async () => {
+    stubBrowser("/tools/qr-code-generator");
+    const configured = await loadConfiguredAnalytics();
+    configured.enableAnalytics();
+    const calls: unknown[][] = [];
+    window.gtag = (...args: unknown[]) => calls.push(args);
+    configured.trackEvent("qr_generate", { content_kind: "wifi" });
+    expect(calls).toEqual([["event", "qr_generate", { content_kind: "wifi" }]]);
   });
 });
 

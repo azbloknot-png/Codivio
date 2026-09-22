@@ -3,6 +3,7 @@ import { Download, Eye, EyeOff } from "lucide-react";
 import { generateQrCode, QrGenerationError, type QrGenerateResult, type QrOutputFormat } from "../lib/qr-engine";
 import { downloadTextAsFile, triggerDownload } from "../lib/download-file";
 import { trackQrGenerate } from "../lib/qr-analytics";
+import { trackToolStart, trackToolComplete, trackDownload } from "../lib/tool-analytics";
 import { MAX_QR_PAYLOAD_LENGTH, type QrErrorCorrectionLevel, type QrPayload, type QrWifiSecurity } from "../../shared/qr";
 
 /**
@@ -42,6 +43,7 @@ const SIZE_OPTIONS = [200, 256, 320, 400] as const;
 const MARGIN_OPTIONS = [0, 2, 4, 8] as const;
 const ERROR_CORRECTION_LEVELS: QrErrorCorrectionLevel[] = ["L", "M", "Q", "H"];
 const DEBOUNCE_MS = 300;
+const TOOL_SLUG = "qr-code-generator";
 
 function QrCodeGeneratorTool() {
   const [mode, setMode] = useState<QrInputMode>("text");
@@ -74,6 +76,7 @@ function QrCodeGeneratorTool() {
 
   const requestIdRef = useRef(0);
   const isMountedRef = useRef(true);
+  const hasStartedRef = useRef(false);
 
   useEffect(
     () => () => {
@@ -120,6 +123,16 @@ function QrCodeGeneratorTool() {
       return;
     }
 
+    // Phase 3.21 — fires once per mount, the first time the user has
+    // entered enough real content to attempt a generation (not on every
+    // keystroke/re-render) — the earliest genuine "began using this tool"
+    // signal, distinct from tool_open (which fires just from viewing the
+    // page) and from tool_complete (a successful result, below).
+    if (!hasStartedRef.current) {
+      hasStartedRef.current = true;
+      trackToolStart(TOOL_SLUG);
+    }
+
     const requestId = ++requestIdRef.current;
     setIsGenerating(true);
     setExportError(null);
@@ -136,6 +149,10 @@ function QrCodeGeneratorTool() {
           // union: "text"|"url"|"wifi"|"vcard"), never the actual text/
           // WiFi credentials/vCard fields the user entered.
           trackQrGenerate(payload.kind);
+          // Phase 3.21 — the generic, tool-family-agnostic completion
+          // signal, fired alongside the QR-specific event above (same
+          // cadence: once per successful generation, not just the first).
+          trackToolComplete(TOOL_SLUG);
         })
         .catch((error: unknown) => {
           if (!isMountedRef.current || requestIdRef.current !== requestId) return;
@@ -222,6 +239,10 @@ function QrCodeGeneratorTool() {
         triggerDownload(exported.data, filename);
       }
       setExportError(null);
+      // Phase 3.21 — fires only once the file was actually prepared/handed
+      // to the browser (inside the try block's success path), never on a
+      // failed export (see the catch branch below).
+      trackDownload(TOOL_SLUG, format);
     } catch {
       setExportError("Couldn't prepare the download. Please try again.");
     }

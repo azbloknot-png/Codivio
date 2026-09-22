@@ -3,6 +3,7 @@ import { AlertTriangle, Camera, Check, Copy, ImageOff, RotateCcw, ScanLine, Uplo
 import { decodeQrFromImageData } from "../lib/qr-scanner-engine";
 import { classifyScannedQrContent } from "../../shared/qr";
 import { trackQrScan } from "../lib/qr-analytics";
+import { trackToolStart, trackToolComplete } from "../lib/tool-analytics";
 
 /**
  * Phase 4.6 — QR Code Scanner. Loaded via its own lazy chunk from
@@ -49,6 +50,7 @@ const MAX_CANVAS_DIMENSION = 1600;
 /** Throttles how often a camera frame is actually decoded — decoding every
  * single frame would waste CPU for no scanning-speed benefit. */
 const SCAN_INTERVAL_MS = 200;
+const TOOL_SLUG = "qr-code-scanner";
 
 function QrCodeScannerTool() {
   const [phase, setPhase] = useState<ScannerPhase>("idle");
@@ -58,6 +60,7 @@ function QrCodeScannerTool() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const hasStartedRef = useRef(false);
   const rafRef = useRef<number | null>(null);
   const lastAttemptRef = useRef(0);
   const isMountedRef = useRef(true);
@@ -71,6 +74,15 @@ function QrCodeScannerTool() {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
+  }, []);
+
+  // Phase 3.21 — fires once per mount, the first time the user makes a real
+  // attempt to scan (camera or upload) — distinct from tool_open (just
+  // viewing the page) and tool_complete (a successful decode, below).
+  const markStarted = useCallback(() => {
+    if (hasStartedRef.current) return;
+    hasStartedRef.current = true;
+    trackToolStart(TOOL_SLUG);
   }, []);
 
   useEffect(() => {
@@ -125,12 +137,16 @@ function QrCodeScannerTool() {
       // Phase 4.9 — metadata only (the classified content *kind*, e.g.
       // "url"/"wifi"/"text"), never the decoded text itself.
       trackQrScan(classifyScannedQrContent(result.data).kind);
+      // Phase 3.21 — the generic, tool-family-agnostic completion signal,
+      // fired alongside the QR-specific event above.
+      trackToolComplete(TOOL_SLUG);
       return;
     }
     rafRef.current = requestAnimationFrame(scanFrame);
   }, [stopCamera]);
 
   const startCamera = useCallback(async () => {
+    markStarted();
     setPhase("camera-starting");
 
     if (!navigator.mediaDevices?.getUserMedia) {
@@ -172,7 +188,7 @@ function QrCodeScannerTool() {
         setPhase("camera-error");
       }
     }
-  }, [scanFrame]);
+  }, [scanFrame, markStarted]);
 
   const stopScan = useCallback(() => {
     stopCamera();
@@ -193,6 +209,7 @@ function QrCodeScannerTool() {
       return;
     }
 
+    markStarted();
     setPhase("decoding-image");
     const objectUrl = URL.createObjectURL(file);
     const image = new Image();
@@ -230,6 +247,9 @@ function QrCodeScannerTool() {
         // Phase 4.9 — metadata only, see the matching comment in the
         // camera-path success branch above.
         trackQrScan(classifyScannedQrContent(result.data).kind);
+        // Phase 3.21 — see the matching comment in the camera-path success
+        // branch above.
+        trackToolComplete(TOOL_SLUG);
       } else {
         setPhase("no-code-found");
       }
@@ -239,7 +259,7 @@ function QrCodeScannerTool() {
       if (isMountedRef.current) setPhase("image-invalid");
     };
     image.src = objectUrl;
-  }, []);
+  }, [markStarted]);
 
   const reset = useCallback(() => {
     stopCamera();

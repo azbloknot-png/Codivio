@@ -65,21 +65,66 @@ describe("trackQrGenerate / trackQrScan — real executed consent + /admin gatin
     expect(calls).toHaveLength(0);
   });
 
-  it("trackQrGenerate sends qr_generate with exactly {content_kind} once consent is granted", () => {
+  it("enableAnalytics is a real no-op with no Measurement ID configured (this test environment's actual state) — trackQrGenerate still sends nothing", () => {
     stubBrowser("/tools/qr-code-generator");
     enableAnalytics();
     const calls: unknown[][] = [];
     window.gtag = (...args: unknown[]) => calls.push(args);
     trackQrGenerate("wifi");
+    expect(calls).toHaveLength(0);
+  });
+});
+
+// Phase 3.21 — the Measurement ID is now resolved once, at module load, from
+// `import.meta.env.VITE_GA4_MEASUREMENT_ID` (see tests/analytics.test.ts's
+// own matching block for the full explanation). Proving trackQrGenerate/
+// trackQrScan still deliver real events when a Measurement ID IS configured
+// requires a fresh dynamic import of both src/lib/analytics AND
+// src/lib/qr-analytics after `vi.stubEnv`, so they share the same
+// freshly-configured module instance.
+describe("trackQrGenerate / trackQrScan — real executed delivery when a Measurement ID IS configured", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+    vi.resetModules();
+  });
+
+  async function loadConfigured() {
+    vi.stubEnv("VITE_GA4_MEASUREMENT_ID", "G-TEST0000001");
+    vi.resetModules();
+    const analyticsModule = await import("../src/lib/analytics");
+    const qrAnalyticsModule = await import("../src/lib/qr-analytics");
+    return { ...analyticsModule, ...qrAnalyticsModule };
+  }
+
+  function stubBrowser(pathname: string) {
+    vi.stubGlobal("window", {
+      location: { hostname: "codivio.online", pathname, href: `https://codivio.online${pathname}` },
+    });
+    vi.stubGlobal("document", {
+      cookie: "",
+      head: { appendChild: () => undefined },
+      createElement: () => ({ async: false, src: "" }),
+    });
+  }
+
+  it("trackQrGenerate sends qr_generate with exactly {content_kind} once consent is granted", async () => {
+    stubBrowser("/tools/qr-code-generator");
+    const configured = await loadConfigured();
+    configured.enableAnalytics();
+    const calls: unknown[][] = [];
+    window.gtag = (...args: unknown[]) => calls.push(args);
+    configured.trackQrGenerate("wifi");
     expect(calls).toEqual([["event", "qr_generate", { content_kind: "wifi" }]]);
   });
 
-  it("trackQrScan sends qr_scan with exactly {content_kind} once consent is granted", () => {
+  it("trackQrScan sends qr_scan with exactly {content_kind} once consent is granted", async () => {
     stubBrowser("/tools/qr-code-scanner");
-    enableAnalytics();
+    const configured = await loadConfigured();
+    configured.enableAnalytics();
     const calls: unknown[][] = [];
     window.gtag = (...args: unknown[]) => calls.push(args);
-    trackQrScan("url");
+    configured.trackQrScan("url");
     expect(calls).toEqual([["event", "qr_scan", { content_kind: "url" }]]);
   });
 });

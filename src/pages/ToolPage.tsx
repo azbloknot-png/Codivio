@@ -1,9 +1,10 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ShieldCheck, Zap } from "lucide-react";
 import { useLanguage } from "../i18n/LanguageContext";
 import { getContentBlueprint } from "../../shared/seo/content";
 import { getRelatedToolLinks, getToolBreadcrumb } from "../../shared/seo/internal-links";
+import { trackToolOpen } from "../lib/tool-analytics";
 
 /**
  * Phase 4.2 — its own lazy chunk, separate from this already-lazy ToolPage
@@ -162,6 +163,15 @@ function ToolContentSections({ slug }: { slug: string }) {
 
 function ToolPage({ name, description, category, slug }: ToolPageProps) {
   const { t } = useLanguage();
+
+  // Phase 3.21 — fires once per tool page view (including the 32 still
+  // "coming soon"; opening the page is a real, meaningful signal on its
+  // own). `page_view` (src/App.tsx's <Analytics />) already fires for this
+  // same navigation with the raw path; this adds a semantic tool_slug
+  // dimension GA4 reports can group by directly, without parsing paths.
+  useEffect(() => {
+    if (slug) trackToolOpen(slug);
+  }, [slug]);
 
   return (
     <main className="tool-page">
