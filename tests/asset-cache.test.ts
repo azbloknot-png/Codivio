@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { isHashedBuildAsset, withImmutableAssetCache } from "../worker/asset-cache";
+import worker from "../worker/index";
+import { makeEnv } from "./helpers/fake-d1";
 
 /**
  * Performance Fix — long-lived immutable caching for Vite's content-hashed
@@ -62,5 +64,31 @@ describe("withImmutableAssetCache", () => {
     expect(rewritten.status).toBe(200);
     expect(rewritten.headers.get("Content-Type")).toBe("text/css");
     expect(rewritten.headers.get("ETag")).toBe('"abc123"');
+  });
+});
+
+describe("worker/index.ts integration — real edge case found during this fix's own live-deploy verification", () => {
+  it("applies immutable caching to a real, current hashed JS chunk", async () => {
+    const env = makeEnv({
+      ASSETS: {
+        fetch: async () =>
+          new Response("console.log(1)", { status: 200, headers: { "Content-Type": "text/javascript" } }),
+      },
+    });
+    const request = new Request("https://codivio.online/assets/index-realHash1.js");
+    const response = await worker.fetch(request, env);
+    expect(response.headers.get("Cache-Control")).toBe("public, max-age=31536000, immutable");
+  });
+
+  it("does NOT apply immutable caching when a hashed-looking path no longer matches a real deployed file — Cloudflare's own SPA fallback (not_found_handling) returns the HTML shell with status 200 instead of a real 404, and this must not be cached forever as if it were the JS/CSS file the URL implies", async () => {
+    const env = makeEnv({
+      ASSETS: {
+        fetch: async () =>
+          new Response("<!doctype html>...", { status: 200, headers: { "Content-Type": "text/html" } }),
+      },
+    });
+    const request = new Request("https://codivio.online/assets/index-staleHash1.js");
+    const response = await worker.fetch(request, env);
+    expect(response.headers.get("Cache-Control")).not.toBe("public, max-age=31536000, immutable");
   });
 });

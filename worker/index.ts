@@ -216,7 +216,21 @@ async function route(request: Request, env: Env): Promise<Response> {
     // cache forever (see ./asset-cache.ts's module doc comment for why);
     // this never touches index.html or any other page-navigation response,
     // which fall through to the unrelated branches below unchanged.
-    if (assetsResponse.status === 200 && isHashedBuildAsset(url.pathname)) {
+    //
+    // The Content-Type check guards a real edge case, found during this
+    // fix's own live-deploy verification: `assets.not_found_handling:
+    // "single-page-application"` makes env.ASSETS.fetch() itself return the
+    // SPA shell (text/html, status 200) for a URL that merely LOOKS like a
+    // hashed asset path but no longer matches any real deployed file (e.g.
+    // a stale reference to a chunk from a previous build) — without this
+    // check, that HTML response would incorrectly receive an "immutable"
+    // cache policy meant only for genuine JS/CSS build output.
+    const assetsContentType = assetsResponse.headers.get("content-type") ?? "";
+    if (
+      assetsResponse.status === 200 &&
+      isHashedBuildAsset(url.pathname) &&
+      (assetsContentType.includes("javascript") || assetsContentType.includes("css"))
+    ) {
       return withImmutableAssetCache(assetsResponse);
     }
 
