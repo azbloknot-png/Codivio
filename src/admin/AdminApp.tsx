@@ -158,7 +158,7 @@ export function AdminLoginPage() {
     <div className="admin-auth-page">
       <div className="admin-auth-card">
         <Link className="brand" to="/">
-          <img className="brand-logo" src="/assets/branding/codivio-logo.png" alt="Codivio" />
+          <img className="brand-logo" src="/assets/branding/codivio-logo-header.webp" alt="Codivio" />
           Codivio
         </Link>
 
@@ -384,7 +384,7 @@ function AdminShell({
         </button>
 
         <Link className="brand" to="/admin">
-          <img className="brand-logo" src="/assets/branding/codivio-logo.png" alt="Codivio" />
+          <img className="brand-logo" src="/assets/branding/codivio-logo-header.webp" alt="Codivio" />
           Codivio Admin
         </Link>
 

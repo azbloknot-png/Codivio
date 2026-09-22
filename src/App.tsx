@@ -42,13 +42,25 @@ import { Link, Route, Routes, useLocation, useNavigationType, useParams } from "
  * lightweight/heavy function split, since this data is now genuinely
  * needed, just only on this one route. See tests/technical-seo-3.13.test.ts. */
 const ToolPage = lazy(() => import("./pages/ToolPage"));
-import { AdminDashboardPlaceholder, AdminLoginPage, ProtectedAdminRoute } from "./admin/AdminApp";
-import AdminSettingsPage from "./admin/AdminSettingsPage";
-import AdminPagesPage from "./admin/AdminPagesPage";
-import AdminToolsPage from "./admin/AdminToolsPage";
-import AdminFaqPage from "./admin/AdminFaqPage";
-import AdminComingSoonPage from "./admin/AdminComingSoonPage";
-import AdminSeoPage from "./admin/AdminSeoPage";
+
+// Performance Fix — Admin panel lazy loading. Every admin-only component is
+// route-level code-split (same `lazy()` + `<Suspense>` pattern as ToolPage
+// above), so an anonymous public visitor's initial bundle never contains
+// any Admin JS — it loads only once a request actually reaches `/admin/*`.
+// AdminApp.tsx exports 3 named (non-default) components sharing one module,
+// so all 3 `lazy()` calls below resolve the SAME dynamic import — Vite
+// still emits exactly one chunk for that module, not three.
+const AdminLoginPage = lazy(() => import("./admin/AdminApp").then((m) => ({ default: m.AdminLoginPage })));
+const ProtectedAdminRoute = lazy(() => import("./admin/AdminApp").then((m) => ({ default: m.ProtectedAdminRoute })));
+const AdminDashboardPlaceholder = lazy(() =>
+  import("./admin/AdminApp").then((m) => ({ default: m.AdminDashboardPlaceholder }))
+);
+const AdminSettingsPage = lazy(() => import("./admin/AdminSettingsPage"));
+const AdminPagesPage = lazy(() => import("./admin/AdminPagesPage"));
+const AdminToolsPage = lazy(() => import("./admin/AdminToolsPage"));
+const AdminFaqPage = lazy(() => import("./admin/AdminFaqPage"));
+const AdminComingSoonPage = lazy(() => import("./admin/AdminComingSoonPage"));
+const AdminSeoPage = lazy(() => import("./admin/AdminSeoPage"));
 import { useLanguage } from "./i18n/LanguageContext";
 import { LanguageSwitcher } from "./i18n/LanguageSwitcher";
 import { usePageMeta } from "./seo/useSeo";
@@ -625,7 +637,7 @@ function SiteHeader() {
     <header className="header">
       <div className="container nav">
         <Link className="brand" to="/" onClick={() => setMenuOpen(false)}>
-          <img className="brand-logo" src="/assets/branding/codivio-logo.png" alt="Codivio" />
+          <img className="brand-logo" src="/assets/branding/codivio-logo-header.webp" alt="Codivio" />
           Codivio
         </Link>
 
@@ -683,7 +695,7 @@ function SiteFooter() {
         <div className="footer-grid">
           <div>
             <Link className="brand" to="/">
-              <img className="brand-logo" src="/assets/branding/codivio-logo.png" alt="Codivio" />
+              <img className="brand-logo" src="/assets/branding/codivio-logo-header.webp" alt="Codivio" />
               Codivio
             </Link>
             <p>{t.site.siteDescription}</p>
@@ -2442,25 +2454,158 @@ function App() {
       <Route path="/pricing" element={<PricingPage />} />
       <Route path="/sitemap" element={<SitemapPage />} />
       <Route path="/robots" element={<RobotsPage />} />
-      <Route path="/admin/login" element={<AdminLoginPage />} />
-      <Route path="/admin" element={<ProtectedAdminRoute />}>
-        <Route index element={<AdminDashboardPlaceholder />} />
-        <Route path="settings" element={<AdminSettingsPage />} />
-        <Route path="pages" element={<AdminPagesPage />} />
-        <Route path="tools" element={<AdminToolsPage />} />
-        <Route path="faq" element={<AdminFaqPage />} />
-        <Route path="users" element={<AdminComingSoonPage moduleKey="usersCrm" />} />
-        <Route path="blog" element={<AdminComingSoonPage moduleKey="blog" />} />
-        <Route path="analytics" element={<AdminComingSoonPage moduleKey="analytics" />} />
-        <Route path="seo" element={<AdminSeoPage />} />
-        <Route path="search-console" element={<AdminComingSoonPage moduleKey="searchConsole" />} />
-        <Route path="advertising" element={<AdminComingSoonPage moduleKey="advertising" />} />
-        <Route path="affiliate" element={<AdminComingSoonPage moduleKey="affiliate" />} />
-        <Route path="monetization" element={<AdminComingSoonPage moduleKey="monetization" />} />
-        <Route path="social" element={<AdminComingSoonPage moduleKey="social" />} />
-        <Route path="reports" element={<AdminComingSoonPage moduleKey="reports" />} />
-        <Route path="system" element={<AdminComingSoonPage moduleKey="systemHealth" />} />
-        <Route path="audit-log" element={<AdminComingSoonPage moduleKey="auditLog" />} />
+      <Route
+        path="/admin/login"
+        element={
+          <Suspense fallback={null}>
+            <AdminLoginPage />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/admin"
+        element={
+          <Suspense fallback={null}>
+            <ProtectedAdminRoute />
+          </Suspense>
+        }
+      >
+        <Route
+          index
+          element={
+            <Suspense fallback={null}>
+              <AdminDashboardPlaceholder />
+            </Suspense>
+          }
+        />
+        <Route
+          path="settings"
+          element={
+            <Suspense fallback={null}>
+              <AdminSettingsPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="pages"
+          element={
+            <Suspense fallback={null}>
+              <AdminPagesPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="tools"
+          element={
+            <Suspense fallback={null}>
+              <AdminToolsPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="faq"
+          element={
+            <Suspense fallback={null}>
+              <AdminFaqPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="users"
+          element={
+            <Suspense fallback={null}>
+              <AdminComingSoonPage moduleKey="usersCrm" />
+            </Suspense>
+          }
+        />
+        <Route
+          path="blog"
+          element={
+            <Suspense fallback={null}>
+              <AdminComingSoonPage moduleKey="blog" />
+            </Suspense>
+          }
+        />
+        <Route
+          path="analytics"
+          element={
+            <Suspense fallback={null}>
+              <AdminComingSoonPage moduleKey="analytics" />
+            </Suspense>
+          }
+        />
+        <Route
+          path="seo"
+          element={
+            <Suspense fallback={null}>
+              <AdminSeoPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="search-console"
+          element={
+            <Suspense fallback={null}>
+              <AdminComingSoonPage moduleKey="searchConsole" />
+            </Suspense>
+          }
+        />
+        <Route
+          path="advertising"
+          element={
+            <Suspense fallback={null}>
+              <AdminComingSoonPage moduleKey="advertising" />
+            </Suspense>
+          }
+        />
+        <Route
+          path="affiliate"
+          element={
+            <Suspense fallback={null}>
+              <AdminComingSoonPage moduleKey="affiliate" />
+            </Suspense>
+          }
+        />
+        <Route
+          path="monetization"
+          element={
+            <Suspense fallback={null}>
+              <AdminComingSoonPage moduleKey="monetization" />
+            </Suspense>
+          }
+        />
+        <Route
+          path="social"
+          element={
+            <Suspense fallback={null}>
+              <AdminComingSoonPage moduleKey="social" />
+            </Suspense>
+          }
+        />
+        <Route
+          path="reports"
+          element={
+            <Suspense fallback={null}>
+              <AdminComingSoonPage moduleKey="reports" />
+            </Suspense>
+          }
+        />
+        <Route
+          path="system"
+          element={
+            <Suspense fallback={null}>
+              <AdminComingSoonPage moduleKey="systemHealth" />
+            </Suspense>
+          }
+        />
+        <Route
+          path="audit-log"
+          element={
+            <Suspense fallback={null}>
+              <AdminComingSoonPage moduleKey="auditLog" />
+            </Suspense>
+          }
+        />
       </Route>
       <Route path="/:slug" element={<CmsPageRoute />} />
       <Route path="*" element={<NotFoundPage />} />

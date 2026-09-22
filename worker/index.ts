@@ -21,6 +21,7 @@ import {
 } from "./auth";
 import { isKnownPublicRoute, isPageNavigationCandidate, normalizePathname } from "./route-guard";
 import { injectStaticSeoMetadata } from "./seo-rewrite";
+import { isHashedBuildAsset, withImmutableAssetCache } from "./asset-cache";
 import { CANONICAL_DOMAIN } from "../shared/seo/site";
 import { handleGetSettings, handlePatchSettings, handlePublicSettings } from "./settings";
 import {
@@ -210,6 +211,14 @@ async function route(request: Request, env: Env): Promise<Response> {
     }
 
     const assetsResponse = await env.ASSETS.fetch(request);
+
+    // Performance Fix — Vite's own content-hashed JS/CSS chunks are safe to
+    // cache forever (see ./asset-cache.ts's module doc comment for why);
+    // this never touches index.html or any other page-navigation response,
+    // which fall through to the unrelated branches below unchanged.
+    if (assetsResponse.status === 200 && isHashedBuildAsset(url.pathname)) {
+      return withImmutableAssetCache(assetsResponse);
+    }
 
     // Phase 3.15 SEO Remediation — soft-404 fix (see ./route-guard.ts for
     // the full reasoning). Only reconsider the status for a page-shaped GET

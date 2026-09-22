@@ -4,6 +4,7 @@ import { LANGUAGES } from "../shared/i18n/languages";
 import { getGlobalFaqs } from "../shared/seo/global-faq";
 import { validateFaqInput } from "../shared/faq";
 import { hasPermission } from "../shared/rbac";
+import { suspenseRouteJsx } from "./helpers/route-jsx";
 
 /**
  * Phase 3 Finalization: Global FAQ expansion + localization, Admin FAQ
@@ -122,7 +123,9 @@ describe("faq.view / faq.manage RBAC matrix (Admin FAQ Management)", () => {
 
 describe("Admin FAQ Management wiring", () => {
   it("the /admin/faq route and nav item are registered", () => {
-    expect(appSource).toContain('<Route path="faq" element={<AdminFaqPage />} />');
+    // Performance Fix (Admin lazy loading): now Suspense-wrapped/multi-line —
+    // see tests/helpers/route-jsx.ts.
+    expect(appSource).toMatch(suspenseRouteJsx('path="faq"', "<AdminFaqPage />"));
     expect(adminSource).toContain('label: t.nav.faq, to: "/admin/faq"');
   });
 

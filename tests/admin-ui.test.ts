@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { describeLoginError, resolveSessionState } from "../src/admin/AdminApp";
 import fs from "node:fs";
+import { suspenseRouteJsx } from "./helpers/route-jsx";
 
 /**
  * Phase 2.4 test coverage note (see PROJECT_STATE.md / codivio-test-gate):
@@ -84,14 +85,19 @@ describe("routing wiring (structural — see file-level note)", () => {
     for (const route of expectedPublicRoutes) {
       expect(appSource).toContain(route);
     }
-    expect(appSource).toContain('<Route path="/admin/login" element={<AdminLoginPage />} />');
+    // Performance Fix (Admin lazy loading): each of these is now wrapped in
+    // a <Suspense> boundary and spans multiple lines — see
+    // tests/helpers/route-jsx.ts for why a plain .toContain() no longer
+    // applies; the real fact being verified (this path renders this
+    // component) is unchanged.
+    expect(appSource).toMatch(suspenseRouteJsx('path="/admin/login"', "<AdminLoginPage />"));
     // As of Phase 2.7, /admin is a parent route with nested children
     // (Dashboard at index, Settings at /admin/settings) rather than a
     // single self-closing route — the protection/redirect behavior itself
     // (tested separately below) is unchanged.
-    expect(appSource).toContain('<Route path="/admin" element={<ProtectedAdminRoute />}>');
-    expect(appSource).toContain('<Route index element={<AdminDashboardPlaceholder />} />');
-    expect(appSource).toContain('<Route path="settings" element={<AdminSettingsPage />} />');
+    expect(appSource).toMatch(suspenseRouteJsx('path="/admin"', "<ProtectedAdminRoute />", false));
+    expect(appSource).toMatch(suspenseRouteJsx("index", "<AdminDashboardPlaceholder />"));
+    expect(appSource).toMatch(suspenseRouteJsx('path="settings"', "<AdminSettingsPage />"));
   });
 
   it("registry still has all 34 tools", () => {
@@ -208,23 +214,48 @@ describe("Admin navigation architecture (Phase 2.13, translated in Phase 2.15; F
   });
 });
 
-describe("official branding is used consistently (Phase 2.13)", () => {
-  it("public header/footer and Admin login/shell all use the official logo asset, not a generic icon mark", () => {
+describe("official branding is used consistently (Phase 2.13; header/favicon assets optimized in the Performance Fix task)", () => {
+  it("public header/footer and Admin login/shell all use the official, size-optimized header logo asset, not a generic icon mark", () => {
     for (const source of [appSource, adminSource]) {
       expect(source).not.toContain("Code2");
     }
-    const logoOccurrences = (appSource.match(/\/assets\/branding\/codivio-logo\.png/g) ?? []).length;
+    // The small header/footer/admin logo (~34px rendered) uses a dedicated,
+    // size-optimized asset — never the full 1254x1254/1.54MB brand master,
+    // which stays reserved for OG/Twitter/Organization schema (see
+    // shared/seo/site.ts's DEFAULT_OG_IMAGE and shared/seo/schema.ts's
+    // buildOrganizationNode, both still pointing at codivio-logo.png).
+    const logoOccurrences = (appSource.match(/\/assets\/branding\/codivio-logo-header\.webp/g) ?? []).length;
     // Public header + public footer = 2 usages in App.tsx.
     expect(logoOccurrences).toBe(2);
-    const adminLogoOccurrences = (adminSource.match(/\/assets\/branding\/codivio-logo\.png/g) ?? []).length;
+    const adminLogoOccurrences = (adminSource.match(/\/assets\/branding\/codivio-logo-header\.webp/g) ?? []).length;
     // Admin login card + Admin shell header = 2 usages in AdminApp.tsx.
     expect(adminLogoOccurrences).toBe(2);
+    // Never the full-size master image in these 4 small-logo call sites.
+    expect(appSource).not.toMatch(/brand-logo"[^>]*codivio-logo\.png/);
+    expect(adminSource).not.toMatch(/brand-logo"[^>]*codivio-logo\.png/);
   });
 
-  it("index.html declares a favicon using the official logo asset", () => {
+  it("index.html declares a favicon using a dedicated, small favicon asset (not the full brand master image)", () => {
     const indexHtml = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
     expect(indexHtml).toContain('rel="icon"');
-    expect(indexHtml).toContain("/assets/branding/codivio-logo.png");
+    expect(indexHtml).toContain("/assets/branding/codivio-favicon.png");
+  });
+
+  it("OG image, Twitter image, and Organization schema logo still use the full-quality original brand asset, untouched by the header/favicon optimization", () => {
+    const indexHtml = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
+    expect(indexHtml).toContain('property="og:image" content="https://codivio.online/assets/branding/codivio-logo.png"');
+    expect(indexHtml).toContain('name="twitter:image" content="https://codivio.online/assets/branding/codivio-logo.png"');
+  });
+
+  it("the header logo and favicon assets are real files, each comfortably under 10KB (the Performance Fix task's own target)", () => {
+    const headerLogoPath = new URL("../public/assets/branding/codivio-logo-header.webp", import.meta.url);
+    const faviconPath = new URL("../public/assets/branding/codivio-favicon.png", import.meta.url);
+    const headerLogoSize = fs.statSync(headerLogoPath).size;
+    const faviconSize = fs.statSync(faviconPath).size;
+    expect(headerLogoSize).toBeGreaterThan(0);
+    expect(headerLogoSize).toBeLessThan(10 * 1024);
+    expect(faviconSize).toBeGreaterThan(0);
+    expect(faviconSize).toBeLessThan(10 * 1024);
   });
 });
 

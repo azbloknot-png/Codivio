@@ -349,10 +349,13 @@ describe("icon safety", () => {
 describe("existing tool routing is unaffected by this checkpoint", () => {
   it("src/App.tsx still declares /tools, /tools/:slug and the public/admin route set", async () => {
     const fs = await import("node:fs");
+    const { suspenseRouteJsx } = await import("./helpers/route-jsx");
     const source = fs.readFileSync(new URL("../src/App.tsx", import.meta.url), "utf8");
     expect(source).toContain('<Route path="/tools" element={<ToolsPage />} />');
     expect(source).toContain('<Route path="/tools/:slug" element={<ToolRoute />} />');
-    expect(source).toContain('<Route path="tools" element={<AdminToolsPage />} />');
+    // Performance Fix (Admin lazy loading): now Suspense-wrapped/multi-line —
+    // see tests/helpers/route-jsx.ts.
+    expect(source).toMatch(suspenseRouteJsx('path="tools"', "<AdminToolsPage />"));
   });
 });
 
@@ -361,11 +364,14 @@ describe("existing tool routing is unaffected by this checkpoint", () => {
 describe("homepage/admin/settings/pages routes are unaffected", () => {
   it("src/App.tsx still declares /, /admin, /admin/login, /admin/settings, /admin/pages and the catch-all", async () => {
     const fs = await import("node:fs");
+    const { suspenseRouteJsx } = await import("./helpers/route-jsx");
     const source = fs.readFileSync(new URL("../src/App.tsx", import.meta.url), "utf8");
     expect(source).toContain('<Route path="/" element={<HomePage />} />');
-    expect(source).toContain('<Route path="/admin/login" element={<AdminLoginPage />} />');
-    expect(source).toContain('<Route path="settings" element={<AdminSettingsPage />} />');
-    expect(source).toContain('<Route path="pages" element={<AdminPagesPage />} />');
+    // Performance Fix (Admin lazy loading): now Suspense-wrapped/multi-line —
+    // see tests/helpers/route-jsx.ts.
+    expect(source).toMatch(suspenseRouteJsx('path="/admin/login"', "<AdminLoginPage />"));
+    expect(source).toMatch(suspenseRouteJsx('path="settings"', "<AdminSettingsPage />"));
+    expect(source).toMatch(suspenseRouteJsx('path="pages"', "<AdminPagesPage />"));
     expect(source).toContain('<Route path="*" element={<NotFoundPage />} />');
   });
 });
