@@ -42,6 +42,22 @@ describe("isHashedBuildAsset", () => {
     expect(isHashedBuildAsset("/api/health")).toBe(false);
     expect(isHashedBuildAsset("/admin")).toBe(false);
   });
+
+  it("matches a real hash that itself contains an internal hyphen, wherever it falls (real bug, found in production during Phase 5.2's live verification)", () => {
+    // Vite's default hash alphabet includes "-", so an 8-character hash can
+    // legitimately contain one — e.g. a real production main-bundle chunk
+    // was actually named exactly this. The previous pattern (looking for
+    // "-" followed by 6+ word characters at the very end) failed on this
+    // real file: splitting on the *last* hyphen left only "fZgU" (4
+    // characters), under its 6-character minimum, so this genuinely
+    // hashed, immutable-safe file incorrectly fell through to
+    // non-immutable caching in production.
+    expect(isHashedBuildAsset("/assets/index-3Lc-fZgU.js")).toBe(true);
+    // A second real example from the same deploy, with the internal hyphen
+    // at a different position within the 8-character hash — confirms the
+    // fix isn't sensitive to exactly where the hyphen falls.
+    expect(isHashedBuildAsset("/assets/AdminApp-B-kkFuIp.js")).toBe(true);
+  });
 });
 
 describe("withImmutableAssetCache", () => {
@@ -75,7 +91,9 @@ describe("worker/index.ts integration — real edge case found during this fix's
           new Response("console.log(1)", { status: 200, headers: { "Content-Type": "text/javascript" } }),
       },
     });
-    const request = new Request("https://codivio.online/assets/index-realHash1.js");
+    // Exactly 8 characters — Vite's real default hash length (see
+    // worker/asset-cache.ts's own doc comment on why this must be exact).
+    const request = new Request("https://codivio.online/assets/index-realHash.js");
     const response = await worker.fetch(request, env);
     expect(response.headers.get("Cache-Control")).toBe("public, max-age=31536000, immutable");
   });
@@ -87,7 +105,10 @@ describe("worker/index.ts integration — real edge case found during this fix's
           new Response("<!doctype html>...", { status: 200, headers: { "Content-Type": "text/html" } }),
       },
     });
-    const request = new Request("https://codivio.online/assets/index-staleHash1.js");
+    // Also exactly 8 characters — this test exists to prove the SPA-
+    // fallback guard still works, not to test the hash-length matching
+    // itself (already covered by the "realHash" case above).
+    const request = new Request("https://codivio.online/assets/index-staleHas.js");
     const response = await worker.fetch(request, env);
     expect(response.headers.get("Cache-Control")).not.toBe("public, max-age=31536000, immutable");
   });

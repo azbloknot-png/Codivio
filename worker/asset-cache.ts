@@ -29,7 +29,31 @@
  *  - `/api/*` and every other dynamic response — out of scope here.
  */
 
-const HASHED_ASSET_PATTERN = /^\/assets\/[^/]+-[A-Za-z0-9_]{6,}\.(?:js|css)$/;
+/**
+ * The hash segment is matched as *exactly* 8 characters (Vite/Rollup's
+ * default content-hash length in this project — confirmed via
+ * `vite.config.ts`, which sets no custom `output.hashCharacters`/length,
+ * and via every real build hash observed in production) immediately before
+ * the extension, rather than "6-or-more word characters after the last
+ * hyphen".
+ *
+ * Real bug this fixes, found via live production verification (Phase 5.2):
+ * Vite's hash alphabet includes "-" itself (its default is a URL-safe
+ * base64-like charset), so a hash can legitimately contain an internal
+ * hyphen — e.g. a real production chunk was named `index-3Lc-fZgU.js`. The
+ * previous pattern looked for "-" followed by 6+ word characters at the
+ * end, which failed here: splitting on the *last* hyphen left only "fZgU"
+ * (4 characters) as the apparent hash, under the 6-character minimum, so
+ * this genuinely hashed file incorrectly fell through to non-immutable
+ * caching. Matching a fixed 8-character window instead (regardless of what
+ * characters, including hyphens, appear inside it) is correct however many
+ * internal hyphens the hash itself happens to contain, and was verified
+ * against every real chunk name observed this session, including another
+ * previously-passing-by-coincidence case (`AdminApp-B-kkFuIp.js`) whose
+ * hash also contains an internal hyphen. If Vite's default hash length
+ * ever changes, this constant must change with it.
+ */
+const HASHED_ASSET_PATTERN = /^\/assets\/[^/]+-[A-Za-z0-9_-]{8}\.(?:js|css)$/;
 
 /** True only for a flat `/assets/<name>-<hash>.(js|css)` path — Vite's own
  * content-hashed build output. Never matches a nested path like
