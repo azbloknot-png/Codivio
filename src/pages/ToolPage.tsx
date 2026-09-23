@@ -32,6 +32,19 @@ const QR_CODE_SCANNER_SLUG = "qr-code-scanner";
 const PdfMergeTool = lazy(() => import("../tools/PdfMergeTool"));
 const PDF_MERGE_SLUG = "pdf-merge";
 
+/**
+ * Phase 5.3 — same isolation strategy as every other lazy tool above: its
+ * own lazy chunk, gated on its own slug, so `pdf-lib` never reaches the
+ * main bundle or a non-PDF tool page. Since both this and PdfMergeTool
+ * import the same src/lib/pdf-engine.ts, Vite/Rollup may (verified in this
+ * phase's own build output, not assumed) automatically split the shared
+ * `pdf-engine`/`pdf-lib` code into its own common chunk, the same way
+ * download-file.ts and analytics.ts were previously split once a second
+ * lazy consumer appeared.
+ */
+const PdfSplitTool = lazy(() => import("../tools/PdfSplitTool"));
+const PDF_SPLIT_SLUG = "pdf-split";
+
 type ToolPageProps = {
   name: string;
   description: string;
@@ -202,7 +215,9 @@ function ToolPage({ name, description, category, slug }: ToolPageProps) {
                 ? "tool-workspace qr-scanner-workspace"
                 : slug === PDF_MERGE_SLUG
                   ? "tool-workspace pdf-merge-workspace"
-                  : "tool-workspace"
+                  : slug === PDF_SPLIT_SLUG
+                    ? "tool-workspace pdf-split-workspace"
+                    : "tool-workspace"
           }
         >
           {slug === QR_CODE_GENERATOR_SLUG ? (
@@ -216,6 +231,10 @@ function ToolPage({ name, description, category, slug }: ToolPageProps) {
           ) : slug === PDF_MERGE_SLUG ? (
             <Suspense fallback={<div className="qr-generator-loading">Loading PDF merge tool…</div>}>
               <PdfMergeTool />
+            </Suspense>
+          ) : slug === PDF_SPLIT_SLUG ? (
+            <Suspense fallback={<div className="qr-generator-loading">Loading PDF split tool…</div>}>
+              <PdfSplitTool />
             </Suspense>
           ) : (
             <div className="tool-workspace-placeholder">

@@ -1,11 +1,14 @@
 import {
   MAX_PDF_FILE_BYTES,
   MAX_PDF_FILES_PER_MERGE,
+  MAX_SPLIT_OUTPUT_FILES,
   MAX_TOTAL_MERGE_BYTES,
   MIN_PDF_FILES_PER_MERGE,
   PDF_MAGIC_BYTES,
   type PdfFileInput,
   type PdfMergeValidationResult,
+  type PdfPageRange,
+  type PdfPageRangesResult,
   type PdfValidationError,
 } from "./types";
 
@@ -91,4 +94,88 @@ export function validatePdfMergeRequest(files: PdfFileInput[]): PdfMergeValidati
     return { ok: false, errors };
   }
   return { ok: true, files };
+}
+
+const PAGE_TOKEN_PATTERN = /^(\d+)(?:-(\d+))?$/;
+
+/**
+ * Parses a comma-separated page-selection string (e.g. "1-3, 5, 8-10") into
+ * real, bounds-checked 1-based page ranges — the same "collect every error
+ * at once" design as validatePdfMergeRequest above. A bare number ("5") is
+ * a single-page range (`{start:5, end:5}`), matching the existing
+ * SEO/content copy's framing exactly ("a single page can be treated as a
+ * page range of one").
+ */
+export function parsePageRanges(input: string, pageCount: number): PdfPageRangesResult {
+  const tokens = input
+    .split(",")
+    .map((token) => token.trim())
+    .filter((token) => token.length > 0);
+
+  if (tokens.length === 0) {
+    return { ok: false, errors: [{ code: "empty_page_selection", message: "Enter at least one page or page range." }] };
+  }
+
+  const errors: PdfValidationError[] = [];
+  const ranges: PdfPageRange[] = [];
+
+  for (const token of tokens) {
+    const match = PAGE_TOKEN_PATTERN.exec(token);
+    if (!match) {
+      errors.push({ code: "invalid_page_range", message: `"${token}" is not a valid page or page range.` });
+      continue;
+    }
+
+    const start = Number(match[1]);
+    const end = match[2] === undefined ? start : Number(match[2]);
+
+    if (start < 1 || end < 1 || start > pageCount || end > pageCount) {
+      errors.push({
+        code: "page_out_of_range",
+        message: `"${token}" is outside this document's real page range (1–${pageCount}).`,
+      });
+      continue;
+    }
+    if (start > end) {
+      errors.push({ code: "invalid_page_range", message: `"${token}" is not a valid range — the start page must come before the end page.` });
+      continue;
+    }
+
+    ranges.push({ start, end });
+  }
+
+  if (ranges.length > MAX_SPLIT_OUTPUT_FILES) {
+    errors.push({
+      code: "too_many_output_files",
+      message: `A maximum of ${MAX_SPLIT_OUTPUT_FILES} output files can be created from one split.`,
+    });
+  }
+
+  if (errors.length > 0) {
+    return { ok: false, errors };
+  }
+  return { ok: true, ranges };
+}
+
+/** Generates one singleton range per page — the "every page separately"
+ * mode is really just this list, reusing the exact same
+ * splitPdfFile()/range-extraction path as a manually-entered range list
+ * (src/lib/pdf-engine.ts), never a second, parallel code path. */
+export function everyPageRanges(pageCount: number): PdfPageRangesResult {
+  if (pageCount > MAX_SPLIT_OUTPUT_FILES) {
+    return {
+      ok: false,
+      errors: [
+        {
+          code: "too_many_output_files",
+          message: `This document has ${pageCount} pages — "every page separately" supports at most ${MAX_SPLIT_OUTPUT_FILES} pages. Use a custom page range instead.`,
+        },
+      ],
+    };
+  }
+  const ranges: PdfPageRange[] = Array.from({ length: pageCount }, (_, index) => ({
+    start: index + 1,
+    end: index + 1,
+  }));
+  return { ok: true, ranges };
 }

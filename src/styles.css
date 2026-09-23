@@ -152,6 +152,32 @@
 .pdf-merge-result .primary-button{width:100%;justify-content:center}
 }
 
+/* Phase 5.3 — PDF Split workspace. Same specificity-safe pattern as the
+   other .tool-workspace.*-workspace rules above: only `display` is
+   overridden. Reuses .pdf-merge-hint/.pdf-merge-error/.pdf-merge-actions/
+   .pdf-merge-result/.pdf-merge-file-icon/.pdf-merge-file-name/
+   .pdf-merge-file-size directly (identical row/hint/error/result shapes —
+   see codivio-ui skill: add to a shared selector rather than a fourth
+   near-identical rule) — only the genuinely new elements below get their
+   own classes. */
+.tool-workspace.pdf-split-workspace{display:block}
+.pdf-split{display:flex;flex-direction:column;gap:16px;text-align:left}
+.pdf-split-upload{display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+.pdf-split-file-input{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.pdf-split-upload-label{cursor:pointer}
+.pdf-split-upload-label:focus-within{outline:2px solid var(--color-primary);outline-offset:2px}
+.pdf-split-page-count{display:flex;align-items:center;gap:8px;margin:0;color:#243b5a;font-size:13px;font-weight:700}
+.pdf-split-page-count svg{color:var(--color-primary);flex-shrink:0}
+.pdf-split-mode-toggle{margin:0}
+.pdf-split-output-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;width:100%}
+.pdf-split-output-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #dbe4ef;border-radius:11px;background:#fff}
+.pdf-split-output-row .primary-button{flex-shrink:0;min-height:36px;padding:0 14px;font-size:13px}
+@media(max-width:650px){
+.pdf-split-output-row{flex-wrap:wrap}
+.pdf-split-output-row .pdf-merge-file-name{flex-basis:100%}
+.pdf-split-output-row .primary-button{width:100%;justify-content:center}
+}
+
 /* Phase 3.13: Tool Page Content Architecture (breadcrumb, content
    blueprint, FAQ, related tools) — reuses the color/radius design tokens
    rather than raw hex, since these are new rules (see codivio-ui skill:

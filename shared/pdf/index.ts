@@ -4,7 +4,21 @@ export {
   MAX_PDF_FILES_PER_MERGE,
   MIN_PDF_FILES_PER_MERGE,
   MAX_TOTAL_MERGE_BYTES,
+  MAX_SPLIT_OUTPUT_FILES,
 } from "./types";
-export type { PdfValidationErrorCode, PdfValidationError, PdfFileInput, PdfMergeValidationResult } from "./types";
+export type {
+  PdfValidationErrorCode,
+  PdfValidationError,
+  PdfFileInput,
+  PdfMergeValidationResult,
+  PdfPageRange,
+  PdfPageRangesResult,
+} from "./types";
 
-export { hasPdfSignature, validatePdfFile, validatePdfMergeRequest } from "./validate";
+export {
+  hasPdfSignature,
+  validatePdfFile,
+  validatePdfMergeRequest,
+  parsePageRanges,
+  everyPageRanges,
+} from "./validate";

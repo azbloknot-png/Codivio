@@ -293,7 +293,9 @@ const tools: Tool[] = [
     description: "Split PDF documents into separate files.",
     category: "PDF Tools",
     icon: <FileText size={22} />,
-    status: "coming-soon",
+    // Phase 5.3 — the second real PDF tool, mirroring pdf-merge's own
+    // Phase 5.2 precedent.
+    status: "live",
     featured: true,
     popular: true,
     pdf: true,

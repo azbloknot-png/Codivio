@@ -34,6 +34,11 @@ import { ROBOTS_INDEX_FOLLOW, ROBOTS_NOINDEX_FOLLOW, type SeoEntity } from "./ty
  * not-yet-authorized pending changes this task was explicitly told not to
  * touch) — adding pdf-merge's sitemap entry is a small, disclosed, deferred
  * follow-up, not an oversight.
+ *
+ * SEO follow-up (Phase 5.3): "pdf-split" shipped real, working PDF-split
+ * functionality — its `robots` entry is the fourth to flip to
+ * `index,follow`. Same disclosed, deferred `public/sitemap.xml` gap as
+ * pdf-merge above — still out of scope for this phase.
  */
 export const TOOL_SEO: Record<string, SeoEntity> = {
   "qr-code-generator": {
@@ -312,7 +317,7 @@ export const TOOL_SEO: Record<string, SeoEntity> = {
 
   "pdf-split": {
     path: "/tools/pdf-split",
-    robots: ROBOTS_NOINDEX_FOLLOW,
+    robots: ROBOTS_INDEX_FOLLOW,
     localized: {
       en: {
         title: "PDF Split – Separate PDF Pages into New Files",

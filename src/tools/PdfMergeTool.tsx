@@ -2,6 +2,7 @@ import { useCallback, useRef, useState, type ChangeEvent } from "react";
 import { AlertTriangle, ArrowDown, ArrowUp, Check, Download, FileText, Trash2, Upload } from "lucide-react";
 import { mergePdfFiles, PdfMergeError, type PdfMergeResult } from "../lib/pdf-engine";
 import { downloadBytesAsFile } from "../lib/download-file";
+import { formatFileSize } from "../lib/format";
 import { trackToolStart, trackToolComplete, trackDownload } from "../lib/tool-analytics";
 import { validatePdfFile, MAX_PDF_FILES_PER_MERGE, MIN_PDF_FILES_PER_MERGE } from "../../shared/pdf";
 import type { PdfFileInput } from "../../shared/pdf";
@@ -28,12 +29,6 @@ interface PdfMergeFileEntry extends PdfFileInput {
 }
 
 const TOOL_SLUG = "pdf-merge";
-
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
 
 function PdfMergeTool() {
   const [files, setFiles] = useState<PdfMergeFileEntry[]>([]);

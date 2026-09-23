@@ -7,11 +7,11 @@
  *
  * Phase 5.1's architecture audit found no Phase 5 operation currently in
  * scope requires Worker/R2 processing — everything here runs entirely
- * client-side. Phase 5.2 scope is PDF Merge only; Split/Compress/PDF-to-Word
- * payload and config shapes are deliberately not modeled here yet — each
- * later sub-phase adds its own types when it actually needs them, the same
- * incremental growth pattern shared/qr/types.ts followed across Phase
- * 4.1/4.3/4.4/4.5.
+ * client-side. Phase 5.2 added Merge; Phase 5.3 adds Split (page-range
+ * extraction). Compress/PDF-to-Word payload and config shapes are
+ * deliberately not modeled here yet — each later sub-phase adds its own
+ * types when it actually needs them, the same incremental growth pattern
+ * shared/qr/types.ts followed across Phase 4.1/4.3/4.4/4.5.
  */
 
 /** The real PDF file-format signature — the first 5 bytes of any valid PDF
@@ -41,6 +41,19 @@ export const MAX_PDF_FILES_PER_MERGE = 20;
 export const MIN_PDF_FILES_PER_MERGE = 2;
 export const MAX_TOTAL_MERGE_BYTES = 150 * 1024 * 1024; // 150 MB combined
 
+/**
+ * Phase 5.3 — a real, documented cap on how many separate output files one
+ * Split operation can produce, whether from explicit ranges or from
+ * "every page separately" (which is really just one implicit range per
+ * page — see shared/pdf/validate.ts#everyPageRanges). Prevents a
+ * pathologically large page count from generating hundreds of pdf-lib
+ * documents and browser downloads in one click, a real, self-inflicted
+ * browser-tab cost with no server involved (Phase 5.1's cost/architecture
+ * decision). Same "conservative default, revisit only with real evidence"
+ * status as the Merge limits above.
+ */
+export const MAX_SPLIT_OUTPUT_FILES = 50;
+
 export type PdfValidationErrorCode =
   | "empty_file"
   | "invalid_pdf_signature"
@@ -48,7 +61,11 @@ export type PdfValidationErrorCode =
   | "too_many_files"
   | "not_enough_files"
   | "total_size_exceeded"
-  | "corrupt_pdf";
+  | "corrupt_pdf"
+  | "empty_page_selection"
+  | "invalid_page_range"
+  | "page_out_of_range"
+  | "too_many_output_files";
 
 export interface PdfValidationError {
   code: PdfValidationErrorCode;
@@ -73,4 +90,16 @@ export interface PdfFileInput {
 
 export type PdfMergeValidationResult =
   | { ok: true; files: PdfFileInput[] }
+  | { ok: false; errors: PdfValidationError[] };
+
+/** A single, 1-based, inclusive page range — `{ start: 3, end: 3 }` for a
+ * single page, matching the existing SEO/content copy's own framing
+ * ("a single page can be treated as a page range of one"). */
+export interface PdfPageRange {
+  start: number;
+  end: number;
+}
+
+export type PdfPageRangesResult =
+  | { ok: true; ranges: PdfPageRange[] }
   | { ok: false; errors: PdfValidationError[] };

@@ -84,15 +84,15 @@ describe("SitemapPage — Coming soon badge for not-yet-shipped tools", () => {
     expect(sitemapPageSource).toContain('<span className="sitemap-status-badge">Coming soon</span>');
   });
 
-  it("the live tools (qr-code-generator, qr-code-scanner, pdf-merge) never get the badge — verified against the real registry", () => {
+  it("the live tools (qr-code-generator, qr-code-scanner, pdf-merge, pdf-split) never get the badge — verified against the real registry", () => {
     const liveCount = [...appSource.matchAll(/status: "live"/g)].length;
     const comingSoonCount = [...appSource.matchAll(/status: "coming-soon"/g)].length;
     // 1 extra "coming-soon" match is the Tool type's own union declaration
     // (`status: "coming-soon" | "live"`), not a real registry entry.
-    // Phase 5.2: pdf-merge flipped from coming-soon to live, joining the 2
-    // QR tools — 3 live, 31 still coming-soon.
-    expect(liveCount).toBe(3);
-    expect(comingSoonCount - 1).toBe(31);
+    // Phase 5.2/5.3: pdf-merge and pdf-split flipped from coming-soon to
+    // live, joining the 2 QR tools — 4 live, 30 still coming-soon.
+    expect(liveCount).toBe(4);
+    expect(comingSoonCount - 1).toBe(30);
   });
 
   it("intro copy no longer implies every listed tool is ready — mentions the Coming soon convention instead", () => {
