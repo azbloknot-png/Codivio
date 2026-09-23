@@ -35,3 +35,21 @@ export function downloadTextAsFile(content: string, filename: string, mimeType: 
     setTimeout(() => URL.revokeObjectURL(url), 0);
   }
 }
+
+/** Downloads arbitrary binary content (e.g. a generated PDF's bytes) as a
+ * file — the exact same Blob/object-URL lifecycle as downloadTextAsFile,
+ * for binary data instead of text (Phase 5.2, the first non-text/non-image
+ * consumer this generic utility's own doc comment anticipated). */
+export function downloadBytesAsFile(bytes: Uint8Array, filename: string, mimeType: string): void {
+  // `Blob`'s type only accepts a Uint8Array backed by a real `ArrayBuffer`
+  // (not the broader `ArrayBufferLike`, which also covers `SharedArrayBuffer`)
+  // — `new Uint8Array(bytes)` copies into a fresh, guaranteed-`ArrayBuffer`-
+  // backed view, satisfying that regardless of what backed the input.
+  const blob = new Blob([new Uint8Array(bytes)], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  try {
+    triggerDownload(url, filename);
+  } finally {
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+  }
+}

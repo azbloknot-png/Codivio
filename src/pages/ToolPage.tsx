@@ -24,6 +24,14 @@ const QR_CODE_GENERATOR_SLUG = "qr-code-generator";
 const QrCodeScannerTool = lazy(() => import("../tools/QrCodeScannerTool"));
 const QR_CODE_SCANNER_SLUG = "qr-code-scanner";
 
+/**
+ * Phase 5.2 — same isolation strategy as the Phase 4.2/4.6 QR tools: its
+ * own lazy chunk, gated on its own slug, so the `pdf-lib` dependency is
+ * only downloaded by a visitor who actually opens this one tool page.
+ */
+const PdfMergeTool = lazy(() => import("../tools/PdfMergeTool"));
+const PDF_MERGE_SLUG = "pdf-merge";
+
 type ToolPageProps = {
   name: string;
   description: string;
@@ -192,7 +200,9 @@ function ToolPage({ name, description, category, slug }: ToolPageProps) {
               ? "tool-workspace qr-generator-workspace"
               : slug === QR_CODE_SCANNER_SLUG
                 ? "tool-workspace qr-scanner-workspace"
-                : "tool-workspace"
+                : slug === PDF_MERGE_SLUG
+                  ? "tool-workspace pdf-merge-workspace"
+                  : "tool-workspace"
           }
         >
           {slug === QR_CODE_GENERATOR_SLUG ? (
@@ -202,6 +212,10 @@ function ToolPage({ name, description, category, slug }: ToolPageProps) {
           ) : slug === QR_CODE_SCANNER_SLUG ? (
             <Suspense fallback={<div className="qr-generator-loading">Loading QR scanner…</div>}>
               <QrCodeScannerTool />
+            </Suspense>
+          ) : slug === PDF_MERGE_SLUG ? (
+            <Suspense fallback={<div className="qr-generator-loading">Loading PDF merge tool…</div>}>
+              <PdfMergeTool />
             </Suspense>
           ) : (
             <div className="tool-workspace-placeholder">

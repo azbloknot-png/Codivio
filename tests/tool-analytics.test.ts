@@ -119,6 +119,16 @@ describe("trackToolOpen / trackToolStart / trackToolComplete / trackDownload —
     expect(calls).toEqual([["event", "download", { tool_slug: "qr-code-generator", format: "svg" }]]);
   });
 
+  it("trackDownload also accepts the 'pdf' format (Phase 5.2 — the first non-QR tool family to use this generic wrapper)", async () => {
+    stubBrowser("/tools/pdf-merge");
+    const configured = await loadConfigured();
+    configured.enableAnalytics();
+    const calls: unknown[][] = [];
+    window.gtag = (...args: unknown[]) => calls.push(args);
+    configured.trackDownload("pdf-merge", "pdf");
+    expect(calls).toEqual([["event", "download", { tool_slug: "pdf-merge", format: "pdf" }]]);
+  });
+
   it("respects /admin exclusion, same as every other trackEvent-based call", async () => {
     stubBrowser("/admin/tools");
     const configured = await loadConfigured();
@@ -165,7 +175,7 @@ describe("real call sites wire tool-lifecycle events to genuine, already-existin
     expect(completeCalls.length).toBe(2); // camera path + upload path, matching trackQrScan's own 2 call sites
   });
 
-  it("no tool_start/tool_complete/download call exists for any of the 32 not-yet-functional tools — only the 2 live QR tools call these", () => {
+  it("no tool_start/tool_complete/download call exists directly in src/App.tsx — every real call site lives in a tool's own component file (QrCode*Tool.tsx, PdfMergeTool.tsx), never the shared registry/routing file", () => {
     const appSource = fs.readFileSync(new URL("../src/App.tsx", import.meta.url), "utf8");
     expect(appSource).not.toContain("trackToolStart");
     expect(appSource).not.toContain("trackToolComplete");

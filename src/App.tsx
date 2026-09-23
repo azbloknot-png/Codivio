@@ -280,7 +280,9 @@ const tools: Tool[] = [
     description: "Combine multiple PDF files into one document.",
     category: "PDF Tools",
     icon: <FileOutput size={22} />,
-    status: "coming-soon",
+    // Phase 5.2 — the first real PDF tool, mirroring the exact
+    // qr-code-generator/qr-code-scanner precedent (Phase 4.1/4.6).
+    status: "live",
     featured: true,
     popular: true,
     pdf: true,

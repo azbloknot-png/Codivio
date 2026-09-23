@@ -84,13 +84,15 @@ describe("SitemapPage — Coming soon badge for not-yet-shipped tools", () => {
     expect(sitemapPageSource).toContain('<span className="sitemap-status-badge">Coming soon</span>');
   });
 
-  it("the live tools (qr-code-generator, qr-code-scanner) never get the badge — verified against the real registry", () => {
+  it("the live tools (qr-code-generator, qr-code-scanner, pdf-merge) never get the badge — verified against the real registry", () => {
     const liveCount = [...appSource.matchAll(/status: "live"/g)].length;
     const comingSoonCount = [...appSource.matchAll(/status: "coming-soon"/g)].length;
     // 1 extra "coming-soon" match is the Tool type's own union declaration
     // (`status: "coming-soon" | "live"`), not a real registry entry.
-    expect(liveCount).toBe(2);
-    expect(comingSoonCount - 1).toBe(32);
+    // Phase 5.2: pdf-merge flipped from coming-soon to live, joining the 2
+    // QR tools — 3 live, 31 still coming-soon.
+    expect(liveCount).toBe(3);
+    expect(comingSoonCount - 1).toBe(31);
   });
 
   it("intro copy no longer implies every listed tool is ready — mentions the Coming soon convention instead", () => {
@@ -121,10 +123,11 @@ describe("PAGE_SEO.sitemap description no longer implies every tool is ready", (
 
 describe("public/sitemap.xml — Phase 3.18 adds /sitemap itself", () => {
   it("lists /sitemap exactly once, with priority 0.5 and changefreq monthly, matching /faq's tier", () => {
-    const matches = [...sitemapXml.matchAll(/<url>\s*<loc>(https:\/\/codivio\.online\/sitemap)<\/loc>\s*<changefreq>([a-z]+)<\/changefreq>\s*<priority>([0-9.]+)<\/priority>\s*<\/url>/g)];
+    const matches = [...sitemapXml.matchAll(/<url>\s*<loc>(https:\/\/codivio\.online\/sitemap)<\/loc>\s*<lastmod>([0-9-]+)<\/lastmod>\s*<changefreq>([a-z]+)<\/changefreq>\s*<priority>([0-9.]+)<\/priority>\s*<\/url>/g)];
     expect(matches.length).toBe(1);
-    const [, loc, changefreq, priority] = matches[0];
+    const [, loc, lastmod, changefreq, priority] = matches[0];
     expect(loc).toBe("https://codivio.online/sitemap");
+    expect(lastmod).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     expect(changefreq).toBe("monthly");
     expect(priority).toBe("0.5");
   });

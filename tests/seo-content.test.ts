@@ -92,11 +92,13 @@ describe("no unsupported functionality claims (Phase 3.4's explicit banned phras
 
 describe("getContentBlueprint combines content + keyword data without broken references", () => {
   it("returns a complete blueprint for a real tool, including reused keyword-architecture fields", () => {
-    const blueprint = getContentBlueprint("pdf-merge", "en");
+    // Phase 5.2: "pdf-merge" shipped real functionality, so its own trust
+    // message is now the LIVE variant — checked in the dedicated test
+    // below, not asserted here. "pdf-split" is used here instead as the
+    // still-coming-soon exemplar for the reused-keyword-data assertions.
+    const blueprint = getContentBlueprint("pdf-split", "en");
     expect(blueprint).not.toBeNull();
-    expect(blueprint?.introduction).toContain("PDF merging");
-    expect(blueprint?.primaryKeyword).toBe("merge pdf files online");
-    expect(blueprint?.relatedToolOpportunity).toEqual(["pdf-split", "pdf-compress"]);
+    expect(blueprint?.introduction).toContain("PDF splitting");
     expect(blueprint?.trustMessage).toBe(SHARED_TRUST_MESSAGE.en);
   });
 
@@ -104,13 +106,13 @@ describe("getContentBlueprint combines content + keyword data without broken ref
     expect(getContentBlueprint("not-a-real-tool", "en")).toBeNull();
   });
 
-  it("Phase 3.18: uses the live trust/status messages for the 2 shipped tools, keyed off TOOL_SEO's real robots.index signal, and the coming-soon ones for everything else", () => {
-    for (const slug of ["qr-code-generator", "qr-code-scanner"]) {
+  it("Phase 3.18/5.2: uses the live trust/status messages for the 3 shipped tools, keyed off TOOL_SEO's real robots.index signal, and the coming-soon ones for everything else", () => {
+    for (const slug of ["qr-code-generator", "qr-code-scanner", "pdf-merge"]) {
       const blueprint = getContentBlueprint(slug, "en");
       expect(blueprint?.trustMessage, slug).toBe(SHARED_TRUST_MESSAGE_LIVE.en);
       expect(blueprint?.statusNote, slug).toBe(TOOL_LIVE_NOTE.en);
     }
-    const placeholder = getContentBlueprint("pdf-merge", "en");
+    const placeholder = getContentBlueprint("pdf-split", "en");
     expect(placeholder?.trustMessage).toBe(SHARED_TRUST_MESSAGE.en);
     expect(placeholder?.statusNote).toBe(TOOL_STATUS_NOTE.en);
   });

@@ -26,6 +26,14 @@ import { ROBOTS_INDEX_FOLLOW, ROBOTS_NOINDEX_FOLLOW, type SeoEntity } from "./ty
  * as this comment always said would happen once a tool ships. Every other
  * entry below is still a placeholder and stays `noindex,follow` until it,
  * too, ships real functionality.
+ *
+ * SEO follow-up (Phase 5.2): "pdf-merge" shipped real, working PDF-merge
+ * functionality — its `robots` entry is the third to flip to
+ * `index,follow`. Note: `public/sitemap.xml` was NOT updated to add this
+ * URL as part of Phase 5.2 (that file carries other, separately-scoped,
+ * not-yet-authorized pending changes this task was explicitly told not to
+ * touch) — adding pdf-merge's sitemap entry is a small, disclosed, deferred
+ * follow-up, not an oversight.
  */
 export const TOOL_SEO: Record<string, SeoEntity> = {
   "qr-code-generator": {
@@ -285,7 +293,7 @@ export const TOOL_SEO: Record<string, SeoEntity> = {
 
   "pdf-merge": {
     path: "/tools/pdf-merge",
-    robots: ROBOTS_NOINDEX_FOLLOW,
+    robots: ROBOTS_INDEX_FOLLOW,
     localized: {
       en: {
         title: "PDF Merge – Combine Multiple PDFs into One",

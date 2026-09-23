@@ -285,9 +285,14 @@ describe("homepage shows exactly the 12 specified main tools (Phase 2.13)", () =
     for (const slug of expectedSlugs) {
       const toolBlockStart = appSource.indexOf(`slug: "${slug}"`);
       expect(toolBlockStart).toBeGreaterThan(-1);
-      // featured:true is declared a few lines after slug within the same
-      // object literal for every one of these 12 real registry entries.
-      const toolBlock = appSource.slice(toolBlockStart, toolBlockStart + 300);
+      // featured:true is declared somewhere later within the same object
+      // literal for every one of these 12 real registry entries. Sliced to
+      // the entry's real closing "  }," rather than a fixed character
+      // count — a fixed-width slice previously broke here the moment
+      // pdf-merge's entry grew a 2-line comment (Phase 5.2).
+      const blockEnd = appSource.indexOf("\n  },", toolBlockStart);
+      expect(blockEnd).toBeGreaterThan(toolBlockStart);
+      const toolBlock = appSource.slice(toolBlockStart, blockEnd);
       expect(toolBlock).toContain("featured: true");
     }
   });

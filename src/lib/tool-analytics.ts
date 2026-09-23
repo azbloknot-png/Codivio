@@ -38,10 +38,15 @@ export function trackToolComplete(toolSlug: string): void {
   trackEvent("tool_complete", { tool_slug: toolSlug });
 }
 
-/** `format` is `QrOutputFormat` (imported from the one existing download-
- * capable tool's engine) rather than a bare `string` — the same
- * type-level-safety precedent qr-analytics.ts sets for payload kinds,
- * applied here to keep this parameter a closed, non-arbitrary value too. */
-export function trackDownload(toolSlug: string, format: QrOutputFormat): void {
+/** Every known download format across every tool family that actually has
+ * one, grown incrementally exactly like shared/qr/types.ts's own error-code
+ * union — "pdf" (Phase 5.2, PDF Merge) is the first non-QR value, surfacing
+ * a real gap: this parameter was previously just `QrOutputFormat` even
+ * though this file's own doc comment says it's tool-family-agnostic. Kept
+ * as a closed union (not a bare `string`) to preserve the same type-level-
+ * safety precedent qr-analytics.ts sets for payload kinds. */
+export type ToolDownloadFormat = QrOutputFormat | "pdf";
+
+export function trackDownload(toolSlug: string, format: ToolDownloadFormat): void {
   trackEvent("download", { tool_slug: toolSlug, format });
 }
