@@ -58,6 +58,16 @@ describe("isHashedBuildAsset", () => {
     // fix isn't sensitive to exactly where the hyphen falls.
     expect(isHashedBuildAsset("/assets/AdminApp-B-kkFuIp.js")).toBe(true);
   });
+
+  it("matches a real .mjs asset the same way as .js/.css (Phase 5.5 follow-up fix, found in production)", () => {
+    // Phase 5.5's PDF-to-Word tool was this codebase's first build output to
+    // ever include a .mjs asset (pdfjs-dist's worker script, copied by
+    // Vite's `?url` import with its original extension preserved). The
+    // pattern previously only covered .js/.css, so this real, correctly
+    // 8-character-hashed file incorrectly fell through to non-immutable
+    // caching in production — the exact real filename from that deploy.
+    expect(isHashedBuildAsset("/assets/pdf.worker.min-BmVo14Nb.mjs")).toBe(true);
+  });
 });
 
 describe("withImmutableAssetCache", () => {

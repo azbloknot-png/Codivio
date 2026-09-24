@@ -52,11 +52,21 @@
  * previously-passing-by-coincidence case (`AdminApp-B-kkFuIp.js`) whose
  * hash also contains an internal hyphen. If Vite's default hash length
  * ever changes, this constant must change with it.
+ *
+ * `.mjs` extension added (Phase 5.5 follow-up fix): Phase 5.5's PDF-to-Word
+ * tool was this codebase's first build output to ever include a `.mjs`
+ * asset — pdfjs-dist's worker script, copied by Vite's `?url` import with
+ * its original extension preserved (e.g. `pdf.worker.min-BmVo14Nb.mjs`).
+ * Found via live production verification: this real, correctly-hashed file
+ * fell through to non-immutable caching because the pattern only ever
+ * covered `.js`/`.css`. `.mjs` is exactly as content-hashed and safe to
+ * cache forever as `.js` — same flat `/assets/` layout, same Vite-generated
+ * hash — so it belongs in the same alternation, not a separate rule.
  */
-const HASHED_ASSET_PATTERN = /^\/assets\/[^/]+-[A-Za-z0-9_-]{8}\.(?:js|css)$/;
+const HASHED_ASSET_PATTERN = /^\/assets\/[^/]+-[A-Za-z0-9_-]{8}\.(?:js|mjs|css)$/;
 
-/** True only for a flat `/assets/<name>-<hash>.(js|css)` path — Vite's own
- * content-hashed build output. Never matches a nested path like
+/** True only for a flat `/assets/<name>-<hash>.(js|mjs|css)` path — Vite's
+ * own content-hashed build output. Never matches a nested path like
  * `/assets/branding/codivio-logo.png` (no hash, one directory deeper). */
 export function isHashedBuildAsset(pathname: string): boolean {
   return HASHED_ASSET_PATTERN.test(pathname);
