@@ -65,6 +65,18 @@ export const MAX_SPLIT_OUTPUT_FILES = 50;
  */
 export const DEFAULT_COMPRESS_JPEG_QUALITY = 0.7;
 
+/**
+ * Phase 5.5 — a real, documented, conservative threshold on total extracted
+ * characters (across the whole document) below which a PDF is treated as
+ * having no meaningful extractable text — i.e., a scanned/image-only PDF.
+ * Not benchmarked against a large real-world corpus (no browser available in
+ * this environment); chosen to be comfortably above a blank/near-blank page's
+ * incidental extracted whitespace while staying low enough not to falsely
+ * reject a genuinely short but real text document. Revisit only with real
+ * evidence, same status as every other conservative default in this file.
+ */
+export const MIN_EXTRACTABLE_TEXT_CHARACTERS = 20;
+
 export type PdfValidationErrorCode =
   | "empty_file"
   | "invalid_pdf_signature"
@@ -76,7 +88,9 @@ export type PdfValidationErrorCode =
   | "empty_page_selection"
   | "invalid_page_range"
   | "page_out_of_range"
-  | "too_many_output_files";
+  | "too_many_output_files"
+  | "encrypted_pdf"
+  | "no_extractable_text";
 
 export interface PdfValidationError {
   code: PdfValidationErrorCode;

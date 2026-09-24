@@ -55,6 +55,18 @@ const PDF_SPLIT_SLUG = "pdf-split";
 const PdfCompressTool = lazy(() => import("../tools/PdfCompressTool"));
 const PDF_COMPRESS_SLUG = "pdf-compress";
 
+/**
+ * Phase 5.5 — same isolation strategy as every other lazy tool above, but
+ * with a deliberately separate underlying engine: it imports
+ * src/lib/pdf-to-word-engine.ts (pdfjs-dist + docx), never
+ * src/lib/pdf-engine.ts (pdf-lib) — see that engine file's own header
+ * comment. This keeps the much heavier pdfjs-dist/docx payload (measured in
+ * the Phase 5.5 implementation report) fully isolated to this one tool
+ * page, never reaching Merge/Split/Compress or the main bundle.
+ */
+const PdfToWordTool = lazy(() => import("../tools/PdfToWordTool"));
+const PDF_TO_WORD_SLUG = "pdf-to-word";
+
 type ToolPageProps = {
   name: string;
   description: string;
@@ -229,7 +241,9 @@ function ToolPage({ name, description, category, slug }: ToolPageProps) {
                     ? "tool-workspace pdf-split-workspace"
                     : slug === PDF_COMPRESS_SLUG
                       ? "tool-workspace pdf-compress-workspace"
-                      : "tool-workspace"
+                      : slug === PDF_TO_WORD_SLUG
+                        ? "tool-workspace pdf-to-word-workspace"
+                        : "tool-workspace"
           }
         >
           {slug === QR_CODE_GENERATOR_SLUG ? (
@@ -251,6 +265,10 @@ function ToolPage({ name, description, category, slug }: ToolPageProps) {
           ) : slug === PDF_COMPRESS_SLUG ? (
             <Suspense fallback={<div className="qr-generator-loading">Loading PDF compress tool…</div>}>
               <PdfCompressTool />
+            </Suspense>
+          ) : slug === PDF_TO_WORD_SLUG ? (
+            <Suspense fallback={<div className="qr-generator-loading">Loading PDF to Word tool…</div>}>
+              <PdfToWordTool />
             </Suspense>
           ) : (
             <div className="tool-workspace-placeholder">

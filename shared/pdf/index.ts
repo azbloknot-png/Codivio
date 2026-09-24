@@ -6,6 +6,7 @@ export {
   MAX_TOTAL_MERGE_BYTES,
   MAX_SPLIT_OUTPUT_FILES,
   DEFAULT_COMPRESS_JPEG_QUALITY,
+  MIN_EXTRACTABLE_TEXT_CHARACTERS,
 } from "./types";
 export type {
   PdfValidationErrorCode,

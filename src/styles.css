@@ -187,6 +187,15 @@
 .tool-workspace.pdf-compress-workspace{display:block}
 .pdf-compress{display:flex;flex-direction:column;gap:16px;text-align:left}
 
+/* Phase 5.5 — PDF to Word workspace. Identical shape to Compress's own
+   workspace (single file input, single action button, one result block) —
+   reuses .pdf-split-upload/.pdf-split-file-input/.pdf-split-upload-label/
+   .pdf-split-page-count/.pdf-merge-hint/.pdf-merge-error/.pdf-merge-actions/
+   .pdf-merge-result/.pdf-merge-result-label directly; only the top-level
+   flex wrapper is genuinely new. */
+.tool-workspace.pdf-to-word-workspace{display:block}
+.pdf-to-word{display:flex;flex-direction:column;gap:16px;text-align:left}
+
 /* Phase 3.13: Tool Page Content Architecture (breadcrumb, content
    blueprint, FAQ, related tools) — reuses the color/radius design tokens
    rather than raw hex, since these are new rules (see codivio-ui skill:

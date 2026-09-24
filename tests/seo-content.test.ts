@@ -108,7 +108,7 @@ describe("getContentBlueprint combines content + keyword data without broken ref
   });
 
   it("Phase 3.18/5.2/5.3/5.4: uses the live trust/status messages for the 5 shipped tools, keyed off TOOL_SEO's real robots.index signal, and the coming-soon ones for everything else", () => {
-    for (const slug of ["qr-code-generator", "qr-code-scanner", "pdf-merge", "pdf-split", "pdf-compress"]) {
+    for (const slug of ["qr-code-generator", "qr-code-scanner", "pdf-merge", "pdf-split", "pdf-compress", "pdf-to-word"]) {
       const blueprint = getContentBlueprint(slug, "en");
       expect(blueprint?.trustMessage, slug).toBe(SHARED_TRUST_MESSAGE_LIVE.en);
       expect(blueprint?.statusNote, slug).toBe(TOOL_LIVE_NOTE.en);

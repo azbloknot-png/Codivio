@@ -39,7 +39,7 @@ describe("AI content structure covers the real 34-tool / 4-category registry", (
     // (Phase 5.3), and pdf-compress (Phase 5.4) shipped real functionality —
     // their AI profile status is the deliberate exception, checked
     // separately below.
-    const liveSlugs = new Set(["qr-code-generator", "qr-code-scanner", "pdf-merge", "pdf-split", "pdf-compress"]);
+    const liveSlugs = new Set(["qr-code-generator", "qr-code-scanner", "pdf-merge", "pdf-split", "pdf-compress", "pdf-to-word"]);
     for (const slug of slugs) {
       for (const lang of LANGUAGES) {
         const profile = getAiToolProfile(slug, lang);
@@ -104,16 +104,17 @@ describe("deterministic answer builders work in AZ/TR/EN and never fabricate", (
   });
 
   it("answerWhatIsTool reports the real status honestly — 'in development' for a placeholder tool, 'live' for a shipped one", () => {
-    // Phase 5.2/5.3/5.4: pdf-merge/pdf-split/pdf-compress shipped real
-    // functionality, so they moved from the "placeholder" example to the
-    // "live" checks below; pdf-to-jpg (still a placeholder) takes their
-    // place as the "in development" exemplar.
+    // Phase 5.2/5.3/5.4/5.5: pdf-merge/pdf-split/pdf-compress/pdf-to-word
+    // shipped real functionality, so they moved from the "placeholder"
+    // example to the "live" checks below; pdf-to-jpg (still a placeholder)
+    // takes their place as the "in development" exemplar.
     expect(answerWhatIsTool("pdf-to-jpg", "en")).toContain("Status: in development, not yet processing files.");
     expect(answerWhatIsTool("qr-code-generator", "en")).toContain("Status: live.");
     expect(answerWhatIsTool("qr-code-scanner", "en")).toContain("Status: live.");
     expect(answerWhatIsTool("pdf-merge", "en")).toContain("Status: live.");
     expect(answerWhatIsTool("pdf-split", "en")).toContain("Status: live.");
     expect(answerWhatIsTool("pdf-compress", "en")).toContain("Status: live.");
+    expect(answerWhatIsTool("pdf-to-word", "en")).toContain("Status: live.");
   });
 });
 

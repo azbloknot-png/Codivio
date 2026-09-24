@@ -47,6 +47,15 @@ import { ROBOTS_INDEX_FOLLOW, ROBOTS_NOINDEX_FOLLOW, type SeoEntity } from "./ty
  * pdf-merge/pdf-split above — still out of scope for this phase. Its content
  * below is deliberately honest about variable results: no fixed compression
  * percentage is ever promised.
+ *
+ * SEO follow-up (Phase 5.5): "pdf-to-word" shipped real text extraction into
+ * a valid .docx (pdfjs-dist + docx) — its `robots` entry is the sixth to
+ * flip to `index,follow`. Same disclosed, deferred `public/sitemap.xml` gap
+ * as the tools above. Its content is deliberately honest about scope: this
+ * is real text extraction into an editable document, explicitly NOT a
+ * full-fidelity layout/table/image-preserving converter, and does not
+ * support scanned/image-only PDFs or OCR — see
+ * src/lib/pdf-to-word-engine.ts's own header comment for the approved scope.
  */
 export const TOOL_SEO: Record<string, SeoEntity> = {
   "qr-code-generator": {
@@ -401,19 +410,19 @@ export const TOOL_SEO: Record<string, SeoEntity> = {
 
   "pdf-to-word": {
     path: "/tools/pdf-to-word",
-    robots: ROBOTS_NOINDEX_FOLLOW,
+    robots: ROBOTS_INDEX_FOLLOW,
     localized: {
       en: {
-        title: "PDF to Word Converter – Convert PDF into Editable Text",
-        description: "Convert a PDF document into an editable Word file so you can update the text without retyping it.",
+        title: "PDF to Word – Extract Text into an Editable Document",
+        description: "Extract text from a PDF into an editable Word document, so you can update it without retyping. Does not preserve exact layout, tables, or images.",
       },
       az: {
-        title: "PDF-dən Word-ə Çevirici – Redaktə Olunan Mətnə Çevirin",
-        description: "PDF sənədini redaktə edilə bilən Word faylına çevirin ki, mətni yenidən yazmadan dəyişə biləsiniz.",
+        title: "PDF-dən Word-ə – Mətni Redaktə Olunan Sənədə Çıxarın",
+        description: "PDF-dən mətni redaktə edilə bilən Word sənədinə çıxarın ki, yenidən yazmadan dəyişə biləsiniz. Dəqiq düzülüş, cədvəl və ya şəkilləri saxlamır.",
       },
       tr: {
-        title: "PDF'den Word'e Dönüştürücü – Metne Çevirin",
-        description: "Bir PDF belgesini düzenlenebilir bir Word dosyasına dönüştürerek metni yeniden yazmadan güncelleyin.",
+        title: "PDF'den Word'e – Metni Düzenlenebilir Belgeye Çıkarın",
+        description: "Bir PDF'den metni, yeniden yazmadan düzenleyebileceğiniz bir Word belgesine çıkarın. Tam düzeni, tabloları veya görselleri korumaz.",
       },
     },
   },

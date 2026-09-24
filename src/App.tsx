@@ -334,10 +334,13 @@ const tools: Tool[] = [
   {
     name: "PDF to Word",
     slug: "pdf-to-word",
-    description: "Convert PDF documents into editable Word files.",
+    description: "Extract text from a PDF into an editable Word document.",
     category: "PDF Tools",
     icon: <FileText size={22} />,
-    status: "coming-soon",
+    // Phase 5.5 — the fourth real PDF tool. Honest scope: real text
+    // extraction into a valid .docx, not full-fidelity layout/table/image
+    // conversion — see src/lib/pdf-to-word-engine.ts's own header comment.
+    status: "live",
     featured: true,
     popular: true,
     pdf: true,
