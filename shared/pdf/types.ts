@@ -54,6 +54,17 @@ export const MAX_TOTAL_MERGE_BYTES = 150 * 1024 * 1024; // 150 MB combined
  */
 export const MAX_SPLIT_OUTPUT_FILES = 50;
 
+/**
+ * Phase 5.4 — the JPEG re-encode quality used by Compress's image pass
+ * (0-1, matching the Canvas `convertToBlob`/`toBlob` quality parameter's own
+ * scale). A conservative, documented middle-ground value, not a benchmarked
+ * "best" number — Phase 5.4's own feasibility audit found no browser
+ * available in this environment to empirically tune it against real
+ * scanned/photo PDFs. Same "conservative default, revisit only with real
+ * evidence" status as the limits above.
+ */
+export const DEFAULT_COMPRESS_JPEG_QUALITY = 0.7;
+
 export type PdfValidationErrorCode =
   | "empty_file"
   | "invalid_pdf_signature"

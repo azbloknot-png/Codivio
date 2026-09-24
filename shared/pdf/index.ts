@@ -5,6 +5,7 @@ export {
   MIN_PDF_FILES_PER_MERGE,
   MAX_TOTAL_MERGE_BYTES,
   MAX_SPLIT_OUTPUT_FILES,
+  DEFAULT_COMPRESS_JPEG_QUALITY,
 } from "./types";
 export type {
   PdfValidationErrorCode,

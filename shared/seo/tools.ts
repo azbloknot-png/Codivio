@@ -39,6 +39,14 @@ import { ROBOTS_INDEX_FOLLOW, ROBOTS_NOINDEX_FOLLOW, type SeoEntity } from "./ty
  * functionality — its `robots` entry is the fourth to flip to
  * `index,follow`. Same disclosed, deferred `public/sitemap.xml` gap as
  * pdf-merge above — still out of scope for this phase.
+ *
+ * SEO follow-up (Phase 5.4): "pdf-compress" shipped real PDF compression
+ * (metadata stripping + structural resave, plus narrowly-scoped embedded
+ * JPEG recompression) — its `robots` entry is the fifth to flip to
+ * `index,follow`. Same disclosed, deferred `public/sitemap.xml` gap as
+ * pdf-merge/pdf-split above — still out of scope for this phase. Its content
+ * below is deliberately honest about variable results: no fixed compression
+ * percentage is ever promised.
  */
 export const TOOL_SEO: Record<string, SeoEntity> = {
   "qr-code-generator": {
@@ -336,7 +344,7 @@ export const TOOL_SEO: Record<string, SeoEntity> = {
 
   "pdf-compress": {
     path: "/tools/pdf-compress",
-    robots: ROBOTS_NOINDEX_FOLLOW,
+    robots: ROBOTS_INDEX_FOLLOW,
     localized: {
       en: {
         title: "PDF Compressor – Reduce PDF File Size Online",

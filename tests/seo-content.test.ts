@@ -92,14 +92,14 @@ describe("no unsupported functionality claims (Phase 3.4's explicit banned phras
 
 describe("getContentBlueprint combines content + keyword data without broken references", () => {
   it("returns a complete blueprint for a real tool, including reused keyword-architecture fields", () => {
-    // Phase 5.2/5.3: "pdf-merge"/"pdf-split" shipped real functionality, so
-    // their own trust messages are now the LIVE variant — checked in the
-    // dedicated test below, not asserted here. "pdf-compress" is used here
-    // instead as the still-coming-soon exemplar for the reused-keyword-data
-    // assertions.
-    const blueprint = getContentBlueprint("pdf-compress", "en");
+    // Phase 5.2/5.3/5.4: "pdf-merge"/"pdf-split"/"pdf-compress" shipped real
+    // functionality, so their own trust messages are now the LIVE variant —
+    // checked in the dedicated test below, not asserted here. "pdf-to-jpg" is
+    // used here instead as the still-coming-soon exemplar for the
+    // reused-keyword-data assertions.
+    const blueprint = getContentBlueprint("pdf-to-jpg", "en");
     expect(blueprint).not.toBeNull();
-    expect(blueprint?.introduction).toContain("PDF compression");
+    expect(blueprint?.introduction).toContain("JPG");
     expect(blueprint?.trustMessage).toBe(SHARED_TRUST_MESSAGE.en);
   });
 
@@ -107,13 +107,13 @@ describe("getContentBlueprint combines content + keyword data without broken ref
     expect(getContentBlueprint("not-a-real-tool", "en")).toBeNull();
   });
 
-  it("Phase 3.18/5.2/5.3: uses the live trust/status messages for the 4 shipped tools, keyed off TOOL_SEO's real robots.index signal, and the coming-soon ones for everything else", () => {
-    for (const slug of ["qr-code-generator", "qr-code-scanner", "pdf-merge", "pdf-split"]) {
+  it("Phase 3.18/5.2/5.3/5.4: uses the live trust/status messages for the 5 shipped tools, keyed off TOOL_SEO's real robots.index signal, and the coming-soon ones for everything else", () => {
+    for (const slug of ["qr-code-generator", "qr-code-scanner", "pdf-merge", "pdf-split", "pdf-compress"]) {
       const blueprint = getContentBlueprint(slug, "en");
       expect(blueprint?.trustMessage, slug).toBe(SHARED_TRUST_MESSAGE_LIVE.en);
       expect(blueprint?.statusNote, slug).toBe(TOOL_LIVE_NOTE.en);
     }
-    const placeholder = getContentBlueprint("pdf-compress", "en");
+    const placeholder = getContentBlueprint("pdf-to-jpg", "en");
     expect(placeholder?.trustMessage).toBe(SHARED_TRUST_MESSAGE.en);
     expect(placeholder?.statusNote).toBe(TOOL_STATUS_NOTE.en);
   });

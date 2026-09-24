@@ -178,6 +178,15 @@
 .pdf-split-output-row .primary-button{width:100%;justify-content:center}
 }
 
+/* Phase 5.4 — PDF Compress workspace. Reuses .pdf-split-upload/
+   .pdf-split-file-input/.pdf-split-upload-label/.pdf-split-page-count
+   (identical file-select/size-display shape as Split) and
+   .pdf-merge-hint/.pdf-merge-error/.pdf-merge-actions/.pdf-merge-result/
+   .pdf-merge-result-label directly — only the top-level flex wrapper is
+   genuinely new. */
+.tool-workspace.pdf-compress-workspace{display:block}
+.pdf-compress{display:flex;flex-direction:column;gap:16px;text-align:left}
+
 /* Phase 3.13: Tool Page Content Architecture (breadcrumb, content
    blueprint, FAQ, related tools) — reuses the color/radius design tokens
    rather than raw hex, since these are new rules (see codivio-ui skill:

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PDFDocument } from "pdf-lib";
+import { PDFDocument, PDFName, PDFRawStream } from "pdf-lib";
 import {
   MAX_PDF_FILE_BYTES,
   MAX_PDF_FILES_PER_MERGE,
@@ -12,7 +12,15 @@ import {
   validatePdfMergeRequest,
   type PdfFileInput,
 } from "../shared/pdf";
-import { mergePdfFiles, PdfMergeError, loadPdfPageCount, splitPdfFile, PdfSplitError } from "../src/lib/pdf-engine";
+import {
+  mergePdfFiles,
+  PdfMergeError,
+  loadPdfPageCount,
+  splitPdfFile,
+  PdfSplitError,
+  compressPdfFile,
+  PdfCompressError,
+} from "../src/lib/pdf-engine";
 
 /** Builds a real, valid, minimal PDF via pdf-lib itself (not hand-crafted
  * bytes) — the same "use the real library to produce real fixtures" idea
@@ -28,6 +36,81 @@ async function makeTestPdf(pageCount: number): Promise<Uint8Array> {
 async function makeFile(name: string, pageCount: number): Promise<PdfFileInput> {
   const bytes = await makeTestPdf(pageCount);
   return { name, size: bytes.length, bytes };
+}
+
+/**
+ * Builds a real, valid PDF (via pdf-lib's own low-level `context` API — the
+ * same public API Phase 5.4's compressPdfFile itself uses) containing one
+ * indirect Image XObject with the given dict properties. The actual image
+ * "content" bytes are arbitrary placeholder bytes, never a real decodable
+ * JPEG — irrelevant here, since compressPdfFile's `isEligibleForRecompression`
+ * check only ever inspects the PDF *dictionary* (Subtype/Filter/ColorSpace/
+ * SMask/Decode/BitsPerComponent), and the actual re-encode step is always a
+ * test-injected fake in this file (see reencodeJpegWithCanvas's own doc
+ * comment in src/lib/pdf-engine.ts for why: createImageBitmap/OffscreenCanvas
+ * do not exist under this project's Node-based Vitest environment).
+ */
+async function makeTestPdfWithImage(options: {
+  filter?: string | string[];
+  colorSpace?: string;
+  bitsPerComponent?: number;
+  withSMask?: boolean;
+  withDecode?: boolean;
+  contentBytes?: Uint8Array;
+  useObjectStreams?: boolean;
+}): Promise<{ file: PdfFileInput; imageBytes: Uint8Array }> {
+  const doc = await PDFDocument.create();
+  doc.addPage([200, 200]);
+
+  const imageBytes = options.contentBytes ?? new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]);
+  const dict: Record<string, unknown> = {
+    Type: "XObject",
+    Subtype: "Image",
+    Width: 10,
+    Height: 10,
+    BitsPerComponent: options.bitsPerComponent ?? 8,
+    ColorSpace: options.colorSpace ?? "DeviceRGB",
+    Filter: options.filter ?? "DCTDecode",
+  };
+  if (options.withDecode) dict.Decode = [0, 1, 0, 1, 0, 1];
+  if (options.withSMask) {
+    const smaskStream = doc.context.stream(new Uint8Array([0, 0]), {
+      Type: "XObject",
+      Subtype: "Image",
+      Width: 10,
+      Height: 10,
+      BitsPerComponent: 8,
+      ColorSpace: "DeviceGray",
+      Filter: "FlateDecode",
+    });
+    dict.SMask = doc.context.register(smaskStream);
+  }
+
+  // `dict`'s exact shape matches pdf-lib's internal (unexported) LiteralObject
+  // type structurally; the cast is only needed because that type isn't part
+  // of the package's public type surface.
+  const imageStream = doc.context.stream(imageBytes, dict as Parameters<typeof doc.context.stream>[1]);
+  doc.context.register(imageStream);
+
+  const bytes = await doc.save({ useObjectStreams: options.useObjectStreams ?? true });
+  return { file: { name: "with-image.pdf", size: bytes.length, bytes }, imageBytes };
+}
+
+/** Finds the single non-SMask Image XObject in a (re)loaded document and
+ * returns its raw stored content bytes — used to prove an image was
+ * genuinely left untouched (or genuinely replaced) after compressPdfFile
+ * runs. Uses pdf-lib's real, public PDFRawStream/PDFDict/PDFName API — the
+ * same one src/lib/pdf-engine.ts itself uses. */
+async function getSoleImageContents(bytes: Uint8Array): Promise<Uint8Array> {
+  const doc = await PDFDocument.load(bytes);
+  for (const [, obj] of doc.context.enumerateIndirectObjects()) {
+    if (!(obj instanceof PDFRawStream)) continue;
+    const subtype = obj.dict.lookup(PDFName.of("Subtype"));
+    if (!(subtype instanceof PDFName) || subtype.asString() !== "/Image") continue;
+    if (obj.dict.has(PDFName.of("SMask"))) continue;
+    return obj.getContents();
+  }
+  throw new Error("No non-SMask Image XObject found in the given PDF bytes");
 }
 
 describe("hasPdfSignature", () => {
@@ -298,5 +381,143 @@ describe("splitPdfFile", () => {
   it("rejects invalid file input before attempting any extraction", async () => {
     const file: PdfFileInput = { name: "empty.pdf", size: 0, bytes: new Uint8Array(0) };
     await expect(splitPdfFile(file, [{ start: 1, end: 1 }])).rejects.toBeInstanceOf(PdfSplitError);
+  });
+});
+
+describe("compressPdfFile", () => {
+  it("recompresses an eligible DCTDecode/DeviceRGB image via the injected recompressor, replacing its stored bytes", async () => {
+    const { file } = await makeTestPdfWithImage({});
+    const smallerBytes = new Uint8Array([9, 9, 9]);
+    const result = await compressPdfFile(file, { recompressJpeg: async () => smallerBytes });
+
+    expect(result.imagesRecompressed).toBe(1);
+    expect(result.imagesSkipped).toBe(0);
+    // Proves the real, highest-risk part actually happened: the output PDF
+    // is reloadable and its image object's bytes are genuinely the
+    // recompressor's output, not the original placeholder bytes.
+    const finalImageBytes = await getSoleImageContents(result.bytes);
+    expect(Array.from(finalImageBytes)).toEqual(Array.from(smallerBytes));
+  });
+
+  it("never returns a result larger than the original — running compress again on an already-compressed file finds nothing further to shrink", async () => {
+    // A freshly-created pdf-lib document is NOT metadata-free: pdf-lib's own
+    // PDFDocument constructor unconditionally stamps a real, non-empty
+    // Producer string (and a ModDate) on every load/create — verified by
+    // reading node_modules/pdf-lib/cjs/api/PDFDocument.js's own
+    // `updateInfoDict()` directly, not assumed. So a *first* compress pass
+    // on any pdf-lib-authored fixture genuinely has real metadata to strip
+    // and will typically shrink a little, even with zero images. The
+    // reliable, real "nothing left to shrink" case is therefore a *second*
+    // compress pass on an already-compressed file: its metadata fields are
+    // already empty, so the loader's auto-stamp gets cleared right back to
+    // empty again, netting no further reduction.
+    const file = await makeFile("original.pdf", 1);
+    const firstPass = await compressPdfFile(file);
+    const secondFile: PdfFileInput = { name: "already-compressed.pdf", size: firstPass.outputSize, bytes: firstPass.bytes };
+    const secondPass = await compressPdfFile(secondFile);
+
+    expect(secondPass.reduced).toBe(false);
+    expect(secondPass.outputSize).toBe(secondPass.originalSize);
+    expect(Array.from(secondPass.bytes)).toEqual(Array.from(secondFile.bytes));
+  });
+
+  it("genuinely shrinks a classic-cross-reference-table PDF by upgrading it to a compressed xref stream (Phase 5.4's real, verified Pass A benefit)", async () => {
+    const { file } = await makeTestPdfWithImage({ useObjectStreams: false });
+    const result = await compressPdfFile(file, { recompressJpeg: async (bytes) => bytes });
+    expect(result.reduced).toBe(true);
+    expect(result.outputSize).toBeLessThan(result.originalSize);
+  });
+
+  it("leaves a FlateDecode-filtered image byte-for-byte untouched (unsupported filter, never silently attempted)", async () => {
+    const { file, imageBytes } = await makeTestPdfWithImage({ filter: "FlateDecode" });
+    const result = await compressPdfFile(file, {
+      recompressJpeg: async () => {
+        throw new Error("must never be called for a non-DCTDecode image");
+      },
+    });
+    expect(result.imagesRecompressed).toBe(0);
+    const finalImageBytes = await getSoleImageContents(result.bytes);
+    expect(Array.from(finalImageBytes)).toEqual(Array.from(imageBytes));
+  });
+
+  it("leaves a soft-masked (SMask) DCTDecode image untouched, even though its filter/colorspace would otherwise qualify", async () => {
+    const { file, imageBytes } = await makeTestPdfWithImage({ withSMask: true });
+    const result = await compressPdfFile(file, {
+      recompressJpeg: async () => {
+        throw new Error("must never be called for an SMask image");
+      },
+    });
+    expect(result.imagesRecompressed).toBe(0);
+  });
+
+  it("leaves a DeviceCMYK-colorspace DCTDecode image untouched (unsupported colorspace, never silently attempted)", async () => {
+    const { file, imageBytes } = await makeTestPdfWithImage({ colorSpace: "DeviceCMYK" });
+    const result = await compressPdfFile(file, {
+      recompressJpeg: async () => {
+        throw new Error("must never be called for a CMYK image");
+      },
+    });
+    expect(result.imagesRecompressed).toBe(0);
+    const finalImageBytes = await getSoleImageContents(result.bytes);
+    expect(Array.from(finalImageBytes)).toEqual(Array.from(imageBytes));
+  });
+
+  it("leaves an image with a non-default Decode array untouched", async () => {
+    const { file, imageBytes } = await makeTestPdfWithImage({ withDecode: true });
+    const result = await compressPdfFile(file, {
+      recompressJpeg: async () => {
+        throw new Error("must never be called for a Decode-array image");
+      },
+    });
+    expect(result.imagesRecompressed).toBe(0);
+    const finalImageBytes = await getSoleImageContents(result.bytes);
+    expect(Array.from(finalImageBytes)).toEqual(Array.from(imageBytes));
+  });
+
+  it("counts (but does not fail on) an image whose recompressed bytes turn out not to be smaller", async () => {
+    const { file, imageBytes } = await makeTestPdfWithImage({});
+    const result = await compressPdfFile(file, {
+      recompressJpeg: async (bytes) => new Uint8Array([...bytes, 0, 0, 0, 0]), // deliberately larger
+    });
+    expect(result.imagesRecompressed).toBe(0);
+    expect(result.imagesSkipped).toBe(1);
+    const finalImageBytes = await getSoleImageContents(result.bytes);
+    expect(Array.from(finalImageBytes)).toEqual(Array.from(imageBytes));
+  });
+
+  it("strips document metadata (Title/Author/Subject/Keywords/Creator/Producer)", async () => {
+    const doc = await PDFDocument.create();
+    doc.addPage([100, 100]);
+    doc.setTitle("Secret Title");
+    doc.setAuthor("Some Author");
+    const bytes = await doc.save();
+    const file: PdfFileInput = { name: "with-metadata.pdf", size: bytes.length, bytes };
+
+    const result = await compressPdfFile(file);
+    const reloaded = await PDFDocument.load(result.bytes);
+    expect(reloaded.getTitle()).toBeFalsy();
+    expect(reloaded.getAuthor()).toBeFalsy();
+  });
+
+  it("rejects invalid file input before attempting to load it", async () => {
+    const file: PdfFileInput = { name: "empty.pdf", size: 0, bytes: new Uint8Array(0) };
+    await expect(compressPdfFile(file)).rejects.toBeInstanceOf(PdfCompressError);
+  });
+
+  it("reports a corrupt/unparseable file with a specific, named PdfCompressError rather than a raw library error", async () => {
+    const corrupt: PdfFileInput = {
+      name: "corrupt.pdf",
+      size: 40,
+      bytes: new TextEncoder().encode("%PDF-1.4\nthis is not a real pdf body"),
+    };
+    let caught: unknown;
+    try {
+      await compressPdfFile(corrupt);
+    } catch (error) {
+      caught = error;
+    }
+    expect(caught).toBeInstanceOf(PdfCompressError);
+    expect((caught as PdfCompressError).errors[0].code).toBe("corrupt_pdf");
+    expect((caught as PdfCompressError).errors[0].fileName).toBe("corrupt.pdf");
   });
 });

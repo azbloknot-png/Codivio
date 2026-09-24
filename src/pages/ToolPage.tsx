@@ -45,6 +45,16 @@ const PDF_MERGE_SLUG = "pdf-merge";
 const PdfSplitTool = lazy(() => import("../tools/PdfSplitTool"));
 const PDF_SPLIT_SLUG = "pdf-split";
 
+/**
+ * Phase 5.4 — same isolation strategy as every other lazy tool above: its
+ * own lazy chunk, gated on its own slug. Being the third consumer of
+ * src/lib/pdf-engine.ts, it reuses whatever shared `pdf-engine`/`pdf-lib`
+ * chunk Vite/Rollup already factored out for PdfMergeTool/PdfSplitTool
+ * rather than adding a second copy.
+ */
+const PdfCompressTool = lazy(() => import("../tools/PdfCompressTool"));
+const PDF_COMPRESS_SLUG = "pdf-compress";
+
 type ToolPageProps = {
   name: string;
   description: string;
@@ -217,7 +227,9 @@ function ToolPage({ name, description, category, slug }: ToolPageProps) {
                   ? "tool-workspace pdf-merge-workspace"
                   : slug === PDF_SPLIT_SLUG
                     ? "tool-workspace pdf-split-workspace"
-                    : "tool-workspace"
+                    : slug === PDF_COMPRESS_SLUG
+                      ? "tool-workspace pdf-compress-workspace"
+                      : "tool-workspace"
           }
         >
           {slug === QR_CODE_GENERATOR_SLUG ? (
@@ -235,6 +247,10 @@ function ToolPage({ name, description, category, slug }: ToolPageProps) {
           ) : slug === PDF_SPLIT_SLUG ? (
             <Suspense fallback={<div className="qr-generator-loading">Loading PDF split tool…</div>}>
               <PdfSplitTool />
+            </Suspense>
+          ) : slug === PDF_COMPRESS_SLUG ? (
+            <Suspense fallback={<div className="qr-generator-loading">Loading PDF compress tool…</div>}>
+              <PdfCompressTool />
             </Suspense>
           ) : (
             <div className="tool-workspace-placeholder">

@@ -139,22 +139,23 @@ describe("canonical URLs and robots directives", () => {
   });
 
   it("every placeholder tool page is noindex,follow (no real functionality yet — see shared/seo/tools.ts)", () => {
-    // Phase 4.9/5.2/5.3 SEO follow-ups: qr-code-generator/qr-code-scanner/
-    // pdf-merge/pdf-split shipped real functionality and are the
+    // Phase 4.9/5.2/5.3/5.4 SEO follow-ups: qr-code-generator/qr-code-scanner/
+    // pdf-merge/pdf-split/pdf-compress shipped real functionality and are the
     // deliberate exceptions — checked separately below, not looped over
     // here.
-    const liveSlugs = new Set(["qr-code-generator", "qr-code-scanner", "pdf-merge", "pdf-split"]);
+    const liveSlugs = new Set(["qr-code-generator", "qr-code-scanner", "pdf-merge", "pdf-split", "pdf-compress"]);
     for (const [slug, entity] of Object.entries(TOOL_SEO)) {
       if (liveSlugs.has(slug)) continue;
       expect(robotsToString(entity.robots), slug).toBe("noindex,follow");
     }
   });
 
-  it("the 4 tools with real functionality (qr-code-generator, qr-code-scanner, pdf-merge, pdf-split) are index,follow", () => {
+  it("the 5 tools with real functionality (qr-code-generator, qr-code-scanner, pdf-merge, pdf-split, pdf-compress) are index,follow", () => {
     expect(robotsToString(TOOL_SEO["qr-code-generator"].robots)).toBe("index,follow");
     expect(robotsToString(TOOL_SEO["qr-code-scanner"].robots)).toBe("index,follow");
     expect(robotsToString(TOOL_SEO["pdf-merge"].robots)).toBe("index,follow");
     expect(robotsToString(TOOL_SEO["pdf-split"].robots)).toBe("index,follow");
+    expect(robotsToString(TOOL_SEO["pdf-compress"].robots)).toBe("index,follow");
   });
 
   it("every static public page is index,follow (all are real, functioning pages)", () => {
@@ -201,14 +202,14 @@ describe("technical SEO files", () => {
     // index,follow and are listed here — no other tool URL should ever
     // appear while it's still noindex.
     //
-    // Known, disclosed gap (Phase 5.2/5.3): "pdf-merge" and "pdf-split"
-    // also flipped to index,follow but are deliberately NOT added here —
-    // public/sitemap.xml carries other, separately-scoped, not-yet-
-    // authorized pending changes both phases were explicitly told not to
-    // touch. This test's title and assertion count intentionally still say
-    // "2 live tool pages" (not 4) until those sitemap entries are added in
-    // their own, separately-authorized follow-up — see shared/seo/tools.ts's
-    // own header comment for the same disclosure.
+    // Known, disclosed gap (Phase 5.2/5.3/5.4): "pdf-merge", "pdf-split" and
+    // "pdf-compress" also flipped to index,follow but are deliberately NOT
+    // added here — public/sitemap.xml carries other, separately-scoped,
+    // not-yet-authorized pending changes each phase was explicitly told not
+    // to touch. This test's title and assertion count intentionally still
+    // say "2 live tool pages" (not 5) until those sitemap entries are added
+    // in their own, separately-authorized follow-up — see
+    // shared/seo/tools.ts's own header comment for the same disclosure.
     expect(locs).toContain(buildCanonicalUrl("/tools/qr-code-generator"));
     expect(locs).toContain(buildCanonicalUrl("/tools/qr-code-scanner"));
     const toolLocs = locs.filter((loc) => loc.includes("/tools/") && loc !== buildCanonicalUrl("/tools"));

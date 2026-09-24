@@ -306,7 +306,9 @@ const tools: Tool[] = [
     description: "Reduce PDF file size while keeping useful quality.",
     category: "PDF Tools",
     icon: <Minimize2 size={22} />,
-    status: "coming-soon",
+    // Phase 5.4 — the third real PDF tool, mirroring pdf-merge/pdf-split's
+    // own Phase 5.2/5.3 precedent.
+    status: "live",
     featured: true,
     popular: true,
     pdf: true,

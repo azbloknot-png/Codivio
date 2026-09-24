@@ -66,11 +66,12 @@ describe("getToolFaqs is a lightweight, correct, deterministic accessor", () => 
 
 describe("the new availability-status FAQ is present and consistently honest", () => {
   it("every placeholder tool's FAQ list includes a status question whose answer says the tool is not yet available", () => {
-    // Phase 3.18/5.2/5.3 content-consistency fixes: qr-code-generator/
-    // qr-code-scanner (Phase 4.1/4.6), pdf-merge (Phase 5.2), and pdf-split
-    // (Phase 5.3) shipped real functionality — their final FAQ answer is
-    // the deliberate exception, checked separately below.
-    const liveSlugs = new Set(["qr-code-generator", "qr-code-scanner", "pdf-merge", "pdf-split"]);
+    // Phase 3.18/5.2/5.3/5.4 content-consistency fixes: qr-code-generator/
+    // qr-code-scanner (Phase 4.1/4.6), pdf-merge (Phase 5.2), pdf-split
+    // (Phase 5.3), and pdf-compress (Phase 5.4) shipped real functionality —
+    // their final FAQ answer is the deliberate exception, checked separately
+    // below.
+    const liveSlugs = new Set(["qr-code-generator", "qr-code-scanner", "pdf-merge", "pdf-split", "pdf-compress"]);
     for (const [slug, byLang] of Object.entries(TOOL_CONTENT)) {
       if (liveSlugs.has(slug)) continue;
       for (const lang of LANGUAGES) {
@@ -80,8 +81,8 @@ describe("the new availability-status FAQ is present and consistently honest", (
     }
   });
 
-  it("the 4 live tools' final FAQ answer honestly says the tool is available now, in all 3 languages", () => {
-    for (const slug of ["qr-code-generator", "qr-code-scanner", "pdf-merge", "pdf-split"]) {
+  it("the 5 live tools' final FAQ answer honestly says the tool is available now, in all 3 languages", () => {
+    for (const slug of ["qr-code-generator", "qr-code-scanner", "pdf-merge", "pdf-split", "pdf-compress"]) {
       for (const lang of LANGUAGES) {
         const lastFaq = TOOL_CONTENT[slug][lang].faq[TOOL_CONTENT[slug][lang].faq.length - 1];
         expect(lastFaq.answer.toLowerCase(), `${slug} [${lang}] final FAQ`).not.toMatch(/not yet|hələ yox|henüz değil/i);
