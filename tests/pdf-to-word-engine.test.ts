@@ -1,4 +1,34 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+/**
+ * Phase 5.7 — captures the real `PDFDocumentLoadingTask` instance
+ * convertPdfToWord creates internally, so its real `destroyed` flag
+ * (pdfjs-dist's own property, set synchronously as the first line of its
+ * real `destroy()`) can be asserted on directly. `vi.spyOn` cannot be used
+ * here — empirically confirmed (Phase 5.7 audit) that pdfjs-dist's real ESM
+ * named exports are non-configurable, so patching `getDocument` directly
+ * throws "Cannot redefine property". `vi.mock`'s module-factory form does
+ * not have this restriction: it intercepts module resolution itself, so
+ * both this test file and src/lib/pdf-to-word-engine.ts's own import receive
+ * the same wrapped module. The wrapper calls straight through to the real
+ * `getDocument` for every other behavior (parsing, PasswordException,
+ * GlobalWorkerOptions, everything) — only the returned real task is also
+ * captured here, never replaced or faked.
+ */
+let capturedLoadingTask: { destroyed: boolean } | undefined;
+
+vi.mock("pdfjs-dist/legacy/build/pdf.mjs", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("pdfjs-dist/legacy/build/pdf.mjs")>();
+  return {
+    ...actual,
+    getDocument: (params: Parameters<typeof actual.getDocument>[0]) => {
+      const task = actual.getDocument(params);
+      capturedLoadingTask = task;
+      return task;
+    },
+  };
+});
+
 import { PDFDocument, StandardFonts } from "pdf-lib";
 import JSZip from "jszip";
 import { convertPdfToWord, PdfToWordError } from "../src/lib/pdf-to-word-engine";
@@ -11,6 +41,10 @@ import type { PdfFileInput } from "../shared/pdf";
  * matching this project's established discipline. One appropriate test per
  * topic per the project's testing rule.
  */
+
+beforeEach(() => {
+  capturedLoadingTask = undefined;
+});
 
 async function makeTextPdf(): Promise<PdfFileInput> {
   const doc = await PDFDocument.create();
@@ -151,5 +185,25 @@ describe("convertPdfToWord — real text extraction and DOCX generation", () => 
   it("rejects invalid file input (empty/bad signature) before attempting to parse it", async () => {
     const file: PdfFileInput = { name: "empty.pdf", size: 0, bytes: new Uint8Array(0) };
     await expect(convertPdfToWord(file)).rejects.toBeInstanceOf(PdfToWordError);
+  });
+});
+
+describe("convertPdfToWord — pdfjs-dist worker lifecycle (Phase 5.7)", () => {
+  it("destroys the pdfjs-dist loading task after a successful conversion", async () => {
+    const file = await makeTextPdf();
+    await convertPdfToWord(file);
+    expect(capturedLoadingTask).toBeDefined();
+    expect(capturedLoadingTask?.destroyed).toBe(true);
+  });
+
+  it("destroys the pdfjs-dist loading task even when conversion fails", async () => {
+    const corrupt: PdfFileInput = {
+      name: "corrupt.pdf",
+      size: 40,
+      bytes: new TextEncoder().encode("%PDF-1.4\nthis is not a real pdf body"),
+    };
+    await expect(convertPdfToWord(corrupt)).rejects.toBeInstanceOf(PdfToWordError);
+    expect(capturedLoadingTask).toBeDefined();
+    expect(capturedLoadingTask?.destroyed).toBe(true);
   });
 });

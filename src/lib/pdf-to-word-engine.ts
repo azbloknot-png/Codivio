@@ -243,47 +243,64 @@ export async function convertPdfToWord(file: PdfFileInput): Promise<PdfToWordRes
     throw new PdfToWordError(fileErrors);
   }
 
-  let pdf: pdfjsLib.PDFDocumentProxy;
+  // Phase 5.7 — the loading task (not just the `PDFDocumentProxy` it
+  // resolves to) is captured so its real, documented `destroy()` API
+  // (confirmed against pdfjs-dist's own shipped types: "Abort all network
+  // requests and destroy the worker") can be called on every exit path
+  // below. `PDFDocumentProxy` itself exposes no public `destroy()` in this
+  // version — the loading task is the only handle that can release the
+  // worker/transport this call allocates, and it was previously discarded
+  // immediately after awaiting `.promise`, leaking that worker for the rest
+  // of the tab's lifetime (see the Phase 5.7 audit for the empirical basis).
+  const loadingTask = pdfjsLib.getDocument({ data: file.bytes });
   try {
-    pdf = await pdfjsLib.getDocument({ data: file.bytes }).promise;
-  } catch (error) {
-    if (error instanceof PasswordException) {
+    let pdf: pdfjsLib.PDFDocumentProxy;
+    try {
+      pdf = await loadingTask.promise;
+    } catch (error) {
+      if (error instanceof PasswordException) {
+        throw new PdfToWordError([
+          {
+            code: "encrypted_pdf",
+            message: `"${file.name}" is password-protected. Password-protected PDFs are not supported.`,
+            fileName: file.name,
+          },
+        ]);
+      }
       throw new PdfToWordError([
         {
-          code: "encrypted_pdf",
-          message: `"${file.name}" is password-protected. Password-protected PDFs are not supported.`,
+          code: "corrupt_pdf",
+          message: `"${file.name}" could not be read as a valid PDF (it may be corrupt or not a real PDF).`,
           fileName: file.name,
         },
       ]);
     }
-    throw new PdfToWordError([
-      {
-        code: "corrupt_pdf",
-        message: `"${file.name}" could not be read as a valid PDF (it may be corrupt or not a real PDF).`,
-        fileName: file.name,
-      },
-    ]);
+
+    const pageCount = pdf.numPages;
+    const lines = await extractLines(pdf);
+    const totalCharacters = lines.reduce((sum, line) => sum + line.text.length, 0);
+
+    if (totalCharacters < MIN_EXTRACTABLE_TEXT_CHARACTERS) {
+      throw new PdfToWordError([
+        {
+          code: "no_extractable_text",
+          message: `"${file.name}" does not appear to contain extractable text — it may be a scanned or image-only PDF. This tool does not support OCR.`,
+          fileName: file.name,
+        },
+      ]);
+    }
+
+    const bodyFontSize = modeFontSize(lines);
+    const children = buildDocxChildren(lines, bodyFontSize);
+    const doc = new Document({ sections: [{ children }] });
+    const blob = await Packer.toBlob(doc);
+    const bytes = new Uint8Array(await blob.arrayBuffer());
+
+    return { bytes, pageCount };
+  } finally {
+    // Never let a cleanup failure mask the real outcome above (a thrown
+    // PdfToWordError, or the successful result) — destroy() failing is not
+    // a scenario this phase's scope changes error behavior for.
+    await loadingTask.destroy().catch(() => {});
   }
-
-  const pageCount = pdf.numPages;
-  const lines = await extractLines(pdf);
-  const totalCharacters = lines.reduce((sum, line) => sum + line.text.length, 0);
-
-  if (totalCharacters < MIN_EXTRACTABLE_TEXT_CHARACTERS) {
-    throw new PdfToWordError([
-      {
-        code: "no_extractable_text",
-        message: `"${file.name}" does not appear to contain extractable text — it may be a scanned or image-only PDF. This tool does not support OCR.`,
-        fileName: file.name,
-      },
-    ]);
-  }
-
-  const bodyFontSize = modeFontSize(lines);
-  const children = buildDocxChildren(lines, bodyFontSize);
-  const doc = new Document({ sections: [{ children }] });
-  const blob = await Packer.toBlob(doc);
-  const bytes = new Uint8Array(await blob.arrayBuffer());
-
-  return { bytes, pageCount };
 }
