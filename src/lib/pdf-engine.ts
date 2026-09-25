@@ -18,6 +18,27 @@ import type { PdfFileInput, PdfPageRange, PdfValidationError } from "../../share
  * Phase 5 operation currently in scope requires Worker/R2 involvement.
  */
 
+/**
+ * Phase 5.6 — detects pdf-lib's `EncryptedPDFError` WITHOUT `instanceof`.
+ *
+ * REAL, empirically-confirmed pdf-lib limitation (not a workaround chosen
+ * for convenience): pdf-lib's own compiled output defines its error classes
+ * (including `EncryptedPDFError`) using an ES5-style `tslib.__extends`
+ * pattern to extend the built-in `Error`. This is a well-known JavaScript
+ * interop gap — extending a built-in like `Error` this way does not
+ * correctly wire up the prototype chain, so `instanceof EncryptedPDFError`,
+ * `error.constructor === EncryptedPDFError`, and
+ * `Object.getPrototypeOf(error) === EncryptedPDFError.prototype` all
+ * evaluate to `false` for a real, genuinely-thrown `EncryptedPDFError` —
+ * verified directly against pdf-lib's real thrown error, not assumed.
+ * `error.message` is the only reliable signal pdf-lib actually gives here;
+ * matching it is a deliberate, disclosed choice forced by this library
+ * limitation, not a general pattern used elsewhere in this codebase.
+ */
+function isPdfLibEncryptedError(error: unknown): boolean {
+  return error instanceof Error && error.message.includes("is encrypted");
+}
+
 export class PdfMergeError extends Error {
   errors: PdfValidationError[];
 
@@ -66,11 +87,25 @@ export async function mergePdfFiles(files: PdfFileInput[]): Promise<PdfMergeResu
       for (const page of copiedPages) {
         mergedPdf.addPage(page);
       }
-    } catch {
+    } catch (error) {
+      // Phase 5.6 — pdf-lib throws a real, distinct error whenever a file is
+      // encrypted and `ignoreEncryption` wasn't passed (see
+      // isPdfLibEncryptedError's own doc comment for why this can't be
+      // detected via `instanceof`). Reported honestly and specifically,
+      // rather than folded into the same hedged "may be corrupt or not a
+      // real PDF" message every other failure gets — mirrors
+      // src/lib/pdf-to-word-engine.ts's own PasswordException handling
+      // (Phase 5.5), now reusing the same `encrypted_pdf` error code across
+      // all four PDF tools instead of just one.
+      if (isPdfLibEncryptedError(error)) {
+        throw new PdfMergeError([
+          { code: "encrypted_pdf", message: `"${file.name}" is password-protected. Password-protected PDFs are not supported.`, fileName: file.name },
+        ]);
+      }
       throw new PdfMergeError([
         {
           code: "corrupt_pdf",
-          message: `"${file.name}" could not be read as a valid PDF (it may be corrupt, password-protected, or not a real PDF).`,
+          message: `"${file.name}" could not be read as a valid PDF (it may be corrupt or not a real PDF).`,
           fileName: file.name,
         },
       ]);
@@ -122,11 +157,18 @@ export async function loadPdfPageCount(file: PdfFileInput): Promise<number> {
   try {
     const doc = await PDFDocument.load(file.bytes);
     return doc.getPageCount();
-  } catch {
+  } catch (error) {
+    // Phase 5.6 — same real, distinct EncryptedPDFError handling as
+    // mergePdfFiles above.
+    if (isPdfLibEncryptedError(error)) {
+      throw new PdfSplitError([
+        { code: "encrypted_pdf", message: `"${file.name}" is password-protected. Password-protected PDFs are not supported.`, fileName: file.name },
+      ]);
+    }
     throw new PdfSplitError([
       {
         code: "corrupt_pdf",
-        message: `"${file.name}" could not be read as a valid PDF (it may be corrupt, password-protected, or not a real PDF).`,
+        message: `"${file.name}" could not be read as a valid PDF (it may be corrupt or not a real PDF).`,
         fileName: file.name,
       },
     ]);
@@ -153,11 +195,18 @@ export async function splitPdfFile(file: PdfFileInput, ranges: PdfPageRange[]): 
     // Deliberately does NOT pass { ignoreEncryption: true } — same honest-
     // failure policy as mergePdfFiles above.
     sourceDoc = await PDFDocument.load(file.bytes);
-  } catch {
+  } catch (error) {
+    // Phase 5.6 — same real, distinct EncryptedPDFError handling as
+    // mergePdfFiles/loadPdfPageCount above.
+    if (isPdfLibEncryptedError(error)) {
+      throw new PdfSplitError([
+        { code: "encrypted_pdf", message: `"${file.name}" is password-protected. Password-protected PDFs are not supported.`, fileName: file.name },
+      ]);
+    }
     throw new PdfSplitError([
       {
         code: "corrupt_pdf",
-        message: `"${file.name}" could not be read as a valid PDF (it may be corrupt, password-protected, or not a real PDF).`,
+        message: `"${file.name}" could not be read as a valid PDF (it may be corrupt or not a real PDF).`,
         fileName: file.name,
       },
     ]);
@@ -427,10 +476,17 @@ export async function compressPdfFile(
     };
   } catch (error) {
     if (error instanceof PdfCompressError) throw error;
+    // Phase 5.6 — same real, distinct EncryptedPDFError handling as
+    // mergePdfFiles/splitPdfFile/loadPdfPageCount above.
+    if (isPdfLibEncryptedError(error)) {
+      throw new PdfCompressError([
+        { code: "encrypted_pdf", message: `"${file.name}" is password-protected. Password-protected PDFs are not supported.`, fileName: file.name },
+      ]);
+    }
     throw new PdfCompressError([
       {
         code: "corrupt_pdf",
-        message: `"${file.name}" could not be read as a valid PDF (it may be corrupt, password-protected, or not a real PDF).`,
+        message: `"${file.name}" could not be read as a valid PDF (it may be corrupt or not a real PDF).`,
         fileName: file.name,
       },
     ]);

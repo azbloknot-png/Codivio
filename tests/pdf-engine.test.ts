@@ -39,6 +39,29 @@ async function makeFile(name: string, pageCount: number): Promise<PdfFileInput> 
 }
 
 /**
+ * Phase 5.6 — builds a real PDF that pdf-lib's OWN parser recognizes as
+ * encrypted, via its real, public API (`context.trailerInfo.Encrypt`), not
+ * fabricated bytes or a mocked error. `PDFDocument`'s `isEncrypted` check is
+ * simply `!!context.lookup(context.trailerInfo.Encrypt)` (confirmed by
+ * reading pdf-lib's own source) — registering a real `/Encrypt` dictionary
+ * and pointing the trailer at it before saving produces a file that
+ * pdf-lib's real `PDFDocument.load()` genuinely throws its real
+ * EncryptedPDFError-shaped error for on reload. A full, real RC4/AES
+ * encryption round-trip was not needed to prove this specific validation
+ * path — only that pdf-lib recognizes the file as encrypted and reports it,
+ * which is exactly what this test verifies.
+ */
+async function makeEncryptedFile(name: string): Promise<PdfFileInput> {
+  const doc = await PDFDocument.create();
+  doc.addPage([100, 100]);
+  const encryptDict = doc.context.obj({ Filter: "Standard", V: 1, R: 2, O: "placeholder", U: "placeholder", P: -1 });
+  const encryptRef = doc.context.register(encryptDict);
+  doc.context.trailerInfo.Encrypt = encryptRef;
+  const bytes = await doc.save();
+  return { name, size: bytes.length, bytes };
+}
+
+/**
  * Builds a real, valid PDF (via pdf-lib's own low-level `context` API — the
  * same public API Phase 5.4's compressPdfFile itself uses) containing one
  * indirect Image XObject with the given dict properties. The actual image
@@ -123,6 +146,23 @@ describe("hasPdfSignature", () => {
     expect(hasPdfSignature(new TextEncoder().encode("not a pdf at all"))).toBe(false);
     expect(hasPdfSignature(new Uint8Array(0))).toBe(false);
     expect(hasPdfSignature(new Uint8Array([0x25, 0x50]))).toBe(false); // shorter than the signature
+  });
+
+  it("tolerates a few bytes of leading garbage before the header (Phase 5.6 — a real PDF with a UTF-8 BOM still loads via pdf-lib, verified empirically)", async () => {
+    const realBytes = await makeTestPdf(1);
+    const withBom = new Uint8Array(3 + realBytes.length);
+    withBom.set([0xef, 0xbb, 0xbf], 0);
+    withBom.set(realBytes, 3);
+    expect(hasPdfSignature(withBom)).toBe(true);
+    // Confirms this isn't just a lenient check — pdf-lib itself really does
+    // load this exact byte sequence successfully.
+    const reloaded = await PDFDocument.load(withBom);
+    expect(reloaded.getPageCount()).toBe(1);
+  });
+
+  it("still rejects content with no real PDF header anywhere within the search window", () => {
+    const farBytes = new Uint8Array(2000).fill(0x41); // 2000 'A' bytes, no "%PDF-" anywhere
+    expect(hasPdfSignature(farBytes)).toBe(false);
   });
 });
 
@@ -246,6 +286,21 @@ describe("mergePdfFiles", () => {
     expect((caught as PdfMergeError).errors[0].code).toBe("corrupt_pdf");
     expect((caught as PdfMergeError).errors[0].fileName).toBe("corrupt.pdf");
   });
+
+  it("reports a real encrypted PDF with the specific encrypted_pdf code, distinct from corrupt_pdf (Phase 5.6)", async () => {
+    const good = await makeFile("good.pdf", 1);
+    const encrypted = await makeEncryptedFile("locked.pdf");
+
+    let caught: unknown;
+    try {
+      await mergePdfFiles([good, encrypted]);
+    } catch (error) {
+      caught = error;
+    }
+    expect(caught).toBeInstanceOf(PdfMergeError);
+    expect((caught as PdfMergeError).errors[0].code).toBe("encrypted_pdf");
+    expect((caught as PdfMergeError).errors[0].fileName).toBe("locked.pdf");
+  });
 });
 
 describe("parsePageRanges", () => {
@@ -332,6 +387,18 @@ describe("loadPdfPageCount", () => {
     expect(caught).toBeInstanceOf(PdfSplitError);
     expect((caught as PdfSplitError).errors[0].code).toBe("corrupt_pdf");
   });
+
+  it("reports a real encrypted PDF with the specific encrypted_pdf code (Phase 5.6)", async () => {
+    const encrypted = await makeEncryptedFile("locked.pdf");
+    let caught: unknown;
+    try {
+      await loadPdfPageCount(encrypted);
+    } catch (error) {
+      caught = error;
+    }
+    expect(caught).toBeInstanceOf(PdfSplitError);
+    expect((caught as PdfSplitError).errors[0].code).toBe("encrypted_pdf");
+  });
 });
 
 describe("splitPdfFile", () => {
@@ -381,6 +448,18 @@ describe("splitPdfFile", () => {
   it("rejects invalid file input before attempting any extraction", async () => {
     const file: PdfFileInput = { name: "empty.pdf", size: 0, bytes: new Uint8Array(0) };
     await expect(splitPdfFile(file, [{ start: 1, end: 1 }])).rejects.toBeInstanceOf(PdfSplitError);
+  });
+
+  it("reports a real encrypted PDF with the specific encrypted_pdf code (Phase 5.6)", async () => {
+    const encrypted = await makeEncryptedFile("locked.pdf");
+    let caught: unknown;
+    try {
+      await splitPdfFile(encrypted, [{ start: 1, end: 1 }]);
+    } catch (error) {
+      caught = error;
+    }
+    expect(caught).toBeInstanceOf(PdfSplitError);
+    expect((caught as PdfSplitError).errors[0].code).toBe("encrypted_pdf");
   });
 });
 
@@ -519,5 +598,17 @@ describe("compressPdfFile", () => {
     expect(caught).toBeInstanceOf(PdfCompressError);
     expect((caught as PdfCompressError).errors[0].code).toBe("corrupt_pdf");
     expect((caught as PdfCompressError).errors[0].fileName).toBe("corrupt.pdf");
+  });
+
+  it("reports a real encrypted PDF with the specific encrypted_pdf code (Phase 5.6)", async () => {
+    const encrypted = await makeEncryptedFile("locked.pdf");
+    let caught: unknown;
+    try {
+      await compressPdfFile(encrypted);
+    } catch (error) {
+      caught = error;
+    }
+    expect(caught).toBeInstanceOf(PdfCompressError);
+    expect((caught as PdfCompressError).errors[0].code).toBe("encrypted_pdf");
   });
 });

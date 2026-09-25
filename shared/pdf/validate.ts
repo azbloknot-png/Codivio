@@ -4,6 +4,7 @@ import {
   MAX_SPLIT_OUTPUT_FILES,
   MAX_TOTAL_MERGE_BYTES,
   MIN_PDF_FILES_PER_MERGE,
+  PDF_HEADER_SEARCH_WINDOW_BYTES,
   PDF_MAGIC_BYTES,
   type PdfFileInput,
   type PdfMergeValidationResult,
@@ -13,15 +14,27 @@ import {
 } from "./types";
 
 /**
- * Checks the real PDF file signature (the first 5 bytes, ASCII "%PDF-") —
- * a genuine content check against the actual bytes, never a filename,
+ * Checks for the real PDF file signature (the ASCII string "%PDF-") — a
+ * genuine content check against the actual bytes, never a filename,
  * extension, or client-declared MIME type check. Not a full parse; a file
  * can pass this and still be corrupt further in — src/lib/pdf-engine.ts's
  * actual pdf-lib parse is the real, authoritative validity check.
+ *
+ * Searches the first PDF_HEADER_SEARCH_WINDOW_BYTES bytes, not only byte 0
+ * (Phase 5.6, empirically verified — see that constant's own doc comment):
+ * a real PDF with a few bytes of leading garbage (e.g. a UTF-8 BOM) still
+ * loads successfully via pdf-lib, so a byte-0-only check would wrongly
+ * reject a file the engine can actually parse.
  */
 export function hasPdfSignature(bytes: Uint8Array): boolean {
   if (bytes.length < PDF_MAGIC_BYTES.length) return false;
-  return PDF_MAGIC_BYTES.every((byte, index) => bytes[index] === byte);
+  const windowEnd = Math.min(bytes.length, PDF_HEADER_SEARCH_WINDOW_BYTES);
+  for (let offset = 0; offset <= windowEnd - PDF_MAGIC_BYTES.length; offset += 1) {
+    if (PDF_MAGIC_BYTES.every((byte, index) => bytes[offset + index] === byte)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /** Validates one file's basic properties (empty/size/signature) — used both

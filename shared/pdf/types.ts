@@ -14,15 +14,29 @@
  * shared/qr/types.ts followed across Phase 4.1/4.3/4.4/4.5.
  */
 
-/** The real PDF file-format signature — the first 5 bytes of any valid PDF
- * file are the ASCII string "%PDF-" (e.g. "%PDF-1.7"). Checking this is a
- * real, verifiable content check against the actual bytes — never a
+/** The real PDF file-format signature — a valid PDF file contains the ASCII
+ * string "%PDF-" (e.g. "%PDF-1.7"), conventionally at byte 0 but not always
+ * (see PDF_HEADER_SEARCH_WINDOW_BYTES below). Checking this is a real,
+ * verifiable content check against the actual bytes — never a
  * filename/extension/client-declared MIME type check (see DECISIONS.md's
  * "Image Upload Standard" for why that distinction matters). It is not a
  * full parse: a file can pass this check and still be corrupt further in —
  * src/lib/pdf-engine.ts's actual pdf-lib parse is the real, authoritative
  * validity check. */
 export const PDF_MAGIC_BYTES = [0x25, 0x50, 0x44, 0x46, 0x2d] as const; // "%PDF-"
+
+/**
+ * Phase 5.6 — how far into a file `hasPdfSignature` searches for the "%PDF-"
+ * marker, not just byte 0. Real, empirically-verified need: a PDF with a few
+ * bytes of leading garbage before its header (e.g. a UTF-8 BOM) still loads
+ * successfully via `pdf-lib`'s own `PDFDocument.load()` — confirmed with a
+ * real fixture during this phase's own audit — so a byte-0-only check would
+ * incorrectly reject a file the engine can actually parse. 1024 bytes
+ * matches the PDF ecosystem's own long-standing convention (real-world
+ * readers, including pdf.js, tolerate leading bytes within this same
+ * window) — not an arbitrary number invented for this project.
+ */
+export const PDF_HEADER_SEARCH_WINDOW_BYTES = 1024;
 
 /**
  * Conservative, documented app-level limits — not a benchmarked hard
