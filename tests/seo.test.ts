@@ -143,7 +143,16 @@ describe("canonical URLs and robots directives", () => {
     // qr-code-scanner/pdf-merge/pdf-split/pdf-compress/pdf-to-word shipped
     // real functionality and are the deliberate exceptions — checked
     // separately below, not looped over here.
-    const liveSlugs = new Set(["qr-code-generator", "qr-code-scanner", "pdf-merge", "pdf-split", "pdf-compress", "pdf-to-word"]);
+    const liveSlugs = new Set([
+      "qr-code-generator",
+      "qr-code-scanner",
+      "pdf-merge",
+      "pdf-split",
+      "pdf-compress",
+      "pdf-to-word",
+      "image-resize",
+      "image-compress",
+    ]);
     for (const [slug, entity] of Object.entries(TOOL_SEO)) {
       if (liveSlugs.has(slug)) continue;
       expect(robotsToString(entity.robots), slug).toBe("noindex,follow");

@@ -56,6 +56,24 @@ import { ROBOTS_INDEX_FOLLOW, ROBOTS_NOINDEX_FOLLOW, type SeoEntity } from "./ty
  * full-fidelity layout/table/image-preserving converter, and does not
  * support scanned/image-only PDFs or OCR — see
  * src/lib/pdf-to-word-engine.ts's own header comment for the approved scope.
+ *
+ * SEO follow-up (Phase 6.2): "image-resize" shipped real, working
+ * browser-side image resize functionality (JPEG/PNG/WebP, exact target
+ * width/height, source format preserved) — its `robots` entry is the
+ * seventh to flip to `index,follow`. Its pre-existing title/description
+ * ("resize... to exact pixel dimensions") already matched the shipped
+ * behavior exactly, so neither needed rewriting. Same disclosed, deferred
+ * `public/sitemap.xml` gap as the PDF tools above — still out of scope for
+ * this sub-phase.
+ *
+ * SEO follow-up (Phase 6.3): "image-compress" shipped real, working
+ * browser-side image compression (JPEG/PNG/WebP re-encode at a fixed
+ * quality, never returns a file larger than the original, source format
+ * preserved) — its `robots` entry is the eighth to flip to `index,follow`.
+ * Its pre-existing title/description already avoided promising a fixed
+ * percentage, so neither needed rewriting. Same disclosed, deferred
+ * `public/sitemap.xml` gap as the tools above — still out of scope for this
+ * sub-phase.
  */
 export const TOOL_SEO: Record<string, SeoEntity> = {
   "qr-code-generator": {
@@ -467,7 +485,7 @@ export const TOOL_SEO: Record<string, SeoEntity> = {
 
   "image-resize": {
     path: "/tools/image-resize",
-    robots: ROBOTS_NOINDEX_FOLLOW,
+    robots: ROBOTS_INDEX_FOLLOW,
     localized: {
       en: {
         title: "Image Resizer – Resize Photos to Exact Dimensions",
@@ -486,7 +504,7 @@ export const TOOL_SEO: Record<string, SeoEntity> = {
 
   "image-compress": {
     path: "/tools/image-compress",
-    robots: ROBOTS_NOINDEX_FOLLOW,
+    robots: ROBOTS_INDEX_FOLLOW,
     localized: {
       en: {
         title: "Image Compressor – Reduce Photo File Size Online",

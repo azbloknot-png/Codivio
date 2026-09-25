@@ -44,10 +44,10 @@
 .category-filter.qr-generator-mode-toggle{justify-content:flex-start;margin:0 0 18px}
 .qr-generator-mode-toggle button:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px}
 .qr-generator-field{display:block;margin-bottom:16px;color:#243b5a;font-size:13px;font-weight:700}
-.qr-generator-field textarea,.qr-generator-field select,.qr-generator-field input[type="url"],.qr-generator-field input[type="text"],.qr-generator-field input[type="password"],.qr-generator-field input[type="tel"],.qr-generator-field input[type="email"]{display:block;width:100%;box-sizing:border-box;margin-top:6px;border:1px solid #dbe4ef;border-radius:11px;outline:none;background:#fff;color:#243b5a;font:inherit;font-size:14px}
+.qr-generator-field textarea,.qr-generator-field select,.qr-generator-field input[type="url"],.qr-generator-field input[type="text"],.qr-generator-field input[type="password"],.qr-generator-field input[type="tel"],.qr-generator-field input[type="email"],.qr-generator-field input[type="number"]{display:block;width:100%;box-sizing:border-box;margin-top:6px;border:1px solid #dbe4ef;border-radius:11px;outline:none;background:#fff;color:#243b5a;font:inherit;font-size:14px}
 .qr-generator-field textarea{padding:12px 13px;min-height:90px;resize:vertical}
-.qr-generator-field select,.qr-generator-field input[type="url"],.qr-generator-field input[type="text"],.qr-generator-field input[type="password"],.qr-generator-field input[type="tel"],.qr-generator-field input[type="email"]{height:44px;padding:0 13px}
-.qr-generator-field textarea:focus,.qr-generator-field select:focus,.qr-generator-field input[type="url"]:focus,.qr-generator-field input[type="text"]:focus,.qr-generator-field input[type="password"]:focus,.qr-generator-field input[type="tel"]:focus,.qr-generator-field input[type="email"]:focus{border-color:#9fc3ed;box-shadow:0 0 0 4px rgba(23,105,224,.08)}
+.qr-generator-field select,.qr-generator-field input[type="url"],.qr-generator-field input[type="text"],.qr-generator-field input[type="password"],.qr-generator-field input[type="tel"],.qr-generator-field input[type="email"],.qr-generator-field input[type="number"]{height:44px;padding:0 13px}
+.qr-generator-field textarea:focus,.qr-generator-field select:focus,.qr-generator-field input[type="url"]:focus,.qr-generator-field input[type="text"]:focus,.qr-generator-field input[type="password"]:focus,.qr-generator-field input[type="tel"]:focus,.qr-generator-field input[type="email"]:focus,.qr-generator-field input[type="number"]:focus{border-color:#9fc3ed;box-shadow:0 0 0 4px rgba(23,105,224,.08)}
 .qr-generator-field input[type="color"]{display:block;margin-top:6px;width:64px;height:44px;padding:2px;border:1px solid #dbe4ef;border-radius:11px;background:#fff;cursor:pointer}
 .qr-generator-field input[type="color"]:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px}
 /* Phase 4.4 — WiFi mode: password show/hide row and the hidden-network
@@ -195,6 +195,28 @@
    flex wrapper is genuinely new. */
 .tool-workspace.pdf-to-word-workspace{display:block}
 .pdf-to-word{display:flex;flex-direction:column;gap:16px;text-align:left}
+
+/* Phase 6.2 — Image Resize workspace. Reuses .pdf-split-upload/
+   .pdf-split-file-input/.pdf-split-upload-label/.pdf-split-page-count/
+   .pdf-merge-hint/.pdf-merge-error/.pdf-merge-actions/.pdf-merge-result/
+   .pdf-merge-result-label directly (identical file-select/hint/error/
+   result shapes to every PDF tool) — only the top-level wrapper and the
+   width/height/lock-aspect-ratio controls (genuinely new to this tool) get
+   their own rules. */
+.tool-workspace.image-resize-workspace{display:block}
+.image-resize{display:flex;flex-direction:column;gap:16px;text-align:left}
+.image-resize-dimensions{display:flex;flex-wrap:wrap;gap:12px}
+.image-resize-dimensions .qr-generator-field{flex:1;min-width:120px;margin-bottom:0}
+.image-resize-lock{display:flex;align-items:center;gap:8px;margin:0;color:#243b5a;font-size:13px;font-weight:700;cursor:pointer}
+
+/* Phase 6.3 — Image Compress workspace. Identical shape to Resize's own
+   file-select/hint/error/result blocks (reuses .pdf-split-upload/
+   .pdf-split-file-input/.pdf-split-upload-label/.pdf-split-page-count/
+   .pdf-merge-hint/.pdf-merge-error/.pdf-merge-actions/.pdf-merge-result/
+   .pdf-merge-result-label directly) — only the top-level wrapper is
+   genuinely new, mirroring PdfCompressTool's own minimal footprint. */
+.tool-workspace.image-compress-workspace{display:block}
+.image-compress{display:flex;flex-direction:column;gap:16px;text-align:left}
 
 /* Phase 3.13: Tool Page Content Architecture (breadcrumb, content
    blueprint, FAQ, related tools) — reuses the color/radius design tokens

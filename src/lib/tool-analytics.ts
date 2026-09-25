@@ -1,5 +1,6 @@
 import { trackEvent } from "./analytics";
 import type { QrOutputFormat } from "./qr-engine";
+import type { ImageFormat } from "../../shared/image/types";
 
 /**
  * Codivio — generic tool-lifecycle analytics (Phase 3.21).
@@ -44,10 +45,14 @@ export function trackToolComplete(toolSlug: string): void {
  * a real gap: this parameter was previously just `QrOutputFormat` even
  * though this file's own doc comment says it's tool-family-agnostic. "docx"
  * (Phase 5.5, PDF to Word) is the next real, distinct output format this
- * platform produces. Kept as a closed union (not a bare `string`) to
- * preserve the same type-level-safety precedent qr-analytics.ts sets for
- * payload kinds. */
-export type ToolDownloadFormat = QrOutputFormat | "pdf" | "docx";
+ * platform produces. `ImageFormat` (Phase 6.2, Image Resize) reuses
+ * shared/image/types.ts's own real format union directly rather than
+ * inventing parallel string literals — Resize always outputs the same
+ * format it was given, so its three real values ("jpeg"/"png"/"webp") are
+ * exactly what this event needs. Kept as a closed union (not a bare
+ * `string`) to preserve the same type-level-safety precedent
+ * qr-analytics.ts sets for payload kinds. */
+export type ToolDownloadFormat = QrOutputFormat | "pdf" | "docx" | ImageFormat;
 
 export function trackDownload(toolSlug: string, format: ToolDownloadFormat): void {
   trackEvent("download", { tool_slug: toolSlug, format });

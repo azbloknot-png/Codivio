@@ -39,7 +39,16 @@ describe("AI content structure covers the real 34-tool / 4-category registry", (
     // (Phase 5.3), and pdf-compress (Phase 5.4) shipped real functionality —
     // their AI profile status is the deliberate exception, checked
     // separately below.
-    const liveSlugs = new Set(["qr-code-generator", "qr-code-scanner", "pdf-merge", "pdf-split", "pdf-compress", "pdf-to-word"]);
+    const liveSlugs = new Set([
+      "qr-code-generator",
+      "qr-code-scanner",
+      "pdf-merge",
+      "pdf-split",
+      "pdf-compress",
+      "pdf-to-word",
+      "image-resize",
+      "image-compress",
+    ]);
     for (const slug of slugs) {
       for (const lang of LANGUAGES) {
         const profile = getAiToolProfile(slug, lang);

@@ -67,6 +67,23 @@ const PDF_COMPRESS_SLUG = "pdf-compress";
 const PdfToWordTool = lazy(() => import("../tools/PdfToWordTool"));
 const PDF_TO_WORD_SLUG = "pdf-to-word";
 
+/**
+ * Phase 6.2 — same isolation strategy as every lazy tool above: its own
+ * chunk, gated on its own slug. Imports src/lib/image-engine.ts, never any
+ * PDF/QR engine — no dependency overlap with any existing tool chunk.
+ */
+const ImageResizeTool = lazy(() => import("../tools/ImageResizeTool"));
+const IMAGE_RESIZE_SLUG = "image-resize";
+
+/**
+ * Phase 6.3 — same isolation strategy as every lazy tool above, and same
+ * shared engine as ImageResizeTool (src/lib/image-engine.ts) — both get
+ * their own chunk regardless, so this is still never downloaded by a
+ * visitor who only opens Resize, or vice versa.
+ */
+const ImageCompressTool = lazy(() => import("../tools/ImageCompressTool"));
+const IMAGE_COMPRESS_SLUG = "image-compress";
+
 type ToolPageProps = {
   name: string;
   description: string;
@@ -243,7 +260,11 @@ function ToolPage({ name, description, category, slug }: ToolPageProps) {
                       ? "tool-workspace pdf-compress-workspace"
                       : slug === PDF_TO_WORD_SLUG
                         ? "tool-workspace pdf-to-word-workspace"
-                        : "tool-workspace"
+                        : slug === IMAGE_RESIZE_SLUG
+                          ? "tool-workspace image-resize-workspace"
+                          : slug === IMAGE_COMPRESS_SLUG
+                            ? "tool-workspace image-compress-workspace"
+                            : "tool-workspace"
           }
         >
           {slug === QR_CODE_GENERATOR_SLUG ? (
@@ -269,6 +290,14 @@ function ToolPage({ name, description, category, slug }: ToolPageProps) {
           ) : slug === PDF_TO_WORD_SLUG ? (
             <Suspense fallback={<div className="qr-generator-loading">Loading PDF to Word tool…</div>}>
               <PdfToWordTool />
+            </Suspense>
+          ) : slug === IMAGE_RESIZE_SLUG ? (
+            <Suspense fallback={<div className="qr-generator-loading">Loading image resize tool…</div>}>
+              <ImageResizeTool />
+            </Suspense>
+          ) : slug === IMAGE_COMPRESS_SLUG ? (
+            <Suspense fallback={<div className="qr-generator-loading">Loading image compress tool…</div>}>
+              <ImageCompressTool />
             </Suspense>
           ) : (
             <div className="tool-workspace-placeholder">
