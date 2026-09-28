@@ -228,6 +228,10 @@
 .tool-workspace.image-converter-workspace{display:block}
 .image-converter{display:flex;flex-direction:column;gap:16px;text-align:left}
 
+.tool-workspace.background-remover-workspace{display:block}
+.background-remover{display:flex;flex-direction:column;gap:16px;text-align:left}
+.background-remover-preview{max-width:100%;max-height:360px;border-radius:var(--radius-md);background:repeating-conic-gradient(#e5e9f0 0% 25%,#ffffff 0% 50%) 50%/20px 20px}
+
 /* Phase 3.13: Tool Page Content Architecture (breadcrumb, content
    blueprint, FAQ, related tools) — reuses the color/radius design tokens
    rather than raw hex, since these are new rules (see codivio-ui skill:

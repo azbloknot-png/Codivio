@@ -153,6 +153,7 @@ describe("canonical URLs and robots directives", () => {
       "image-resize",
       "image-compress",
       "image-converter",
+      "background-remover",
     ]);
     for (const [slug, entity] of Object.entries(TOOL_SEO)) {
       if (liveSlugs.has(slug)) continue;

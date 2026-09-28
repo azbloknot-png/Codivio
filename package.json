@@ -13,6 +13,7 @@
     "typecheck:tests": "tsc --noEmit -p tsconfig.test.json"
   },
   "dependencies": {
+    "@mediapipe/tasks-vision": "^1.0.1",
     "docx": "^9.7.2",
     "jsqr": "^1.4.0",
     "lucide-react": "^0.468.0",

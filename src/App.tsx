@@ -438,7 +438,7 @@ const tools: Tool[] = [
     description: "Remove backgrounds from images.",
     category: "Image Tools",
     icon: <Sparkles size={22} />,
-    status: "coming-soon",
+    status: "live",
     featured: true,
     popular: true,
   },

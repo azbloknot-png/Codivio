@@ -94,6 +94,16 @@ const IMAGE_COMPRESS_SLUG = "image-compress";
 const ImageConverterTool = lazy(() => import("../tools/ImageConverterTool"));
 const IMAGE_CONVERTER_SLUG = "image-converter";
 
+/**
+ * Phase 6.5 — same isolation strategy as every lazy tool above. This tool's
+ * own engine (src/lib/background-remover-engine.ts) is a separate module
+ * from src/lib/image-engine.ts because it lazy-loads a much heavier,
+ * different dependency (@mediapipe/tasks-vision) — never imported here
+ * directly, only reached once this specific branch renders.
+ */
+const BackgroundRemoverTool = lazy(() => import("../tools/BackgroundRemoverTool"));
+const BACKGROUND_REMOVER_SLUG = "background-remover";
+
 type ToolPageProps = {
   name: string;
   description: string;
@@ -276,7 +286,9 @@ function ToolPage({ name, description, category, slug }: ToolPageProps) {
                             ? "tool-workspace image-compress-workspace"
                             : slug === IMAGE_CONVERTER_SLUG
                               ? "tool-workspace image-converter-workspace"
-                              : "tool-workspace"
+                              : slug === BACKGROUND_REMOVER_SLUG
+                                ? "tool-workspace background-remover-workspace"
+                                : "tool-workspace"
           }
         >
           {slug === QR_CODE_GENERATOR_SLUG ? (
@@ -314,6 +326,10 @@ function ToolPage({ name, description, category, slug }: ToolPageProps) {
           ) : slug === IMAGE_CONVERTER_SLUG ? (
             <Suspense fallback={<div className="qr-generator-loading">Loading image converter tool…</div>}>
               <ImageConverterTool />
+            </Suspense>
+          ) : slug === BACKGROUND_REMOVER_SLUG ? (
+            <Suspense fallback={<div className="qr-generator-loading">Loading background remover tool…</div>}>
+              <BackgroundRemoverTool />
             </Suspense>
           ) : (
             <div className="tool-workspace-placeholder">

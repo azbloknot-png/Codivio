@@ -84,6 +84,17 @@ import { ROBOTS_INDEX_FOLLOW, ROBOTS_NOINDEX_FOLLOW, type SeoEntity } from "./ty
  * explicitly NOT part of this sub-phase's authorized scope and remain
  * `noindex,follow` — a deliberate scope decision, not an oversight. Same
  * disclosed, deferred `public/sitemap.xml` gap as the tools above.
+ *
+ * SEO follow-up (Phase 6.5): "background-remover" shipped real, working
+ * browser-side background removal for photos of people (MediaPipe's Selfie
+ * Segmenter model family, Apache-2.0) — its `robots` entry is the tenth to
+ * flip to `index,follow`. Its title/description were rewritten (not
+ * reused as-is) to honestly disclose the person/subject-focused scope —
+ * the pre-existing copy did not claim universality but also did not
+ * disclose this real limitation, and the approved Phase 6.5 scope decision
+ * explicitly requires this tool to never read as a general arbitrary-object
+ * background remover. Same disclosed, deferred `public/sitemap.xml` gap as
+ * the tools above.
  */
 export const TOOL_SEO: Record<string, SeoEntity> = {
   "qr-code-generator": {
@@ -647,19 +658,22 @@ export const TOOL_SEO: Record<string, SeoEntity> = {
 
   "background-remover": {
     path: "/tools/background-remover",
-    robots: ROBOTS_NOINDEX_FOLLOW,
+    robots: ROBOTS_INDEX_FOLLOW,
     localized: {
       en: {
         title: "Background Remover – Remove Image Backgrounds Online",
-        description: "Remove the background from a photo automatically, leaving a clean cutout ready to use.",
+        description:
+          "Remove the background from a photo of a person, right in your browser, leaving a transparent cutout ready to use.",
       },
       az: {
         title: "Fon Silici – Şəkillərdən Fonu Onlayn Silin",
-        description: "Fotoşəkildən fonu avtomatik silin və istifadəyə hazır təmiz kəsimi əldə edin.",
+        description:
+          "İnsan fotoşəklindəki fonu birbaşa brauzerinizdə silin və istifadəyə hazır şəffaf kəsimi əldə edin.",
       },
       tr: {
         title: "Arka Plan Silici – Görsel Arka Planını Online Kaldırın",
-        description: "Bir fotoğrafın arka planını otomatik olarak kaldırın ve kullanıma hazır temiz bir kesim elde edin.",
+        description:
+          "Bir kişinin fotoğrafındaki arka planı doğrudan tarayıcınızda kaldırın ve kullanıma hazır şeffaf bir kesim elde edin.",
       },
     },
   },

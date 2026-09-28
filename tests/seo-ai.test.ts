@@ -49,6 +49,7 @@ describe("AI content structure covers the real 34-tool / 4-category registry", (
       "image-resize",
       "image-compress",
       "image-converter",
+      "background-remover",
     ]);
     for (const slug of slugs) {
       for (const lang of LANGUAGES) {
