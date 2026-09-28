@@ -2,7 +2,8 @@ import { detectImageFormat } from "../../shared/image/format";
 import type { ImageFileInput, ImageFormat } from "../../shared/image/types";
 
 /**
- * Codivio Shared Image Engine — Resize (Phase 6.2).
+ * Codivio Shared Image Engine — Resize (Phase 6.2), Compress (Phase 6.3),
+ * Convert (Phase 6.4).
  *
  * The only file that touches browser Canvas/Image decode APIs
  * (`createImageBitmap`/`OffscreenCanvas`) — mirrors src/lib/pdf-engine.ts's
@@ -398,6 +399,155 @@ export async function resizeImage(
     throw new ImageResizeError(
       "encode_failed",
       `"${file.name}" could not be resized. Please try a different file.`,
+    );
+  } finally {
+    image.close();
+  }
+}
+
+export type ImageConvertErrorCode =
+  | "empty_file"
+  | "invalid_image_signature"
+  | "same_format"
+  | "decode_failed"
+  | "encode_failed";
+
+/** Separate from ImageResizeError/ImageCompressError, mirroring
+ * src/lib/pdf-engine.ts's one-class-per-operation convention. */
+export class ImageConvertError extends Error {
+  code: ImageConvertErrorCode;
+
+  constructor(code: ImageConvertErrorCode, message: string) {
+    super(message);
+    this.name = "ImageConvertError";
+    this.code = code;
+  }
+}
+
+export interface ImageConvertResult {
+  bytes: Uint8Array;
+  sourceFormat: ImageFormat;
+  /** The real output format — always different from `sourceFormat` (same-
+   * format "conversion" is rejected before any decode is attempted). */
+  format: ImageFormat;
+  width: number;
+  height: number;
+}
+
+export interface ImageConvertOverrides {
+  /** Test-only seam — same real default (`defaultDecodeImage`) and same
+   * reason as ImageResizeOverrides#decodeImage. */
+  decodeImage?: (bytes: Uint8Array, format: ImageFormat) => Promise<DecodedImageLike>;
+  /** Test-only seam — real implementation is `defaultEncodeConverted`.
+   * Never set by src/tools/ImageConverterTool.tsx. */
+  encodeConverted?: (image: DecodedImageLike, targetFormat: ImageFormat) => Promise<Uint8Array>;
+}
+
+/**
+ * Whether a white background must be composited onto the canvas before
+ * encoding to `targetFormat` — real, required behavior only for JPEG, the
+ * one Phase 6.4 target format with no alpha channel at all (PNG and WebP
+ * both genuinely support transparency, so their encode path needs no fill).
+ * Kept as its own small, pure, testable function specifically so this
+ * policy decision can be verified in this Node-based test environment even
+ * though the actual pixel compositing itself (inside
+ * `defaultEncodeConverted`) cannot be — no `OffscreenCanvas` exists here
+ * (ENVIRONMENT LIMITATION).
+ *
+ * Always filling white for a JPEG target — never only when a source is
+ * separately detected to "have" transparency — is a deliberate, safe
+ * superset: a fully opaque source fully covers the fill, so this never
+ * visibly changes an already-opaque conversion's result, and it avoids
+ * needing any pixel-inspection step to decide whether a source "really"
+ * has transparent pixels.
+ */
+export function shouldCompositeWhiteBackground(targetFormat: ImageFormat): boolean {
+  return targetFormat === "jpeg";
+}
+
+/**
+ * Real, production convert-encode via `OffscreenCanvas` — same standard Web
+ * API family as `defaultRenderResized`/`defaultEncodeAtQuality`. Draws at
+ * the image's own original dimensions (Convert never resizes). For a JPEG
+ * target, real, spec-documented Canvas behavior is that a transparent
+ * source would otherwise flatten to a BLACK background (a canvas's backing
+ * store defaults to transparent black) — `shouldCompositeWhiteBackground`
+ * makes this an explicit, correct white fill instead, per the approved
+ * Phase 6.4 scope. Same Node/ENVIRONMENT LIMITATION as the other `default*`
+ * functions in this file.
+ */
+async function defaultEncodeConverted(image: DecodedImageLike, targetFormat: ImageFormat): Promise<Uint8Array> {
+  const canvas = new OffscreenCanvas(image.width, image.height);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    throw new Error("2D canvas context unavailable");
+  }
+  if (shouldCompositeWhiteBackground(targetFormat)) {
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, image.width, image.height);
+  }
+  ctx.drawImage(image as unknown as CanvasImageSource, 0, 0);
+  const mimeType = FORMAT_MIME_TYPES[targetFormat];
+  const blob = await canvas.convertToBlob({ type: mimeType });
+  if (blob.type !== mimeType) {
+    throw new Error(`Browser could not encode output as ${mimeType} (got "${blob.type || "unknown"}").`);
+  }
+  return new Uint8Array(await blob.arrayBuffer());
+}
+
+/**
+ * Converts one image to a different target format, entirely in memory,
+ * never changing its dimensions (Resize's job) or quality (Compress's
+ * job — the simplest native encode path is used, with no user-facing
+ * quality control and no quality guarantee). Rejects a same-format request
+ * before any decode is attempted — "converting" a file to the format it
+ * already is isn't a real conversion. Never claims metadata/EXIF
+ * preservation: the Canvas pipeline has no concept of metadata at all, so
+ * none survives this round-trip, by construction. Throws ImageConvertError
+ * on invalid input or a genuine decode/encode failure. Always releases the
+ * decoded image, on both the success and failure path.
+ */
+export async function convertImage(
+  file: ImageFileInput,
+  targetFormat: ImageFormat,
+  overrides: ImageConvertOverrides = {},
+): Promise<ImageConvertResult> {
+  if (file.size === 0 || file.bytes.length === 0) {
+    throw new ImageConvertError("empty_file", `"${file.name}" is empty.`);
+  }
+
+  const sourceFormat = detectImageFormat(file.bytes);
+  if (!sourceFormat) {
+    throw new ImageConvertError(
+      "invalid_image_signature",
+      `"${file.name}" does not look like a supported image (JPEG, PNG, or WebP).`,
+    );
+  }
+
+  if (sourceFormat === targetFormat) {
+    throw new ImageConvertError("same_format", `"${file.name}" is already in the requested format.`);
+  }
+
+  const decodeImage = overrides.decodeImage ?? defaultDecodeImage;
+  const encodeConverted = overrides.encodeConverted ?? defaultEncodeConverted;
+
+  let image: DecodedImageLike;
+  try {
+    image = await decodeImage(file.bytes, sourceFormat);
+  } catch {
+    throw new ImageConvertError(
+      "decode_failed",
+      `"${file.name}" could not be decoded as a valid image (it may be corrupt).`,
+    );
+  }
+
+  try {
+    const bytes = await encodeConverted(image, targetFormat);
+    return { bytes, sourceFormat, format: targetFormat, width: image.width, height: image.height };
+  } catch {
+    throw new ImageConvertError(
+      "encode_failed",
+      `"${file.name}" could not be converted. Please try a different file.`,
     );
   } finally {
     image.close();

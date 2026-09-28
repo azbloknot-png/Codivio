@@ -48,6 +48,7 @@ describe("AI content structure covers the real 34-tool / 4-category registry", (
       "pdf-to-word",
       "image-resize",
       "image-compress",
+      "image-converter",
     ]);
     for (const slug of slugs) {
       for (const lang of LANGUAGES) {

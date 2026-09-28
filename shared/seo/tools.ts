@@ -74,6 +74,16 @@ import { ROBOTS_INDEX_FOLLOW, ROBOTS_NOINDEX_FOLLOW, type SeoEntity } from "./ty
  * percentage, so neither needed rewriting. Same disclosed, deferred
  * `public/sitemap.xml` gap as the tools above — still out of scope for this
  * sub-phase.
+ *
+ * SEO follow-up (Phase 6.4): "image-converter" shipped real, working
+ * browser-side format conversion (any of JPEG/PNG/WebP to a different one)
+ * — its `robots` entry is the ninth to flip to `index,follow`. Its
+ * pre-existing title/description already matched the shipped behavior
+ * exactly, so neither needed rewriting. The three dedicated single-purpose
+ * converters below ("jpg-to-png", "png-to-jpg", "webp-converter") are
+ * explicitly NOT part of this sub-phase's authorized scope and remain
+ * `noindex,follow` — a deliberate scope decision, not an oversight. Same
+ * disclosed, deferred `public/sitemap.xml` gap as the tools above.
  */
 export const TOOL_SEO: Record<string, SeoEntity> = {
   "qr-code-generator": {
@@ -523,7 +533,7 @@ export const TOOL_SEO: Record<string, SeoEntity> = {
 
   "image-converter": {
     path: "/tools/image-converter",
-    robots: ROBOTS_NOINDEX_FOLLOW,
+    robots: ROBOTS_INDEX_FOLLOW,
     localized: {
       en: {
         title: "Image Format Converter – Convert Between Image Types",

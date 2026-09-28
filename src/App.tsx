@@ -390,7 +390,7 @@ const tools: Tool[] = [
     description: "Convert images between popular formats.",
     category: "Image Tools",
     icon: <ImageIcon size={22} />,
-    status: "coming-soon",
+    status: "live",
   },
   {
     name: "JPG to PNG",

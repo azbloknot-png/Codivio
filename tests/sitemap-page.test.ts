@@ -91,10 +91,10 @@ describe("SitemapPage — Coming soon badge for not-yet-shipped tools", () => {
     // (`status: "coming-soon" | "live"`), not a real registry entry.
     // Phase 5.2/5.3/5.4/5.5: pdf-merge, pdf-split, pdf-compress, and
     // pdf-to-word flipped from coming-soon to live, joining the 2 QR tools.
-    // Phase 6.2/6.3: image-resize and image-compress flipped too — 8 live,
-    // 26 still coming-soon.
-    expect(liveCount).toBe(8);
-    expect(comingSoonCount - 1).toBe(26);
+    // Phase 6.2/6.3/6.4: image-resize, image-compress, and image-converter
+    // flipped too — 9 live, 25 still coming-soon.
+    expect(liveCount).toBe(9);
+    expect(comingSoonCount - 1).toBe(25);
   });
 
   it("intro copy no longer implies every listed tool is ready — mentions the Coming soon convention instead", () => {

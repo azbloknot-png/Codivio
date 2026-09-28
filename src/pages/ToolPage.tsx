@@ -84,6 +84,16 @@ const IMAGE_RESIZE_SLUG = "image-resize";
 const ImageCompressTool = lazy(() => import("../tools/ImageCompressTool"));
 const IMAGE_COMPRESS_SLUG = "image-compress";
 
+/**
+ * Phase 6.4 — same isolation strategy as every lazy tool above, and same
+ * shared engine (src/lib/image-engine.ts) as Resize/Compress. Covers only
+ * the generic "image-converter" tool — the three dedicated single-purpose
+ * converters (jpg-to-png/png-to-jpg/webp-converter) remain "coming soon"
+ * and unrouted here, per the approved Phase 6.4 scope.
+ */
+const ImageConverterTool = lazy(() => import("../tools/ImageConverterTool"));
+const IMAGE_CONVERTER_SLUG = "image-converter";
+
 type ToolPageProps = {
   name: string;
   description: string;
@@ -264,7 +274,9 @@ function ToolPage({ name, description, category, slug }: ToolPageProps) {
                           ? "tool-workspace image-resize-workspace"
                           : slug === IMAGE_COMPRESS_SLUG
                             ? "tool-workspace image-compress-workspace"
-                            : "tool-workspace"
+                            : slug === IMAGE_CONVERTER_SLUG
+                              ? "tool-workspace image-converter-workspace"
+                              : "tool-workspace"
           }
         >
           {slug === QR_CODE_GENERATOR_SLUG ? (
@@ -298,6 +310,10 @@ function ToolPage({ name, description, category, slug }: ToolPageProps) {
           ) : slug === IMAGE_COMPRESS_SLUG ? (
             <Suspense fallback={<div className="qr-generator-loading">Loading image compress tool…</div>}>
               <ImageCompressTool />
+            </Suspense>
+          ) : slug === IMAGE_CONVERTER_SLUG ? (
+            <Suspense fallback={<div className="qr-generator-loading">Loading image converter tool…</div>}>
+              <ImageConverterTool />
             </Suspense>
           ) : (
             <div className="tool-workspace-placeholder">

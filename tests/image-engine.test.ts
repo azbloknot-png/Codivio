@@ -4,12 +4,16 @@ import {
   getImageDimensions,
   resizeImage,
   compressImage,
+  convertImage,
+  shouldCompositeWhiteBackground,
   ImageResizeError,
   ImageCompressError,
+  ImageConvertError,
   type ImageResizeOverrides,
   type ImageCompressOverrides,
+  type ImageConvertOverrides,
 } from "../src/lib/image-engine";
-import type { ImageFileInput } from "../shared/image/types";
+import type { ImageFileInput, ImageFormat } from "../shared/image/types";
 
 /**
  * Phase 6.2 (Resize) + Phase 6.3 (Compress) — Image engine tests.
@@ -33,6 +37,20 @@ const REAL_PNG_1X1 = Buffer.from(
 
 function realPngFile(name = "photo.png"): ImageFileInput {
   return { name, size: REAL_PNG_1X1.length, bytes: new Uint8Array(REAL_PNG_1X1) };
+}
+
+// Real, standardized JPEG/WebP signature bytes (same values proven in
+// tests/image-format.test.ts) — sufficient for detectImageFormat, which is
+// all these fixtures need to exercise since the actual decode is always
+// mocked via the decodeImage override in this file's tests.
+function realJpegFile(name = "photo.jpg"): ImageFileInput {
+  const bytes = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46]);
+  return { name, size: bytes.length, bytes };
+}
+
+function realWebpFile(name = "photo.webp"): ImageFileInput {
+  const bytes = new Uint8Array([0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50]);
+  return { name, size: bytes.length, bytes };
 }
 
 function makeMockImage(width: number, height: number) {
@@ -202,5 +220,79 @@ describe("compressImage", () => {
   it("throws a named ImageCompressError, never a raw library error", async () => {
     const file: ImageFileInput = { name: "empty.png", size: 0, bytes: new Uint8Array(0) };
     await expect(compressImage(file)).rejects.toBeInstanceOf(ImageCompressError);
+  });
+});
+
+describe("convertImage", () => {
+  it("rejects an empty file", async () => {
+    const file: ImageFileInput = { name: "empty.png", size: 0, bytes: new Uint8Array(0) };
+    await expect(convertImage(file, "jpeg")).rejects.toMatchObject({ code: "empty_file" });
+  });
+
+  it("rejects a file with an unrecognized signature", async () => {
+    const file: ImageFileInput = { name: "not-image.txt", size: 10, bytes: new TextEncoder().encode("not-image!") };
+    await expect(convertImage(file, "jpeg")).rejects.toMatchObject({ code: "invalid_image_signature" });
+  });
+
+  it("rejects converting a file to the format it already is", async () => {
+    await expect(convertImage(realPngFile(), "png")).rejects.toMatchObject({ code: "same_format" });
+  });
+
+  it("converts correctly across all 6 real supported source/target combinations, preserving dimensions and reporting the real output format", async () => {
+    const cases: Array<{ file: ImageFileInput; sourceFormat: ImageFormat; targetFormat: ImageFormat }> = [
+      { file: realJpegFile(), sourceFormat: "jpeg", targetFormat: "png" },
+      { file: realJpegFile(), sourceFormat: "jpeg", targetFormat: "webp" },
+      { file: realPngFile(), sourceFormat: "png", targetFormat: "jpeg" },
+      { file: realPngFile(), sourceFormat: "png", targetFormat: "webp" },
+      { file: realWebpFile(), sourceFormat: "webp", targetFormat: "jpeg" },
+      { file: realWebpFile(), sourceFormat: "webp", targetFormat: "png" },
+    ];
+
+    for (const { file, sourceFormat, targetFormat } of cases) {
+      const mockImage = makeMockImage(320, 240);
+      const outputBytes = new Uint8Array([9, 9, 9]);
+      const overrides: ImageConvertOverrides = {
+        decodeImage: vi.fn().mockResolvedValue(mockImage),
+        encodeConverted: vi.fn().mockResolvedValue(outputBytes),
+      };
+      const result = await convertImage(file, targetFormat, overrides);
+      expect(result.sourceFormat, `${sourceFormat}->${targetFormat}`).toBe(sourceFormat);
+      expect(result.format, `${sourceFormat}->${targetFormat}`).toBe(targetFormat);
+      expect(result.bytes).toBe(outputBytes);
+      expect(result.width).toBe(320);
+      expect(result.height).toBe(240);
+      expect(overrides.encodeConverted).toHaveBeenCalledWith(mockImage, targetFormat);
+      expect(mockImage.close).toHaveBeenCalledOnce();
+    }
+  });
+
+  it("reports a specific decode_failed error when the browser cannot decode the file", async () => {
+    const overrides: ImageConvertOverrides = {
+      decodeImage: vi.fn().mockRejectedValue(new Error("simulated real decode failure")),
+    };
+    await expect(convertImage(realPngFile(), "jpeg", overrides)).rejects.toMatchObject({ code: "decode_failed" });
+  });
+
+  it("reports a specific encode_failed error and still releases the decoded image when conversion fails", async () => {
+    const mockImage = makeMockImage(100, 100);
+    const overrides: ImageConvertOverrides = {
+      decodeImage: vi.fn().mockResolvedValue(mockImage),
+      encodeConverted: vi.fn().mockRejectedValue(new Error("simulated real encode failure")),
+    };
+    await expect(convertImage(realPngFile(), "jpeg", overrides)).rejects.toMatchObject({ code: "encode_failed" });
+    expect(mockImage.close).toHaveBeenCalledOnce();
+  });
+
+  it("throws a named ImageConvertError, never a raw library error", async () => {
+    const file: ImageFileInput = { name: "empty.png", size: 0, bytes: new Uint8Array(0) };
+    await expect(convertImage(file, "jpeg")).rejects.toBeInstanceOf(ImageConvertError);
+  });
+});
+
+describe("shouldCompositeWhiteBackground (Phase 6.4 transparency policy)", () => {
+  it("requires a white background fill only for a JPEG target — the one format with no alpha channel", () => {
+    expect(shouldCompositeWhiteBackground("jpeg")).toBe(true);
+    expect(shouldCompositeWhiteBackground("png")).toBe(false);
+    expect(shouldCompositeWhiteBackground("webp")).toBe(false);
   });
 });
