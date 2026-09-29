@@ -34,7 +34,16 @@ const CONTENT_SECURITY_POLICY = [
   // own gtag.js CSP guidance names — no broader than that, and no
   // 'unsafe-inline' was added (src/lib/analytics.ts's dataLayer/gtag
   // bootstrap is same-origin bundled JS, not an inline <script> block).
-  "script-src 'self' https://www.googletagmanager.com",
+  //
+  // Widened again for Phase 6.5 (Background Remover): 'wasm-unsafe-eval' is
+  // the real, CSP-Level-3-documented keyword required for
+  // WebAssembly.instantiate/compile to run under a restrictive CSP (MDN:
+  // "Content-Security-Policy: script-src" — WebAssembly compilation is
+  // gated the same way 'unsafe-eval' gates eval()). https://cdn.jsdelivr.net
+  // is the exact, disclosed host src/lib/background-remover-engine.ts fetches
+  // the MediaPipe WASM runtime/loader from — verified, not a guess (see that
+  // file's own header comment for the real, measured URL/size evidence).
+  "script-src 'self' https://www.googletagmanager.com https://cdn.jsdelivr.net 'wasm-unsafe-eval'",
   "style-src 'self'",
   // googletagmanager.com is also allowed here: gtag.js's own fallback
   // image-beacon transport can use it, per Google's documented CSP.
@@ -47,7 +56,18 @@ const CONTENT_SECURITY_POLICY = [
   // An incomplete list here would silently drop page views (a blocked
   // network request, invisible without browser devtools), so this errs
   // toward Google's full documented set rather than a narrower guess.
-  "connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com",
+  //
+  // Phase 6.5 (Background Remover) REAL PROJECT PROBLEM fix: this directive
+  // did not previously allow https://cdn.jsdelivr.net (MediaPipe's WASM
+  // runtime/model-loader fetch) or https://storage.googleapis.com (the
+  // selfie-segmentation model fetch) — both `fetch()`-based, both required
+  // for that tool to function at all. Without these two exact hosts here,
+  // every real-browser attempt to use Background Remover would have its
+  // WASM/model fetch blocked by this CSP before MediaPipe could even start,
+  // regardless of any application-level code correctness. Added exactly
+  // these two disclosed hosts — no broader pattern, same minimal-widening
+  // discipline as the GA4 entries above.
+  "connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com https://cdn.jsdelivr.net https://storage.googleapis.com",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

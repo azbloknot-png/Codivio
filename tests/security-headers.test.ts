@@ -8,7 +8,12 @@ describe("security headers baseline (Phase 2.11)", () => {
 
     expect(wrapped.headers.get("Content-Security-Policy")).toContain("default-src 'self'");
     expect(wrapped.headers.get("Content-Security-Policy")).not.toContain("unsafe-inline");
-    expect(wrapped.headers.get("Content-Security-Policy")).not.toContain("unsafe-eval");
+    // The broad 'unsafe-eval' token (which would also permit eval()/
+    // new Function()) must never appear — only the narrower, Phase 6.5-
+    // disclosed 'wasm-unsafe-eval' token (WebAssembly compilation only) is
+    // present, so this checks for the exact quoted broad token, not a bare
+    // substring match that 'wasm-unsafe-eval' would also satisfy.
+    expect(wrapped.headers.get("Content-Security-Policy")).not.toContain("'unsafe-eval'");
     expect(wrapped.headers.get("X-Content-Type-Options")).toBe("nosniff");
     expect(wrapped.headers.get("Referrer-Policy")).toBe("strict-origin-when-cross-origin");
     // Exact full-string match (not just toContain) so any future accidental
@@ -46,8 +51,24 @@ describe("security headers baseline (Phase 2.11)", () => {
     expect(csp).toContain("https://*.analytics.google.com");
     expect(csp).toMatch(/connect-src[^;]*https:\/\/www\.googletagmanager\.com/);
     expect(csp).not.toContain("unsafe-inline");
-    expect(csp).not.toContain("unsafe-eval");
+    expect(csp).not.toContain("'unsafe-eval'");
     // style-src stays untouched by the GA4 widening — gtag.js needs no CSS.
     expect(csp).toContain("style-src 'self'");
+  });
+
+  // Phase 6.5 (Background Remover) REAL PROJECT PROBLEM fix: the CSP
+  // previously omitted the two exact external hosts that tool's own
+  // disclosed MediaPipe WASM/model fetch depends on, which would have
+  // blocked every real-browser attempt to use it. Regression guard for that
+  // specific fix — see worker/security-headers.ts's own header comment.
+  it("allows exactly the MediaPipe WASM/model hosts Background Remover needs, with no broader eval exception", () => {
+    const csp = withSecurityHeaders(Response.json({}), new Request("http://localhost/")).headers.get(
+      "Content-Security-Policy",
+    );
+    expect(csp).toContain("https://cdn.jsdelivr.net");
+    expect(csp).toMatch(/connect-src[^;]*https:\/\/cdn\.jsdelivr\.net/);
+    expect(csp).toMatch(/connect-src[^;]*https:\/\/storage\.googleapis\.com/);
+    expect(csp).toContain("'wasm-unsafe-eval'");
+    expect(csp).not.toContain("'unsafe-eval'");
   });
 });

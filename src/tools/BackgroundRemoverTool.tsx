@@ -2,11 +2,12 @@ import { useCallback, useEffect, useState, type ChangeEvent } from "react";
 import { AlertTriangle, Check, Download, Upload } from "lucide-react";
 import {
   removeBackground,
+  detectInputFormat,
   BackgroundRemoverError,
+  MAX_FILE_SIZE_BYTES,
   type BackgroundRemoverOutputFormat,
   type BackgroundRemoverResult,
 } from "../lib/background-remover-engine";
-import { detectImageFormat } from "../../shared/image/format";
 import { downloadBytesAsFile } from "../lib/download-file";
 import { trackToolStart, trackToolComplete, trackDownload } from "../lib/tool-analytics";
 import type { ImageFileInput } from "../../shared/image/types";
@@ -78,8 +79,12 @@ function BackgroundRemoverTool() {
       setFileErrors([`"${fileInput.name}" is empty.`]);
       return;
     }
-    if (!detectImageFormat(fileInput.bytes)) {
-      setFileErrors([`"${fileInput.name}" does not look like a supported image (JPEG, PNG, or WebP).`]);
+    if (fileInput.size > MAX_FILE_SIZE_BYTES) {
+      setFileErrors(["File is too large. Maximum supported size is 5 MB."]);
+      return;
+    }
+    if (!detectInputFormat(fileInput.bytes)) {
+      setFileErrors([`"${fileInput.name}" does not look like a supported file (JPEG, PNG, WebP, SVG, or PDF).`]);
       return;
     }
 
@@ -121,18 +126,19 @@ function BackgroundRemoverTool() {
       <p className="pdf-merge-hint">
         Removes the background from photos of people, leaving a transparent PNG or WebP cutout. Optimized for
         portraits and subject photos — not a general tool for removing backgrounds from arbitrary objects or scenes.
+        Accepts JPG, PNG, WebP, SVG, or PDF (first page only). Maximum file size: 5 MB.
       </p>
 
       <div className="pdf-split-upload">
         <label className="primary-button pdf-split-upload-label" htmlFor="background-remover-file-input">
           <Upload size={16} aria-hidden="true" />
-          Choose a photo
+          Choose a file
         </label>
         <input
           id="background-remover-file-input"
           className="pdf-split-file-input"
           type="file"
-          accept="image/jpeg,image/png,image/webp"
+          accept="image/jpeg,image/png,image/webp,image/svg+xml,application/pdf"
           onChange={(event) => void handleFileSelected(event)}
         />
       </div>

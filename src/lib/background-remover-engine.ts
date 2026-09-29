@@ -1,6 +1,15 @@
 import { detectImageFormat } from "../../shared/image/format";
 import type { ImageFileInput, ImageFormat } from "../../shared/image/types";
+import { hasPdfSignature } from "../../shared/pdf";
 import { FORMAT_MIME_TYPES } from "./image-engine";
+// Vite's `?url` suffix gives the real, hashed, deployable URL of pdfjs-dist's
+// worker script — the same established pattern already proven in
+// src/lib/pdf-to-word-engine.ts (Phase 5.5). This import itself is just a
+// string (cheap, not the actual pdfjs-dist library), so it costs nothing to
+// keep static; the library itself is loaded via a dynamic `import()` inside
+// `decodePdfFirstPage`, only when a PDF is actually selected, so JPEG/PNG/
+// WebP/SVG users never pay pdfjs-dist's bundle cost.
+import pdfWorkerUrl from "pdfjs-dist/legacy/build/pdf.worker.min.mjs?url";
 
 /**
  * Codivio Background Remover Engine (Phase 6.5).
@@ -52,9 +61,34 @@ export const MEDIAPIPE_WASM_BASE_PATH = "https://cdn.jsdelivr.net/npm/@mediapipe
 export const MEDIAPIPE_MODEL_URL =
   "https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/latest/selfie_segmenter.tflite";
 
+/** Maximum accepted upload size — a real, required product limit (not a
+ * Phase 6.7 general resource-limit policy), because this tool's input can
+ * now include SVG/PDF, which a size check alone cannot make safe on its own
+ * (see MAX_RASTER_DIMENSION_PX below for the companion guard). */
+export const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+
+/**
+ * Maximum accepted decoded/rasterized dimension (in either axis), checked
+ * after decode for every input format, not only SVG/PDF — a small 5 MB file
+ * can still be a pathological source (e.g. a solid-color PNG or an SVG with
+ * an enormous `viewBox`) that would otherwise expand into an unbounded
+ * canvas allocation. Deliberately a single, narrow guard scoped to exactly
+ * what this tool's own rasterization step needs to stay safe — not a
+ * general Phase 6.7 Image Processing Resource Limits policy, which remains
+ * unimplemented and out of this sub-phase's scope. 4096px is a
+ * conventional, widely-used safe upper bound for a single client-side
+ * canvas operation (comfortably above any real photo/document use case for
+ * this tool, comfortably below the point where a 2D canvas allocation
+ * becomes a real memory risk in an ordinary browser tab) — not empirically
+ * tuned against real devices in this environment (ENVIRONMENT LIMITATION).
+ */
+export const MAX_RASTER_DIMENSION_PX = 4096;
+
 export type BackgroundRemoverErrorCode =
   | "empty_file"
+  | "file_too_large"
   | "invalid_image_signature"
+  | "dimension_too_large"
   | "decode_failed"
   | "segmentation_failed"
   | "encode_failed";
@@ -76,9 +110,16 @@ export class BackgroundRemoverError extends Error {
  * established in src/lib/image-engine.ts's Convert operation). */
 export type BackgroundRemoverOutputFormat = "png" | "webp";
 
+/** The real input formats this tool accepts — a strict superset of
+ * shared/image/types.ts's `ImageFormat`. SVG/PDF are deliberately kept as a
+ * local addition here, not added to the shared `ImageFormat` type: Resize/
+ * Compress/Convert never accept a vector or document format, and widening
+ * the shared type would incorrectly imply they do. */
+export type BackgroundRemoverInputFormat = ImageFormat | "svg" | "pdf";
+
 export interface BackgroundRemoverResult {
   bytes: Uint8Array;
-  sourceFormat: ImageFormat;
+  sourceFormat: BackgroundRemoverInputFormat;
   format: BackgroundRemoverOutputFormat;
   width: number;
   height: number;
@@ -104,7 +145,7 @@ export interface BackgroundRemoverOverrides {
    * the browser's own `createImageBitmap`. Never set by
    * src/tools/BackgroundRemoverTool.tsx; production always uses the real
    * implementation. */
-  decodeImage?: (bytes: Uint8Array, format: ImageFormat) => Promise<DecodedImageLike>;
+  decodeImage?: (bytes: Uint8Array, format: BackgroundRemoverInputFormat) => Promise<DecodedImageLike>;
   /** Test-only seam — real implementation is `defaultSegmentForeground`,
    * which lazy-loads @mediapipe/tasks-vision and runs real WASM inference.
    * No WASM ML runtime exists in this project's Node-based Vitest
@@ -122,8 +163,93 @@ export interface BackgroundRemoverOverrides {
   ) => Promise<Uint8Array>;
 }
 
-async function defaultDecodeImage(bytes: Uint8Array, format: ImageFormat): Promise<DecodedImageLike> {
-  const blob = new Blob([new Uint8Array(bytes)], { type: FORMAT_MIME_TYPES[format] });
+/** SVG's real signature is text (XML), not a fixed binary magic-byte
+ * sequence like JPEG/PNG/WebP/PDF — this is a genuine, real constraint of
+ * the format itself, not a shortcut. Decodes only the first
+ * `SVG_SNIFF_WINDOW_BYTES` bytes as UTF-8 (best-effort; a malformed/partial
+ * decode simply fails the check rather than throwing) and looks for a
+ * `<svg` tag, which every real SVG document contains near its start
+ * (optionally preceded by an XML declaration/doctype/comment). This never
+ * parses the file as XML and never executes anything — it is a content
+ * sniff, exactly like the byte-signature checks used for every other
+ * format here. */
+const SVG_SNIFF_WINDOW_BYTES = 1024;
+
+function hasSvgSignature(bytes: Uint8Array): boolean {
+  try {
+    const window = bytes.subarray(0, Math.min(bytes.length, SVG_SNIFF_WINDOW_BYTES));
+    const text = new TextDecoder("utf-8", { fatal: false }).decode(window);
+    return /<svg[\s>]/i.test(text);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Identifies the real input format from actual file content, reusing the
+ * same shared/image/format.ts check every other Image tool uses for JPEG/
+ * PNG/WebP, and shared/pdf's own already-proven `hasPdfSignature` for PDF
+ * (Phase 5.6) — never reimplementing either. SVG detection is the one new
+ * check this file adds, since no other tool in this codebase accepts SVG.
+ */
+export function detectInputFormat(bytes: Uint8Array): BackgroundRemoverInputFormat | null {
+  const imageFormat = detectImageFormat(bytes);
+  if (imageFormat) return imageFormat;
+  if (hasPdfSignature(bytes)) return "pdf";
+  if (hasSvgSignature(bytes)) return "svg";
+  return null;
+}
+
+/**
+ * Renders only the FIRST page of a PDF to a raster bitmap — an explicit,
+ * disclosed scope decision (never "batch" PDF background removal), using
+ * this project's existing, already-proven `pdfjs-dist` dependency (Phase
+ * 5.5/5.7) rather than adding a new one. The render scale is capped so
+ * neither dimension exceeds `MAX_RASTER_DIMENSION_PX` — the same resource-
+ * safety guard applied to every input format, computed here before
+ * rendering (for PDF specifically) so an oversized page never reaches an
+ * actual canvas allocation in the first place, rather than being rejected
+ * only after the fact. Always destroys the loading task, mirroring
+ * src/lib/pdf-to-word-engine.ts's own Phase 5.7 fix for the same real
+ * resource-leak class.
+ */
+async function decodePdfFirstPage(bytes: Uint8Array): Promise<DecodedImageLike> {
+  const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    typeof window !== "undefined" ? pdfWorkerUrl : "pdfjs-dist/legacy/build/pdf.worker.mjs";
+
+  const loadingTask = pdfjsLib.getDocument({ data: bytes });
+  try {
+    const pdf = await loadingTask.promise;
+    const page = await pdf.getPage(1);
+    const baseViewport = page.getViewport({ scale: 1 });
+    const scale = Math.min(1, MAX_RASTER_DIMENSION_PX / Math.max(baseViewport.width, baseViewport.height));
+    const viewport = page.getViewport({ scale });
+    const canvas = new OffscreenCanvas(Math.max(1, Math.ceil(viewport.width)), Math.max(1, Math.ceil(viewport.height)));
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      throw new Error("2D canvas context unavailable");
+    }
+    // `canvas: null` + `canvasContext` is pdfjs-dist's own documented path
+    // for rendering into a context that isn't backed by an HTMLCanvasElement
+    // (we use OffscreenCanvas, consistent with every other Canvas operation
+    // in this codebase) — see RenderParameters's own doc comment.
+    await page.render({ canvasContext: ctx as unknown as CanvasRenderingContext2D, canvas: null, viewport }).promise;
+    return await createImageBitmap(canvas);
+  } finally {
+    // Mirrors src/lib/pdf-to-word-engine.ts's own Phase 5.7 fix: only
+    // `loadingTask.destroy()` exists/is needed — PDFDocumentProxy itself has
+    // no separate `destroy()` method in this pdfjs-dist version.
+    await loadingTask.destroy();
+  }
+}
+
+async function defaultDecodeImage(bytes: Uint8Array, format: BackgroundRemoverInputFormat): Promise<DecodedImageLike> {
+  if (format === "pdf") {
+    return await decodePdfFirstPage(bytes);
+  }
+  const mimeType = format === "svg" ? "image/svg+xml" : FORMAT_MIME_TYPES[format];
+  const blob = new Blob([new Uint8Array(bytes)], { type: mimeType });
   return await createImageBitmap(blob);
 }
 
@@ -266,11 +392,15 @@ export async function removeBackground(
     throw new BackgroundRemoverError("empty_file", `"${file.name}" is empty.`);
   }
 
-  const sourceFormat = detectImageFormat(file.bytes);
+  if (file.size > MAX_FILE_SIZE_BYTES) {
+    throw new BackgroundRemoverError("file_too_large", "File is too large. Maximum supported size is 5 MB.");
+  }
+
+  const sourceFormat = detectInputFormat(file.bytes);
   if (!sourceFormat) {
     throw new BackgroundRemoverError(
       "invalid_image_signature",
-      `"${file.name}" does not look like a supported image (JPEG, PNG, or WebP).`,
+      `"${file.name}" does not look like a supported file (JPEG, PNG, WebP, SVG, or PDF).`,
     );
   }
 
@@ -284,7 +414,15 @@ export async function removeBackground(
   } catch {
     throw new BackgroundRemoverError(
       "decode_failed",
-      `"${file.name}" could not be decoded as a valid image (it may be corrupt).`,
+      `"${file.name}" could not be decoded as a valid file (it may be corrupt or an unsupported variant).`,
+    );
+  }
+
+  if (image.width > MAX_RASTER_DIMENSION_PX || image.height > MAX_RASTER_DIMENSION_PX) {
+    image.close();
+    throw new BackgroundRemoverError(
+      "dimension_too_large",
+      `"${file.name}" is too large to process (${image.width}×${image.height} exceeds the ${MAX_RASTER_DIMENSION_PX}px limit).`,
     );
   }
 

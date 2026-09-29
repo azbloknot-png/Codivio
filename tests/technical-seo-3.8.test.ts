@@ -106,7 +106,12 @@ describe("CSP is unchanged and remains compatible with JSON-LD (no unsafe-inline
     const scriptSrc = csp?.split(";").find((directive) => directive.trim().startsWith("script-src"));
     expect(scriptSrc).toContain("'self'");
     expect(scriptSrc).not.toContain("unsafe-inline");
-    expect(scriptSrc).not.toContain("unsafe-eval");
+    // Phase 6.5 added the narrower 'wasm-unsafe-eval' token (WebAssembly
+    // compilation only, for the disclosed Background Remover CDN fetch) —
+    // this checks for the broad, quoted 'unsafe-eval' token specifically,
+    // which 'wasm-unsafe-eval' would otherwise false-positive-match as a
+    // bare substring.
+    expect(scriptSrc).not.toContain("'unsafe-eval'");
 
     const useSeoSource = fs.readFileSync(new URL("../src/seo/useSeo.ts", import.meta.url), "utf8");
     expect(useSeoSource).toContain('script.type = "application/ld+json"');

@@ -63,10 +63,20 @@ describe("Background Remover privacy and network boundary", () => {
 });
 
 describe("Background Remover required functionality and honest scope boundary (Phase 6.5)", () => {
-  it("accepts exactly one real image file via a real file input, restricted to the three supported formats", () => {
+  it("accepts exactly one real file via a real file input, restricted to the five supported formats (Phase 6.5 format expansion)", () => {
     expect(toolSource).toContain('type="file"');
-    expect(toolSource).toContain('accept="image/jpeg,image/png,image/webp"');
+    expect(toolSource).toContain('accept="image/jpeg,image/png,image/webp,image/svg+xml,application/pdf"');
     expect(toolSource).not.toMatch(/\n\s*multiple\s*\n/);
+  });
+
+  it("discloses the 5 MB maximum file size and the PDF first-page-only behavior in its own rendered copy", () => {
+    expect(toolSource).toMatch(/maximum file size:\s*5\s*mb/i);
+    expect(toolSource.toLowerCase()).toMatch(/pdf.{0,20}first page|first page.{0,20}pdf/);
+  });
+
+  it("shows the exact required error message for an oversized file, via the shared MAX_FILE_SIZE_BYTES constant", () => {
+    expect(toolSource).toContain("MAX_FILE_SIZE_BYTES");
+    expect(toolSource).toContain("File is too large. Maximum supported size is 5 MB.");
   });
 
   it("routes through exactly one shared engine call, never a bespoke per-tool inference path", () => {

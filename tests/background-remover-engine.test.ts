@@ -2,9 +2,12 @@ import { describe, expect, it, vi } from "vitest";
 import {
   removeBackground,
   compositeAlphaFromMask,
+  detectInputFormat,
   BackgroundRemoverError,
   MEDIAPIPE_WASM_BASE_PATH,
   MEDIAPIPE_MODEL_URL,
+  MAX_FILE_SIZE_BYTES,
+  MAX_RASTER_DIMENSION_PX,
 } from "../src/lib/background-remover-engine";
 import type { ImageFileInput } from "../shared/image/types";
 
@@ -38,6 +41,25 @@ function makeMockImage(width: number, height: number) {
   return { width, height, close: vi.fn() };
 }
 
+// A real, minimal PDF signature ("%PDF-1.4") — sufficient for the real
+// hasPdfSignature/detectInputFormat content check under test here. Full
+// pdfjs-dist parsing of a complete PDF structure is exercised by
+// tests/pdf-*.test.ts elsewhere in this codebase, not duplicated here — this
+// file tests only that a PDF is correctly routed through removeBackground's
+// format detection and decode seam.
+const REAL_PDF_HEADER_BYTES = new TextEncoder().encode("%PDF-1.4\n%\xe2\xe3\xcf\xd3\n");
+
+function realPdfFile(): ImageFileInput {
+  return { name: "document.pdf", size: REAL_PDF_HEADER_BYTES.length, bytes: REAL_PDF_HEADER_BYTES };
+}
+
+// A real, minimal, valid SVG document.
+const REAL_SVG_BYTES = new TextEncoder().encode('<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"></svg>');
+
+function realSvgFile(): ImageFileInput {
+  return { name: "icon.svg", size: REAL_SVG_BYTES.length, bytes: REAL_SVG_BYTES };
+}
+
 describe("compositeAlphaFromMask", () => {
   it("multiplies alpha by confidence, leaving color channels untouched", () => {
     const rgba = new Uint8ClampedArray([10, 20, 30, 255, 40, 50, 60, 200]);
@@ -58,15 +80,114 @@ describe("compositeAlphaFromMask", () => {
   });
 });
 
+describe("detectInputFormat (real content-based signature checks)", () => {
+  it("detects JPEG/PNG/WebP via the existing shared/image/format.ts check (unchanged behavior)", () => {
+    expect(detectInputFormat(REAL_PNG_BYTES)).toBe("png");
+  });
+
+  it("detects a real PDF via the existing, already-proven shared/pdf hasPdfSignature check", () => {
+    expect(detectInputFormat(REAL_PDF_HEADER_BYTES)).toBe("pdf");
+  });
+
+  it("detects a real SVG document by its <svg> tag, not by file extension", () => {
+    expect(detectInputFormat(REAL_SVG_BYTES)).toBe("svg");
+  });
+
+  it("detects an SVG with no XML declaration, just the bare <svg> root element", () => {
+    const bytes = new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"></svg>');
+    expect(detectInputFormat(bytes)).toBe("svg");
+  });
+
+  it("returns null for an unrecognized/unsupported file format", () => {
+    expect(detectInputFormat(new Uint8Array([1, 2, 3, 4]))).toBeNull();
+    expect(detectInputFormat(new TextEncoder().encode("plain text, not a real document"))).toBeNull();
+  });
+});
+
 describe("removeBackground", () => {
   it("rejects an empty file before any decode/segmentation is attempted", async () => {
     const file: ImageFileInput = { name: "empty.png", size: 0, bytes: new Uint8Array() };
     await expect(removeBackground(file)).rejects.toMatchObject({ code: "empty_file" });
   });
 
-  it("rejects a file with no recognized image signature", async () => {
+  it("rejects a file with no recognized signature (JPEG, PNG, WebP, SVG, or PDF)", async () => {
     const file: ImageFileInput = { name: "fake.png", size: 4, bytes: new Uint8Array([1, 2, 3, 4]) };
     await expect(removeBackground(file)).rejects.toMatchObject({ code: "invalid_image_signature" });
+  });
+
+  it("rejects a file over the 5 MB limit before any decode is attempted, with the exact required error message", async () => {
+    const oversized = new Uint8Array(MAX_FILE_SIZE_BYTES + 1);
+    const file: ImageFileInput = { name: "huge.png", size: oversized.length, bytes: oversized };
+    const decodeImage = vi.fn();
+    await expect(removeBackground(file, "png", { decodeImage })).rejects.toMatchObject({
+      code: "file_too_large",
+      message: "File is too large. Maximum supported size is 5 MB.",
+    });
+    expect(decodeImage).not.toHaveBeenCalled();
+  });
+
+  it("accepts a file exactly at the 5 MB boundary (rejects only when strictly larger)", async () => {
+    // A real PNG signature followed by padding, sized to exactly MAX_FILE_SIZE_BYTES.
+    const bytes = new Uint8Array(MAX_FILE_SIZE_BYTES);
+    bytes.set(REAL_PNG_BYTES.subarray(0, 8)); // real PNG magic bytes at the start
+    const file: ImageFileInput = { name: "boundary.png", size: bytes.length, bytes };
+    const mockImage = makeMockImage(1, 1);
+    const result = await removeBackground(file, "png", {
+      decodeImage: vi.fn().mockResolvedValue(mockImage),
+      segmentForeground: vi.fn().mockResolvedValue(new Float32Array([1])),
+      renderCutout: vi.fn().mockResolvedValue(new Uint8Array([1])),
+    });
+    expect(result.sourceFormat).toBe("png");
+  });
+
+  it("routes an SVG file through the svg format to the decode seam", async () => {
+    const mockImage = makeMockImage(10, 10);
+    const decodeImage = vi.fn().mockResolvedValue(mockImage);
+    await removeBackground(realSvgFile(), "png", {
+      decodeImage,
+      segmentForeground: vi.fn().mockResolvedValue(new Float32Array(100).fill(1)),
+      renderCutout: vi.fn().mockResolvedValue(new Uint8Array([1])),
+    });
+    expect(decodeImage).toHaveBeenCalledWith(REAL_SVG_BYTES, "svg");
+  });
+
+  it("routes a PDF file through the pdf format to the decode seam (first-page-only architecture, disclosed)", async () => {
+    const mockImage = makeMockImage(20, 30);
+    const decodeImage = vi.fn().mockResolvedValue(mockImage);
+    const result = await removeBackground(realPdfFile(), "png", {
+      decodeImage,
+      segmentForeground: vi.fn().mockResolvedValue(new Float32Array(600).fill(1)),
+      renderCutout: vi.fn().mockResolvedValue(new Uint8Array([1])),
+    });
+    expect(decodeImage).toHaveBeenCalledWith(REAL_PDF_HEADER_BYTES, "pdf");
+    expect(result.sourceFormat).toBe("pdf");
+  });
+
+  it("rejects a decoded image wider than MAX_RASTER_DIMENSION_PX, before segmentation is attempted", async () => {
+    const mockImage = makeMockImage(MAX_RASTER_DIMENSION_PX + 1, 100);
+    const segmentForeground = vi.fn();
+    await expect(
+      removeBackground(realPngFile(), "png", { decodeImage: vi.fn().mockResolvedValue(mockImage), segmentForeground }),
+    ).rejects.toMatchObject({ code: "dimension_too_large" });
+    expect(segmentForeground).not.toHaveBeenCalled();
+    expect(mockImage.close).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects a decoded image taller than MAX_RASTER_DIMENSION_PX", async () => {
+    const mockImage = makeMockImage(100, MAX_RASTER_DIMENSION_PX + 1);
+    await expect(
+      removeBackground(realPngFile(), "png", { decodeImage: vi.fn().mockResolvedValue(mockImage) }),
+    ).rejects.toMatchObject({ code: "dimension_too_large" });
+  });
+
+  it("accepts a decoded image exactly at MAX_RASTER_DIMENSION_PX in both dimensions", async () => {
+    const mockImage = makeMockImage(MAX_RASTER_DIMENSION_PX, MAX_RASTER_DIMENSION_PX);
+    const result = await removeBackground(realPngFile(), "png", {
+      decodeImage: vi.fn().mockResolvedValue(mockImage),
+      segmentForeground: vi.fn().mockResolvedValue(new Float32Array(1).fill(1)),
+      renderCutout: vi.fn().mockResolvedValue(new Uint8Array([1])),
+    });
+    expect(result.width).toBe(MAX_RASTER_DIMENSION_PX);
   });
 
   it("decodes, segments, and renders a cutout via the injected seams, then releases the decoded image", async () => {
