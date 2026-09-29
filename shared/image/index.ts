@@ -8,3 +8,6 @@ export {
 export type { ImageFormat, ImageFileInput } from "./types";
 
 export { detectImageFormat } from "./format";
+
+export { validateImageFileInput, validateImageDimensions, MAX_IMAGE_FILE_BYTES, MAX_IMAGE_DIMENSION_PX } from "./validate";
+export type { ImageValidationErrorCode, ImageValidationError, ImageValidationResult, ImageDimensionValidationResult } from "./validate";

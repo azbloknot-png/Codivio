@@ -14,6 +14,7 @@ import {
   type ImageConvertOverrides,
 } from "../src/lib/image-engine";
 import type { ImageFileInput, ImageFormat } from "../shared/image/types";
+import { MAX_IMAGE_DIMENSION_PX } from "../shared/image/validate";
 
 /**
  * Phase 6.2 (Resize) + Phase 6.3 (Compress) — Image engine tests.
@@ -95,6 +96,24 @@ describe("getImageDimensions", () => {
     const file: ImageFileInput = { name: "not-image.txt", size: 10, bytes: new TextEncoder().encode("not-image!") };
     await expect(getImageDimensions(file)).rejects.toMatchObject({ code: "invalid_image_signature" });
   });
+
+  it("rejects a decoded image wider than the Phase 6.6 MAX_IMAGE_DIMENSION_PX limit, releasing the decoded image", async () => {
+    const mockImage = makeMockImage(MAX_IMAGE_DIMENSION_PX + 1, 100);
+    const overrides: Pick<ImageResizeOverrides, "decodeImage"> = {
+      decodeImage: vi.fn().mockResolvedValue(mockImage),
+    };
+    await expect(getImageDimensions(realPngFile(), overrides)).rejects.toMatchObject({ code: "dimension_too_large" });
+    expect(mockImage.close).toHaveBeenCalledOnce();
+  });
+
+  it("accepts a decoded image exactly at the MAX_IMAGE_DIMENSION_PX boundary", async () => {
+    const mockImage = makeMockImage(MAX_IMAGE_DIMENSION_PX, MAX_IMAGE_DIMENSION_PX);
+    const overrides: Pick<ImageResizeOverrides, "decodeImage"> = {
+      decodeImage: vi.fn().mockResolvedValue(mockImage),
+    };
+    const result = await getImageDimensions(realPngFile(), overrides);
+    expect(result.width).toBe(MAX_IMAGE_DIMENSION_PX);
+  });
 });
 
 describe("resizeImage", () => {
@@ -152,6 +171,15 @@ describe("resizeImage", () => {
   it("throws a named ImageResizeError, never a raw library error", async () => {
     const file: ImageFileInput = { name: "empty.png", size: 0, bytes: new Uint8Array(0) };
     await expect(resizeImage(file, 100, 100)).rejects.toBeInstanceOf(ImageResizeError);
+  });
+
+  it("rejects a decoded source image taller than MAX_IMAGE_DIMENSION_PX, before attempting to render, releasing the decoded image", async () => {
+    const mockImage = makeMockImage(100, MAX_IMAGE_DIMENSION_PX + 1);
+    const renderResized = vi.fn();
+    const overrides: ImageResizeOverrides = { decodeImage: vi.fn().mockResolvedValue(mockImage), renderResized };
+    await expect(resizeImage(realPngFile(), 50, 50, overrides)).rejects.toMatchObject({ code: "dimension_too_large" });
+    expect(renderResized).not.toHaveBeenCalled();
+    expect(mockImage.close).toHaveBeenCalledOnce();
   });
 });
 
@@ -221,6 +249,15 @@ describe("compressImage", () => {
     const file: ImageFileInput = { name: "empty.png", size: 0, bytes: new Uint8Array(0) };
     await expect(compressImage(file)).rejects.toBeInstanceOf(ImageCompressError);
   });
+
+  it("rejects a decoded image wider than MAX_IMAGE_DIMENSION_PX, before attempting to re-encode, releasing the decoded image", async () => {
+    const mockImage = makeMockImage(MAX_IMAGE_DIMENSION_PX + 1, 100);
+    const encodeAtQuality = vi.fn();
+    const overrides: ImageCompressOverrides = { decodeImage: vi.fn().mockResolvedValue(mockImage), encodeAtQuality };
+    await expect(compressImage(realPngFile(), overrides)).rejects.toMatchObject({ code: "dimension_too_large" });
+    expect(encodeAtQuality).not.toHaveBeenCalled();
+    expect(mockImage.close).toHaveBeenCalledOnce();
+  });
 });
 
 describe("convertImage", () => {
@@ -286,6 +323,15 @@ describe("convertImage", () => {
   it("throws a named ImageConvertError, never a raw library error", async () => {
     const file: ImageFileInput = { name: "empty.png", size: 0, bytes: new Uint8Array(0) };
     await expect(convertImage(file, "jpeg")).rejects.toBeInstanceOf(ImageConvertError);
+  });
+
+  it("rejects a decoded image taller than MAX_IMAGE_DIMENSION_PX, before attempting to convert, releasing the decoded image", async () => {
+    const mockImage = makeMockImage(100, MAX_IMAGE_DIMENSION_PX + 1);
+    const encodeConverted = vi.fn();
+    const overrides: ImageConvertOverrides = { decodeImage: vi.fn().mockResolvedValue(mockImage), encodeConverted };
+    await expect(convertImage(realPngFile(), "jpeg", overrides)).rejects.toMatchObject({ code: "dimension_too_large" });
+    expect(encodeConverted).not.toHaveBeenCalled();
+    expect(mockImage.close).toHaveBeenCalledOnce();
   });
 });
 

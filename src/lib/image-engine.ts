@@ -1,4 +1,4 @@
-import { detectImageFormat } from "../../shared/image/format";
+import { validateImageFileInput, validateImageDimensions } from "../../shared/image/validate";
 import type { ImageFileInput, ImageFormat } from "../../shared/image/types";
 
 /**
@@ -18,17 +18,24 @@ import type { ImageFileInput, ImageFormat } from "../../shared/image/types";
  * Scope (Phase 6.2, authorized): resize only, to an exact target
  * width/height, output staying in the source format. No format conversion
  * (6.4), no quality/compression control (6.3), no crop/rotate, no batch
- * input. No file-size, pixel-count, or output-dimension policy limit is
- * enforced here — those are explicitly reserved for Phase 6.6/6.7; only the
- * structural correctness checks a resize operation cannot mathematically
- * skip (empty input, recognized format, positive integer target
- * dimensions) are enforced.
+ * input.
+ *
+ * Format/size validation (Phase 6.6, explicitly product-authorized):
+ * every operation in this file validates its input file via the shared
+ * `shared/image/validate.ts#validateImageFileInput` (empty-file, 50 MB max
+ * size, real format signature) and its real decoded dimensions via
+ * `validateImageDimensions` (8192px max, either axis) before proceeding.
+ * These are conservative product acceptance limits, not benchmarked browser
+ * capabilities, and not Phase 6.7's separate runtime Resource Limits
+ * concern — see that module's own header comment for the full rationale.
  */
 
 export type ImageResizeErrorCode =
   | "empty_file"
+  | "file_too_large"
   | "invalid_image_signature"
   | "invalid_dimensions"
+  | "dimension_too_large"
   | "decode_failed"
   | "encode_failed";
 
@@ -183,16 +190,11 @@ export async function getImageDimensions(
   file: ImageFileInput,
   overrides: Pick<ImageResizeOverrides, "decodeImage"> = {},
 ): Promise<ImageDimensions & { format: ImageFormat }> {
-  if (file.size === 0 || file.bytes.length === 0) {
-    throw new ImageResizeError("empty_file", `"${file.name}" is empty.`);
+  const validation = validateImageFileInput(file);
+  if (!validation.ok) {
+    throw new ImageResizeError(validation.error.code, validation.error.message);
   }
-  const format = detectImageFormat(file.bytes);
-  if (!format) {
-    throw new ImageResizeError(
-      "invalid_image_signature",
-      `"${file.name}" does not look like a supported image (JPEG, PNG, or WebP).`,
-    );
-  }
+  const format = validation.format;
 
   const decodeImage = overrides.decodeImage ?? defaultDecodeImage;
   let image: DecodedImageLike;
@@ -205,7 +207,11 @@ export async function getImageDimensions(
     );
   }
   const { width, height } = image;
+  const dimensionCheck = validateImageDimensions(width, height);
   image.close();
+  if (!dimensionCheck.ok) {
+    throw new ImageResizeError(dimensionCheck.error.code, dimensionCheck.error.message);
+  }
   return { width, height, format };
 }
 
@@ -221,7 +227,13 @@ export async function getImageDimensions(
  */
 export const DEFAULT_COMPRESS_QUALITY = 0.7;
 
-export type ImageCompressErrorCode = "empty_file" | "invalid_image_signature" | "decode_failed" | "encode_failed";
+export type ImageCompressErrorCode =
+  | "empty_file"
+  | "file_too_large"
+  | "invalid_image_signature"
+  | "dimension_too_large"
+  | "decode_failed"
+  | "encode_failed";
 
 /** Separate from ImageResizeError, mirroring src/lib/pdf-engine.ts's own
  * one-class-per-operation convention (PdfMergeError/PdfSplitError/
@@ -303,17 +315,11 @@ export async function compressImage(
   file: ImageFileInput,
   overrides: ImageCompressOverrides = {},
 ): Promise<ImageCompressResult> {
-  if (file.size === 0 || file.bytes.length === 0) {
-    throw new ImageCompressError("empty_file", `"${file.name}" is empty.`);
+  const validation = validateImageFileInput(file);
+  if (!validation.ok) {
+    throw new ImageCompressError(validation.error.code, validation.error.message);
   }
-
-  const format = detectImageFormat(file.bytes);
-  if (!format) {
-    throw new ImageCompressError(
-      "invalid_image_signature",
-      `"${file.name}" does not look like a supported image (JPEG, PNG, or WebP).`,
-    );
-  }
+  const format = validation.format;
 
   const decodeImage = overrides.decodeImage ?? defaultDecodeImage;
   const encodeAtQuality = overrides.encodeAtQuality ?? defaultEncodeAtQuality;
@@ -326,6 +332,12 @@ export async function compressImage(
       "decode_failed",
       `"${file.name}" could not be decoded as a valid image (it may be corrupt).`,
     );
+  }
+
+  const dimensionCheck = validateImageDimensions(image.width, image.height);
+  if (!dimensionCheck.ok) {
+    image.close();
+    throw new ImageCompressError(dimensionCheck.error.code, dimensionCheck.error.message);
   }
 
   try {
@@ -363,17 +375,11 @@ export async function resizeImage(
   targetHeight: number,
   overrides: ImageResizeOverrides = {},
 ): Promise<ImageResizeResult> {
-  if (file.size === 0 || file.bytes.length === 0) {
-    throw new ImageResizeError("empty_file", `"${file.name}" is empty.`);
+  const validation = validateImageFileInput(file);
+  if (!validation.ok) {
+    throw new ImageResizeError(validation.error.code, validation.error.message);
   }
-
-  const format = detectImageFormat(file.bytes);
-  if (!format) {
-    throw new ImageResizeError(
-      "invalid_image_signature",
-      `"${file.name}" does not look like a supported image (JPEG, PNG, or WebP).`,
-    );
-  }
+  const format = validation.format;
 
   if (!Number.isInteger(targetWidth) || targetWidth <= 0 || !Number.isInteger(targetHeight) || targetHeight <= 0) {
     throw new ImageResizeError("invalid_dimensions", "Width and height must be positive whole numbers.");
@@ -392,6 +398,12 @@ export async function resizeImage(
     );
   }
 
+  const dimensionCheck = validateImageDimensions(image.width, image.height);
+  if (!dimensionCheck.ok) {
+    image.close();
+    throw new ImageResizeError(dimensionCheck.error.code, dimensionCheck.error.message);
+  }
+
   try {
     const bytes = await renderResized(image, targetWidth, targetHeight, format);
     return { bytes, format, width: targetWidth, height: targetHeight };
@@ -407,8 +419,10 @@ export async function resizeImage(
 
 export type ImageConvertErrorCode =
   | "empty_file"
+  | "file_too_large"
   | "invalid_image_signature"
   | "same_format"
+  | "dimension_too_large"
   | "decode_failed"
   | "encode_failed";
 
@@ -512,17 +526,11 @@ export async function convertImage(
   targetFormat: ImageFormat,
   overrides: ImageConvertOverrides = {},
 ): Promise<ImageConvertResult> {
-  if (file.size === 0 || file.bytes.length === 0) {
-    throw new ImageConvertError("empty_file", `"${file.name}" is empty.`);
+  const validation = validateImageFileInput(file);
+  if (!validation.ok) {
+    throw new ImageConvertError(validation.error.code, validation.error.message);
   }
-
-  const sourceFormat = detectImageFormat(file.bytes);
-  if (!sourceFormat) {
-    throw new ImageConvertError(
-      "invalid_image_signature",
-      `"${file.name}" does not look like a supported image (JPEG, PNG, or WebP).`,
-    );
-  }
+  const sourceFormat = validation.format;
 
   if (sourceFormat === targetFormat) {
     throw new ImageConvertError("same_format", `"${file.name}" is already in the requested format.`);
@@ -539,6 +547,12 @@ export async function convertImage(
       "decode_failed",
       `"${file.name}" could not be decoded as a valid image (it may be corrupt).`,
     );
+  }
+
+  const dimensionCheck = validateImageDimensions(image.width, image.height);
+  if (!dimensionCheck.ok) {
+    image.close();
+    throw new ImageConvertError(dimensionCheck.error.code, dimensionCheck.error.message);
   }
 
   try {
