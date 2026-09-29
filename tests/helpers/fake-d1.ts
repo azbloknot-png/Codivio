@@ -21,12 +21,14 @@ export class FakeD1 implements D1Database {
   tools: Record<string, unknown>[] = [];
   siteFaqs: Record<string, unknown>[] = [];
   seoOverrides: Record<string, unknown>[] = [];
+  adSlots: Record<string, unknown>[] = [];
   private nextUserId = 1;
   private nextAuditId = 1;
   private nextPageId = 1;
   private nextToolId = 1;
   private nextFaqId = 1;
   private nextSeoOverrideId = 1;
+  private nextAdSlotId = 1;
 
   /** Seeds the same 4 category rows migrations/0006_tools_management.sql
    * inserts. Real tool rows are seeded separately per-test via
@@ -534,6 +536,52 @@ export class FakeD1 implements D1Database {
     if (q.startsWith("DELETE FROM seo_overrides")) {
       const [id] = v;
       this.seoOverrides = this.seoOverrides.filter((o) => o.id !== id);
+      return { first: null, all: [] };
+    }
+    if (q.startsWith("SELECT id, name, position, device, width, height, status, priority, created_at, updated_at, provider, ad_unit_id FROM ad_slots")) {
+      if (q.includes("WHERE id = ?")) {
+        const row = this.adSlots.find((a) => a.id === v[0]) ?? null;
+        return { first: row ? { ...row } : null, all: row ? [{ ...row }] : [] };
+      }
+      // ORDER BY position ASC, priority ASC (admin list-all query)
+      const rows = [...this.adSlots]
+        .sort((a, b) => {
+          const posDiff = (a.position as string).localeCompare(b.position as string);
+          return posDiff !== 0 ? posDiff : (a.priority as number) - (b.priority as number);
+        })
+        .map((a) => ({ ...a }));
+      return { first: rows[0] ?? null, all: rows };
+    }
+    if (q.startsWith("INSERT INTO ad_slots")) {
+      const [name, position, device, width, height, status, priority, created_at, updated_at, provider, ad_unit_id] = v;
+      const id = this.nextAdSlotId++;
+      this.adSlots.push({
+        id,
+        name,
+        position,
+        device,
+        width,
+        height,
+        status,
+        priority,
+        created_at,
+        updated_at,
+        provider,
+        ad_unit_id,
+      });
+      return { first: null, all: [], lastRowId: id };
+    }
+    if (q.startsWith("UPDATE ad_slots SET name")) {
+      const [name, position, device, width, height, status, priority, updated_at, provider, ad_unit_id, id] = v;
+      const row = this.adSlots.find((a) => a.id === id);
+      if (row) {
+        Object.assign(row, { name, position, device, width, height, status, priority, updated_at, provider, ad_unit_id });
+      }
+      return { first: null, all: [] };
+    }
+    if (q.startsWith("DELETE FROM ad_slots")) {
+      const [id] = v;
+      this.adSlots = this.adSlots.filter((a) => a.id !== id);
       return { first: null, all: [] };
     }
     throw new Error(`FakeD1: unhandled query: ${q}`);

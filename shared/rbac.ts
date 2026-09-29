@@ -36,6 +36,8 @@ export const PERMISSIONS = [
   "settings.manage",
   "analytics.view",
   "audit.view",
+  "advertising.view",
+  "advertising.manage",
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 
@@ -65,6 +67,14 @@ export const ROLE_DISPLAY_NAMES: Readonly<Record<Role, string>> = {
  * `seo.manage` gates the SEO override CRUD endpoints added in Phase
  * 3.15-C (`worker/seo-overrides.ts`) — see DECISIONS.md's Phase 3.15-B
  * and 3.15-C entries.
+ *
+ * `advertising.view`/`advertising.manage` (Phase 7.4) deliberately break
+ * the `seo.*`-style "always granted to admin+editor together" pattern:
+ * `advertising.view` is granted to both `admin` and `editor`, but
+ * `advertising.manage` is granted to `admin` ONLY — ad-slot configuration
+ * is revenue-affecting monetization data, not content metadata, so write
+ * access is intentionally narrower than the existing content-management
+ * precedent. This was an explicit product decision, not an oversight.
  */
 const ROLE_PERMISSIONS: Readonly<Record<Role, readonly Permission[]>> = {
   super_admin: PERMISSIONS,
@@ -83,6 +93,8 @@ const ROLE_PERMISSIONS: Readonly<Record<Role, readonly Permission[]>> = {
     "analytics.view",
     "settings.view",
     "audit.view",
+    "advertising.view",
+    "advertising.manage",
   ],
   editor: [
     "admin.access",
@@ -95,6 +107,7 @@ const ROLE_PERMISSIONS: Readonly<Record<Role, readonly Permission[]>> = {
     "faq.manage",
     "seo.view",
     "seo.manage",
+    "advertising.view",
   ],
   analyst: ["admin.access", "dashboard.view", "analytics.view"],
 };

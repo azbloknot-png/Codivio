@@ -61,6 +61,7 @@ const AdminToolsPage = lazy(() => import("./admin/AdminToolsPage"));
 const AdminFaqPage = lazy(() => import("./admin/AdminFaqPage"));
 const AdminComingSoonPage = lazy(() => import("./admin/AdminComingSoonPage"));
 const AdminSeoPage = lazy(() => import("./admin/AdminSeoPage"));
+const AdminAdvertisingPage = lazy(() => import("./admin/AdminAdvertisingPage"));
 import { useLanguage } from "./i18n/LanguageContext";
 import { LanguageSwitcher } from "./i18n/LanguageSwitcher";
 import { usePageMeta } from "./seo/useSeo";
@@ -2563,7 +2564,7 @@ function App() {
           path="advertising"
           element={
             <Suspense fallback={null}>
-              <AdminComingSoonPage moduleKey="advertising" />
+              <AdminAdvertisingPage />
             </Suspense>
           }
         />

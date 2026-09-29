@@ -221,6 +221,10 @@ export const tr: Translations = {
     editFaq: "SSS'yi düzenle",
     noFaqsYet: "Henüz SSS yok",
     loadingFaqs: "SSS yükleniyor…",
+    newAdSlot: "Yeni reklam alanı",
+    editAdSlot: "Reklam alanını düzenle",
+    noAdSlotsYet: "Henüz reklam alanı yok",
+    loadingAdSlots: "Reklam alanları yükleniyor…",
   },
   site: {
     navHome: "Ana sayfa",

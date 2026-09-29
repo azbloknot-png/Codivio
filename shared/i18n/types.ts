@@ -190,6 +190,10 @@ export interface Translations {
     editFaq: string;
     noFaqsYet: string;
     loadingFaqs: string;
+    newAdSlot: string;
+    editAdSlot: string;
+    noAdSlotsYet: string;
+    loadingAdSlots: string;
   };
   site: {
     navHome: string;

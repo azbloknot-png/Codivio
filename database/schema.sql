@@ -132,6 +132,14 @@ CREATE TABLE IF NOT EXISTS seo_settings (
   FOREIGN KEY (page_id) REFERENCES pages(id) ON DELETE CASCADE
 );
 
+-- Phase 7.4 (migrations/0011_ad_slots_controlled_model.sql) added `provider`
+-- and `ad_unit_id` -- the controlled fields approved in Phase 7.3's
+-- architecture review. `code` is intentionally RETIRED IN PLACE, not
+-- dropped (D1/SQLite DROP COLUMN support was unverified in this
+-- environment -- see that migration's own comment): it is never read,
+-- written, or exposed by shared/ad-slots.ts or worker/ad-slots.ts. It must
+-- never be reused as a free-text HTML/JS/iframe-source field (CLAUDE.md
+-- §14's controlled provider/slot model requirement).
 CREATE TABLE IF NOT EXISTS ad_slots (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
@@ -143,8 +151,13 @@ CREATE TABLE IF NOT EXISTS ad_slots (
   status TEXT NOT NULL DEFAULT 'active',
   priority INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  provider TEXT NOT NULL DEFAULT '',
+  ad_unit_id TEXT NOT NULL DEFAULT ''
 );
+
+CREATE INDEX IF NOT EXISTS idx_ad_slots_status ON ad_slots(status);
+CREATE INDEX IF NOT EXISTS idx_ad_slots_position ON ad_slots(position);
 
 CREATE TABLE IF NOT EXISTS faqs (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

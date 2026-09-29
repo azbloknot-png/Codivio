@@ -222,6 +222,10 @@ export const az: Translations = {
     editFaq: "FAQ-nı redaktə et",
     noFaqsYet: "Hələ FAQ yoxdur",
     loadingFaqs: "FAQ yüklənir…",
+    newAdSlot: "Yeni reklam bloku",
+    editAdSlot: "Reklam blokunu redaktə et",
+    noAdSlotsYet: "Hələ reklam bloku yoxdur",
+    loadingAdSlots: "Reklam blokları yüklənir…",
   },
   site: {
     navHome: "Ana səhifə",

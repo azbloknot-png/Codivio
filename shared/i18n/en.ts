@@ -218,6 +218,10 @@ export const en: Translations = {
     editFaq: "Edit FAQ",
     noFaqsYet: "No FAQ entries yet",
     loadingFaqs: "Loading FAQ entries…",
+    newAdSlot: "New ad slot",
+    editAdSlot: "Edit ad slot",
+    noAdSlotsYet: "No ad slots yet",
+    loadingAdSlots: "Loading ad slots…",
   },
   site: {
     navHome: "Home",

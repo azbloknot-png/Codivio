@@ -62,6 +62,17 @@ describe("hasPermission", () => {
     expect(hasPermission("analyst", "users.view")).toBe(false);
   });
 
+  it("advertising.view (Phase 7.4) follows the seo.*-style admin+editor pattern, but advertising.manage is admin-only — an explicit, narrower product decision for revenue-affecting monetization data", () => {
+    expect(hasPermission("admin", "advertising.view")).toBe(true);
+    expect(hasPermission("admin", "advertising.manage")).toBe(true);
+    expect(hasPermission("editor", "advertising.view")).toBe(true);
+    expect(hasPermission("editor", "advertising.manage")).toBe(false);
+    expect(hasPermission("analyst", "advertising.view")).toBe(false);
+    expect(hasPermission("analyst", "advertising.manage")).toBe(false);
+    expect(hasPermission("super_admin", "advertising.view")).toBe(true);
+    expect(hasPermission("super_admin", "advertising.manage")).toBe(true);
+  });
+
   it("seo.view/seo.manage (Phase 3.15-B) follow the exact same admin+editor-only pattern as pages/tools/faq — never granted alone, never to analyst", () => {
     for (const role of ["admin", "editor"] as const) {
       expect(hasPermission(role, "seo.view")).toBe(hasPermission(role, "pages.view"));

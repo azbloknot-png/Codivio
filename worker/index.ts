@@ -54,6 +54,7 @@ import {
   handleListSeoOverrides,
   handleUpdateSeoOverride,
 } from "./seo-overrides";
+import { handleCreateAdSlot, handleDeleteAdSlot, handleListAdSlots, handleUpdateAdSlot } from "./ad-slots";
 import { withSecurityHeaders } from "./security-headers";
 
 export type { Env };
@@ -199,6 +200,20 @@ async function route(request: Request, env: Env): Promise<Response> {
       if (request.method === "PATCH") return handleUpdateSeoOverride(request, env, id);
       if (request.method === "DELETE") return handleDeleteSeoOverride(request, env, id);
       return methodNotAllowed(["GET", "PATCH", "DELETE"]);
+    }
+
+    if (url.pathname === "/api/admin/ad-slots") {
+      if (request.method === "GET") return handleListAdSlots(request, env);
+      if (request.method === "POST") return handleCreateAdSlot(request, env);
+      return methodNotAllowed(["GET", "POST"]);
+    }
+
+    const adminAdSlotMatch = url.pathname.match(/^\/api\/admin\/ad-slots\/([^/]+)$/);
+    if (adminAdSlotMatch) {
+      const id = adminAdSlotMatch[1];
+      if (request.method === "PATCH") return handleUpdateAdSlot(request, env, id);
+      if (request.method === "DELETE") return handleDeleteAdSlot(request, env, id);
+      return methodNotAllowed(["PATCH", "DELETE"]);
     }
 
     // Every specific /api/* route above has already had its chance to

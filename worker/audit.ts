@@ -45,6 +45,11 @@ export const AUDIT_ACTIONS = [
   "SEO_OVERRIDE_CREATED",
   "SEO_OVERRIDE_UPDATED",
   "SEO_OVERRIDE_DELETED",
+  "AD_SLOT_CREATED",
+  "AD_SLOT_UPDATED",
+  "AD_SLOT_ACTIVATED",
+  "AD_SLOT_DEACTIVATED",
+  "AD_SLOT_DELETED",
 ] as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
 
