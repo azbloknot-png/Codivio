@@ -81,6 +81,7 @@ import {
   type RobotsPolicy,
 } from "../shared/seo/robots-policy";
 import type { Language } from "../shared/i18n/languages";
+import type { AdSlotDevice } from "../shared/ad-slots";
 
 /**
  * FAQ Management Source-of-Truth Remediation.
@@ -742,12 +743,30 @@ function SiteFooter() {
   );
 }
 
-function AdSlot({ label }: { label?: string }) {
+/**
+ * Phase 7.5 — Desktop / Mobile Ad Placement.
+ *
+ * `device` is presentational only, resolved entirely via CSS
+ * (`.ad-slot-device-desktop`/`.ad-slot-device-mobile`, mirroring the
+ * existing `.hero-ad-slot{display:none}` breakpoint pattern already
+ * proven elsewhere in this stylesheet) — never JavaScript viewport
+ * detection, no resize listener, no hydration-dependent state. Default
+ * "all" preserves this component's exact pre-7.5 behavior (visible at
+ * every width) for the 3 existing call sites, none of which currently has
+ * real evidence to justify a narrower value — see Phase 7.5 Stage 1.
+ *
+ * Still a pure, inert placeholder: no executable content, no raw HTML, no
+ * database read. `role="complementary"`/`aria-label` mirror the existing
+ * `.hero-ad-slot` element's own accessibility treatment, which this
+ * generic component previously lacked.
+ */
+function AdSlot({ label, device = "all" }: { label?: string; device?: AdSlotDevice }) {
   const { t } = useLanguage();
+  const adLabel = label ?? t.hero.adLabel;
   return (
     <div className="container">
-      <div className="ad-slot">
-        {label ?? t.hero.adLabel}
+      <div className={`ad-slot ad-slot-device-${device}`} role="complementary" aria-label={adLabel}>
+        {adLabel}
         <span>{t.hero.adNote}</span>
       </div>
     </div>
