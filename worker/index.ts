@@ -61,6 +61,8 @@ import {
   handleGetBlogPost,
   handleListBlogCategories,
   handleListBlogPosts,
+  handlePublicBlogPost,
+  handlePublicBlogPosts,
   handleUpdateBlogPost,
 } from "./blog";
 import { withSecurityHeaders } from "./security-headers";
@@ -241,6 +243,22 @@ async function route(request: Request, env: Env): Promise<Response> {
 
     if (url.pathname === "/api/admin/blog-categories") {
       return request.method === "GET" ? handleListBlogCategories(request, env) : methodNotAllowed(["GET"]);
+    }
+
+    // Phase 8.5 — public, unauthenticated blog endpoints (published posts
+    // only — see worker/blog.ts's handlePublicBlogPosts/handlePublicBlogPost
+    // header comment). Deliberately separate paths from /api/admin/blog-*
+    // above, not a query-param toggle on the same endpoint, so the public
+    // and admin data-exposure surfaces can never be confused by a caller.
+    if (url.pathname === "/api/blog-posts") {
+      return request.method === "GET" ? handlePublicBlogPosts(request, env) : methodNotAllowed(["GET"]);
+    }
+
+    const publicBlogPostMatch = url.pathname.match(/^\/api\/blog-posts\/([^/]+)$/);
+    if (publicBlogPostMatch) {
+      return request.method === "GET"
+        ? handlePublicBlogPost(request, env, publicBlogPostMatch[1])
+        : methodNotAllowed(["GET"]);
     }
 
     // Every specific /api/* route above has already had its chance to

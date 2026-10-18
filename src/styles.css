@@ -337,6 +337,27 @@
 .blog-card p{margin:0 0 17px;color:var(--color-muted);font-size:14px;line-height:1.65}
 .blog-card a{display:flex;align-items:center;gap:4px;color:var(--color-primary);text-decoration:none;font-weight:700;font-size:12px}
 
+/* Phase 8.5 — Public Blog, Post Pages, and Blog Navigation */
+.blog-slider-status{margin:0;padding:18px 4px;color:var(--color-muted);font-size:14px}
+.blog-article-header{margin-bottom:24px}
+.blog-article-header h1{margin:8px 0 10px;color:var(--color-ink);font-size:34px;line-height:1.18;letter-spacing:-.02em}
+.blog-article-meta{display:flex;align-items:center;gap:6px;margin:0 0 10px;color:var(--color-muted);font-size:13px}
+.blog-article-excerpt{margin:0;color:var(--color-muted);font-size:15px;line-height:1.65}
+.blog-article-content{color:var(--color-muted);font-size:15px;line-height:1.75}
+.blog-article-content h1,.blog-article-content h2,.blog-article-content h3{margin:28px 0 10px;color:var(--color-ink);line-height:1.25}
+.blog-article-content h1:first-child,.blog-article-content h2:first-child,.blog-article-content h3:first-child{margin-top:0}
+.blog-article-content p{margin:0 0 14px}
+.blog-article-content ul,.blog-article-content ol{margin:0 0 14px;padding-left:22px}
+.blog-article-content li{margin-bottom:6px}
+.blog-article-content a{color:var(--color-primary);text-decoration:underline}
+.blog-article-content strong{color:var(--color-ink)}
+.blog-article-content blockquote{margin:0 0 14px;padding:10px 18px;border-left:3px solid var(--color-primary);background:#f7f9fc;color:var(--color-ink)}
+.blog-article-content code{padding:2px 6px;background:#f0f4fa;border-radius:6px;font-size:13px}
+.blog-article-content pre{margin:0 0 14px;padding:16px;background:#f0f4fa;border-radius:12px;overflow-x:auto}
+.blog-article-content pre code{padding:0;background:none}
+.blog-article-content img{max-width:100%;border-radius:12px}
+.blog-article-back{margin:24px auto 0;max-width:900px}
+
 .page-search{display:flex;align-items:center;gap:10px;width:min(100%,620px);margin:0 auto 30px;background:#fff;border:1px solid #dbe4ef;border-radius:13px;padding:0 17px}
 .page-search:focus-within{border-color:#9fc3ed;box-shadow:0 0 0 4px rgba(23,105,224,.08)}
 .page-search input{flex:1;height:50px;border:0;outline:0;background:transparent;color:#243b5a;font:inherit;font-size:14px}

@@ -11,6 +11,26 @@
  *  - GET    /api/admin/blog-categories  — blog.view — list existing categories
  *    (read-only; creating/editing/deleting a category is Phase 8.3's scope)
  *
+ * Phase 8.5 — Public Blog, Post Pages, and Blog Navigation adds two
+ * unauthenticated, read-only endpoints (mirrors worker/pages.ts's
+ * handlePublicPage exactly: no authorize() call, filters to
+ * status = 'published' in the SQL itself, and returns an identical 404 for
+ * "slug doesn't exist" and "slug exists but isn't published" so neither
+ * response discloses which case it is):
+ *  - GET /api/blog-posts       — published posts only, summary fields (no
+ *    `content`) — list rendering never needs the full article body.
+ *  - GET /api/blog-posts/:slug — one published post, full fields including
+ *    `content` (raw Markdown source — the client is responsible for
+ *    rendering it through a safe Markdown renderer, see
+ *    src/pages/BlogArticleBody.tsx; this endpoint never returns HTML).
+ * Neither endpoint ever selects/returns `author_id`, `created_by`, or
+ * `updated_by` — `users` has no public-safe display-name column (only
+ * `email`, a login credential), so author attribution is deliberately
+ * omitted from the public API rather than leaking an admin's email or
+ * fabricating a name. Tags and related-tool slugs are also omitted here
+ * (not used by any current public rendering) — add them later, alongside a
+ * real consumer, rather than speculatively.
+ *
  * Mirrors worker/tools.ts's exact shape (authenticate -> authorize ->
  * validate (shared, pure fn) -> explicit field allowlist -> parameterized
  * SQL -> auditLog -> response).
@@ -297,6 +317,69 @@ export async function handleListBlogCategories(request: Request, env: Env): Prom
 
   const rows = await env.DB.prepare("SELECT id, name, slug FROM blog_categories ORDER BY name ASC").all<CategoryRow>();
   return Response.json({ blogCategories: rows.results });
+}
+
+/** Summary shape for the public list — deliberately excludes `content`
+ * (never needed to render a card) on top of the author/tag/related-tool
+ * omissions documented in this file's header comment. */
+function serializePublicBlogPostSummary(row: BlogPostRow, categoryName: string | null) {
+  return {
+    title: row.title,
+    slug: row.slug,
+    excerpt: row.excerpt,
+    featuredImage: row.featured_image,
+    publishedAt: row.published_at,
+    categoryName,
+  };
+}
+
+/** Full shape for a single public article — adds `content` (raw Markdown;
+ * rendering/sanitization happens client-side, see
+ * src/pages/BlogArticleBody.tsx) and the existing SEO fields, still never
+ * author/tag/related-tool data (see header comment). */
+function serializePublicBlogPost(row: BlogPostRow, categoryName: string | null) {
+  return {
+    ...serializePublicBlogPostSummary(row, categoryName),
+    content: row.content,
+    seoTitle: row.seo_title,
+    seoDescription: row.seo_description,
+    canonicalUrl: row.canonical_url,
+    ogImage: row.og_image,
+  };
+}
+
+/** GET /api/blog-posts — public, unauthenticated. Published posts only
+ * (draft/scheduled never selected — status is filtered in SQL, not
+ * filtered-after-the-fact in JS, so there is exactly one place that
+ * decides public visibility). Real data only: an empty table returns an
+ * empty array, never a fabricated sample post. */
+export async function handlePublicBlogPosts(_request: Request, env: Env): Promise<Response> {
+  const [rows, categories] = await Promise.all([
+    env.DB.prepare(`SELECT ${BLOG_POST_COLUMNS} FROM blog_posts WHERE status = 'published' ORDER BY published_at DESC`).all<BlogPostRow>(),
+    loadCategoryMap(env),
+  ]);
+
+  const blogPosts = rows.results.map((row) =>
+    serializePublicBlogPostSummary(row, row.category_id ? categories.get(row.category_id)?.name ?? null : null)
+  );
+
+  return Response.json({ blogPosts });
+}
+
+/** GET /api/blog-posts/:slug — public, unauthenticated. Mirrors
+ * handlePublicPage (worker/pages.ts) exactly: a draft/scheduled post and a
+ * genuinely nonexistent slug both return the identical 404, so guessing a
+ * real but unpublished slug discloses nothing. */
+export async function handlePublicBlogPost(_request: Request, env: Env, slugParam: string): Promise<Response> {
+  const slug = decodeURIComponent(slugParam);
+  const row = await env.DB.prepare(`SELECT ${BLOG_POST_COLUMNS} FROM blog_posts WHERE slug = ? AND status = 'published'`)
+    .bind(slug)
+    .first<BlogPostRow>();
+
+  if (!row) return jsonError("Blog post not found", 404);
+
+  const categoryRow = row.category_id ? await findCategoryById(env, row.category_id) : null;
+  return Response.json({ blogPost: serializePublicBlogPost(row, categoryRow?.name ?? null) });
 }
 
 /** POST /api/admin/blog-posts — requires blog.manage. */

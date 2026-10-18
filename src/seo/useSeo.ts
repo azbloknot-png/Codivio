@@ -36,6 +36,11 @@ export interface UsePageMetaOptions {
    * used if it's a well-formed absolute https:// URL; otherwise the
    * computed canonical for the current path is used instead. */
   canonicalOverride?: string;
+  /** Phase 8.5 — an admin-supplied OG image (e.g. a blog post's ogImage
+   * field). Same validation rule as canonicalOverride: only used if it's a
+   * well-formed absolute https:// URL, otherwise DEFAULT_OG_IMAGE is used,
+   * exactly as every other page already gets. */
+  ogImageOverride?: string;
   /** JSON-LD structured data (Phase 3.7) for this page, built by
    * shared/seo/schema.ts. Omitted entirely on /admin routes regardless of
    * what's passed in (defense in depth — see computeDefaultRobots below;
@@ -116,6 +121,10 @@ export function usePageMeta(title: string, description: string, options?: UsePag
       options?.canonicalOverride && isSafeAbsoluteHttpsUrl(options.canonicalOverride)
         ? options.canonicalOverride
         : buildCanonicalUrl(pathname);
+    const ogImage =
+      options?.ogImageOverride && isSafeAbsoluteHttpsUrl(options.ogImageOverride)
+        ? options.ogImageOverride
+        : DEFAULT_OG_IMAGE;
     const fullTitle = buildTitle(title);
 
     document.title = fullTitle;
@@ -130,13 +139,13 @@ export function usePageMeta(title: string, description: string, options?: UsePag
     upsertMeta("property", "og:title", fullTitle);
     upsertMeta("property", "og:description", description);
     upsertMeta("property", "og:url", canonicalUrl);
-    upsertMeta("property", "og:image", DEFAULT_OG_IMAGE);
+    upsertMeta("property", "og:image", ogImage);
     upsertMeta("property", "og:locale", OG_LOCALE[language]);
 
     upsertMeta("name", "twitter:card", "summary_large_image");
     upsertMeta("name", "twitter:title", fullTitle);
     upsertMeta("name", "twitter:description", description);
-    upsertMeta("name", "twitter:image", DEFAULT_OG_IMAGE);
+    upsertMeta("name", "twitter:image", ogImage);
 
     upsertJsonLd(options?.schemaGraph, pathname);
     // Intentionally keyed on the primitive robots/canonical fields rather
@@ -145,5 +154,14 @@ export function usePageMeta(title: string, description: string, options?: UsePag
     // schemaGraph itself is a fresh object per render too, so it's
     // intentionally left out of the deps array — JSON.stringify inside
     // upsertJsonLd is cheap and always reflects the latest value passed.
-  }, [title, description, language, location.pathname, options?.robots?.index, options?.robots?.follow, options?.canonicalOverride]);
+  }, [
+    title,
+    description,
+    language,
+    location.pathname,
+    options?.robots?.index,
+    options?.robots?.follow,
+    options?.canonicalOverride,
+    options?.ogImageOverride,
+  ]);
 }

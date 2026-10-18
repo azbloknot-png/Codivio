@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
+  ArrowLeft,
   ArrowRight,
   BarChart3,
   BookOpen,
@@ -42,6 +43,13 @@ import { Link, Route, Routes, useLocation, useNavigationType, useParams } from "
  * lightweight/heavy function split, since this data is now genuinely
  * needed, just only on this one route. See tests/technical-seo-3.13.test.ts. */
 const ToolPage = lazy(() => import("./pages/ToolPage"));
+
+/** Phase 8.5 — same isolation strategy as ToolPage above: its own lazy
+ * chunk, so the react-markdown/unified/remark dependency tree is only
+ * downloaded by a visitor who actually opens a blog article. See
+ * src/pages/BlogArticleBody.tsx's own header comment for the XSS-safety
+ * reasoning behind this specific split. */
+const BlogArticleBody = lazy(() => import("./pages/BlogArticleBody"));
 
 // Performance Fix — Admin panel lazy loading. Every admin-only component is
 // route-level code-split (same `lazy()` + `<Suspense>` pattern as ToolPage
@@ -121,6 +129,60 @@ function useGlobalFaqs(language: Language): GlobalFaqItem[] {
   }, [language]);
 
   return faqs;
+}
+
+/** Phase 8.5 — the public shape returned by GET /api/blog-posts (list) —
+ * mirrors worker/blog.ts#serializePublicBlogPostSummary exactly; never
+ * includes `content` (not needed for a card) or any author/tag field (see
+ * that file's header comment for why). */
+interface PublicBlogPostSummary {
+  title: string;
+  slug: string;
+  excerpt: string;
+  featuredImage: string;
+  publishedAt: string | null;
+  categoryName: string | null;
+}
+
+type BlogListState =
+  | { status: "loading" }
+  | { status: "error" }
+  | { status: "ready"; posts: PublicBlogPostSummary[] };
+
+/** Shared by HomePage's Blog slider and BlogPage — each is a distinct route
+ * (never mounted at the same time), so there is no simultaneous-double-
+ * fetch case to guard against here; sharing this hook's code (not a cached
+ * request) is the right-sized reuse for that reality. Replaces the former
+ * hardcoded `blogPosts` array entirely — there is no static fallback here
+ * (unlike useGlobalFaqs above), since real, possibly-empty data is the
+ * correct result, not a sign the fetch failed. */
+function useBlogPosts(): BlogListState {
+  const [state, setState] = useState<BlogListState>({ status: "loading" });
+
+  useEffect(() => {
+    let cancelled = false;
+    setState({ status: "loading" });
+
+    fetch("/api/blog-posts")
+      .then(async (response) => {
+        if (cancelled) return;
+        if (!response.ok) {
+          setState({ status: "error" });
+          return;
+        }
+        const data = (await response.json()) as { blogPosts: PublicBlogPostSummary[] };
+        setState({ status: "ready", posts: data.blogPosts });
+      })
+      .catch(() => {
+        if (!cancelled) setState({ status: "error" });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return state;
 }
 
 /** Phase 3.1 — usePageMeta now also sets canonical/robots/OG/Twitter/html
@@ -526,39 +588,6 @@ const categories = [
   "Other Tools",
 ] as const;
 
-const blogPosts = [
-  {
-    category: "QR Codes",
-    title: "How to Create a QR Code for a Website",
-    text: "Learn the simple steps for turning a website URL into a useful QR code.",
-  },
-  {
-    category: "PDF",
-    title: "How to Reduce PDF File Size",
-    text: "Practical ways to make PDF files smaller for sharing and storage.",
-  },
-  {
-    category: "Images",
-    title: "JPG, PNG or WebP: Which Format Should You Use?",
-    text: "Understand the differences between popular image formats.",
-  },
-  {
-    category: "Productivity",
-    title: "Useful Online Tools for Everyday Tasks",
-    text: "Discover simple browser-based tools that can save time.",
-  },
-  {
-    category: "Security",
-    title: "How to Use Online File Tools More Safely",
-    text: "Important privacy and security considerations when working with files online.",
-  },
-  {
-    category: "QR Codes",
-    title: "QR Codes for Business and Marketing",
-    text: "Ideas for using QR codes on menus, packaging, printed materials and more.",
-  },
-];
-
 function ToolSlider() {
   const [start, setStart] = useState(0);
 
@@ -800,6 +829,7 @@ function HomePage() {
   const homeSeo = getPageSeo("home", language).copy;
   usePageMeta(homeSeo.title, homeSeo.description, { schemaGraph: buildStandardPageGraph("home", language) });
   const globalFaqs = useGlobalFaqs(language);
+  const blogState = useBlogPosts();
   const [query, setQuery] = useState("");
   const [menuCategory, setMenuCategory] = useState<string>("All");
   const popularTrackRef = useRef<HTMLDivElement>(null);
@@ -1244,16 +1274,26 @@ function HomePage() {
               aria-label="Blog posts"
               tabIndex={0}
             >
-              {blogPosts.slice(0, 3).map((post) => (
-                <article key={post.title}>
-                  <span>{post.category}</span>
-                  <h3>{post.title}</h3>
-                  <p>{post.text}</p>
-                  <Link to="/blog">
-                    Read article <ArrowRight size={14} />
-                  </Link>
-                </article>
-              ))}
+              {blogState.status === "loading" && (
+                <p className="blog-slider-status">Loading articles…</p>
+              )}
+              {blogState.status === "error" && (
+                <p className="blog-slider-status">Articles are temporarily unavailable.</p>
+              )}
+              {blogState.status === "ready" && blogState.posts.length === 0 && (
+                <p className="blog-slider-status">No articles published yet. Check back soon.</p>
+              )}
+              {blogState.status === "ready" &&
+                blogState.posts.slice(0, 3).map((post) => (
+                  <article key={post.slug}>
+                    {post.categoryName && <span>{post.categoryName}</span>}
+                    <h3>{post.title}</h3>
+                    <p>{post.excerpt}</p>
+                    <Link to={`/blog/${post.slug}`}>
+                      Read article <ArrowRight size={14} />
+                    </Link>
+                  </article>
+                ))}
             </div>
           </div>
         </section>
@@ -1340,6 +1380,7 @@ function BlogPage() {
   const { language } = useLanguage();
   const seo = getPageSeo("blog", language).copy;
   usePageMeta(seo.title, seo.description, { schemaGraph: buildStandardPageGraph("blog", language) });
+  const blogState = useBlogPosts();
   return (
     <PageShell>
       <main className="inner-page">
@@ -1355,21 +1396,45 @@ function BlogPage() {
 
           <AdSlot />
 
-          <section className="blog-page-grid">
-            {blogPosts.map((post) => (
-              <article className="blog-card" key={post.title}>
-                <div className="blog-card-icon">
-                  <BookOpen size={23} />
-                </div>
-                <span>{post.category}</span>
-                <h2>{post.title}</h2>
-                <p>{post.text}</p>
-                <Link to="/blog">
-                  Read more <ArrowRight size={15} />
-                </Link>
-              </article>
-            ))}
-          </section>
+          {blogState.status === "loading" && (
+            <section className="blog-page-grid" aria-busy="true">
+              <p className="blog-slider-status">Loading articles…</p>
+            </section>
+          )}
+
+          {blogState.status === "error" && (
+            <div className="empty-state">
+              <BookOpen size={28} />
+              <h2>Articles unavailable</h2>
+              <p>We couldn't load the blog right now. Please try again shortly.</p>
+            </div>
+          )}
+
+          {blogState.status === "ready" && blogState.posts.length === 0 && (
+            <div className="empty-state">
+              <BookOpen size={28} />
+              <h2>No articles published yet</h2>
+              <p>Check back soon for guides and practical digital tips.</p>
+            </div>
+          )}
+
+          {blogState.status === "ready" && blogState.posts.length > 0 && (
+            <section className="blog-page-grid">
+              {blogState.posts.map((post) => (
+                <article className="blog-card" key={post.slug}>
+                  <div className="blog-card-icon">
+                    <BookOpen size={23} />
+                  </div>
+                  {post.categoryName && <span>{post.categoryName}</span>}
+                  <h2>{post.title}</h2>
+                  <p>{post.excerpt}</p>
+                  <Link to={`/blog/${post.slug}`}>
+                    Read more <ArrowRight size={15} />
+                  </Link>
+                </article>
+              ))}
+            </section>
+          )}
 
           <section className="seo-content">
             <span className="eyebrow">ABOUT OUR CONTENT</span>
@@ -1386,6 +1451,130 @@ function BlogPage() {
             </p>
           </section>
         </div>
+      </main>
+    </PageShell>
+  );
+}
+
+/** Phase 8.5 — the public shape returned by GET /api/blog-posts/:slug —
+ * mirrors worker/blog.ts#serializePublicBlogPost exactly. */
+interface PublicBlogPost extends PublicBlogPostSummary {
+  content: string;
+  seoTitle: string;
+  seoDescription: string;
+  canonicalUrl: string;
+  ogImage: string;
+}
+
+type BlogPostLoadState =
+  | { status: "loading" }
+  | { status: "notfound" }
+  | { status: "ready"; post: PublicBlogPost };
+
+function formatBlogDate(publishedAt: string | null): string | null {
+  if (!publishedAt) return null;
+  const date = new Date(publishedAt);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+}
+
+function BlogPostContent({ post }: { post: PublicBlogPost }) {
+  usePageMeta(post.seoTitle || post.title, post.seoDescription || post.excerpt || post.title, {
+    canonicalOverride: post.canonicalUrl || undefined,
+    ogImageOverride: post.ogImage || undefined,
+  });
+  const publishedLabel = formatBlogDate(post.publishedAt);
+
+  return (
+    <PageShell showSlider={false}>
+      <main className="inner-page">
+        <div className="container">
+          <nav className="tool-breadcrumb" aria-label="Breadcrumb">
+            <ol>
+              <li>
+                <Link to="/">Home</Link>
+              </li>
+              <li>
+                <Link to="/blog">Blog</Link>
+              </li>
+              <li>
+                <span aria-current="page">{post.title}</span>
+              </li>
+            </ol>
+          </nav>
+
+          <article className="legal-content blog-article">
+            <header className="blog-article-header">
+              {post.categoryName && <span className="eyebrow">{post.categoryName}</span>}
+              <h1>{post.title}</h1>
+              {publishedLabel && (
+                <p className="blog-article-meta">
+                  <CalendarDays size={15} aria-hidden="true" /> {publishedLabel}
+                </p>
+              )}
+              {post.excerpt && <p className="blog-article-excerpt">{post.excerpt}</p>}
+            </header>
+
+            <Suspense fallback={null}>
+              <BlogArticleBody content={post.content} />
+            </Suspense>
+          </article>
+
+          <p className="blog-article-back">
+            <Link className="primary-text-link" to="/blog">
+              <ArrowLeft size={15} /> Back to Blog
+            </Link>
+          </p>
+        </div>
+      </main>
+    </PageShell>
+  );
+}
+
+function BlogPostRoute() {
+  const { slug } = useParams<{ slug: string }>();
+  const [state, setState] = useState<BlogPostLoadState>({ status: "loading" });
+
+  useEffect(() => {
+    let cancelled = false;
+    setState({ status: "loading" });
+
+    fetch(`/api/blog-posts/${encodeURIComponent(slug ?? "")}`)
+      .then(async (response) => {
+        if (cancelled) return;
+        if (!response.ok) {
+          setState({ status: "notfound" });
+          return;
+        }
+        const data = (await response.json()) as { blogPost: PublicBlogPost };
+        setState({ status: "ready", post: data.blogPost });
+      })
+      .catch(() => {
+        if (!cancelled) setState({ status: "notfound" });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [slug]);
+
+  if (state.status === "notfound") {
+    return (
+      <NotFoundPage
+        title="Article not found"
+        message="This article isn't available, or the link may be incorrect. Browse the Codivio blog to find what you need."
+      />
+    );
+  }
+
+  if (state.status === "ready") {
+    return <BlogPostContent post={state.post} />;
+  }
+
+  return (
+    <PageShell showSlider={false}>
+      <main className="inner-page">
+        <div className="container" />
       </main>
     </PageShell>
   );
@@ -2475,6 +2664,7 @@ function App() {
       <Route path="/tools" element={<ToolsPage />} />
       <Route path="/tools/:slug" element={<ToolRoute />} />
       <Route path="/blog" element={<BlogPage />} />
+      <Route path="/blog/:slug" element={<BlogPostRoute />} />
       <Route path="/faq" element={<FAQPage />} />
       <Route path="/about" element={<AboutPage />} />
       <Route path="/contact" element={<ContactPage />} />

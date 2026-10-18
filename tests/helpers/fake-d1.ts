@@ -608,9 +608,24 @@ export class FakeD1 implements D1Database {
         const row = this.blogPosts.find((p) => p.id === v[0]) ?? null;
         return { first: row ? { ...row } : null, all: row ? [{ ...row }] : [] };
       }
+      // Phase 8.5 public single-post lookup — checked before the plain
+      // "WHERE slug = ?" branch below, since that's a substring of this
+      // query too; order here mirrors the real SQL's own specificity.
+      if (q.includes("WHERE slug = ? AND status = 'published'")) {
+        const row = this.blogPosts.find((p) => p.slug === v[0] && p.status === "published") ?? null;
+        return { first: row ? { ...row } : null, all: row ? [{ ...row }] : [] };
+      }
       if (q.includes("WHERE slug = ?")) {
         const row = this.blogPosts.find((p) => p.slug === v[0]) ?? null;
         return { first: row ? { ...row } : null, all: row ? [{ ...row }] : [] };
+      }
+      // Phase 8.5 public list query — published only, newest first.
+      if (q.includes("WHERE status = 'published'")) {
+        const rows = this.blogPosts
+          .filter((p) => p.status === "published")
+          .sort((a, b) => ((b.published_at as string | null) ?? "").localeCompare((a.published_at as string | null) ?? ""))
+          .map((p) => ({ ...p }));
+        return { first: rows[0] ?? null, all: rows };
       }
       // ORDER BY updated_at DESC (admin list-all query)
       const rows = [...this.blogPosts]
