@@ -192,6 +192,15 @@ CREATE TABLE IF NOT EXISTS site_faqs (
 CREATE INDEX IF NOT EXISTS idx_site_faqs_scope_language ON site_faqs(scope, language, sort_order);
 CREATE INDEX IF NOT EXISTS idx_site_faqs_tool_slug ON site_faqs(tool_slug);
 
+-- Phase 8.1 (migrations/0012_blog_data_model.sql) added `category_id`,
+-- `author_id`, `scheduled_at`, `seo_title`, `seo_description`,
+-- `canonical_url`, `og_image`, `created_by`, `updated_by`. `category` and
+-- `author_name` are intentionally RETIRED IN PLACE, not dropped (D1/SQLite
+-- DROP COLUMN support is UNKNOWN -- NOT VERIFIED in this environment --
+-- see that migration's own comment): superseded by `category_id`
+-- (-> blog_categories) and `author_id` (-> users), never read or written
+-- by future Blog code. This table itself remains dormant -- no Worker
+-- handler reads or writes it yet (Phase 8.2, not this phase).
 CREATE TABLE IF NOT EXISTS blog_posts (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   title TEXT NOT NULL,
@@ -204,7 +213,50 @@ CREATE TABLE IF NOT EXISTS blog_posts (
   status TEXT NOT NULL DEFAULT 'draft',
   published_at TEXT,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  category_id INTEGER REFERENCES blog_categories(id),
+  author_id INTEGER REFERENCES users(id),
+  scheduled_at TEXT,
+  seo_title TEXT NOT NULL DEFAULT '',
+  seo_description TEXT NOT NULL DEFAULT '',
+  canonical_url TEXT NOT NULL DEFAULT '',
+  og_image TEXT NOT NULL DEFAULT '',
+  created_by INTEGER REFERENCES users(id),
+  updated_by INTEGER REFERENCES users(id)
+);
+
+-- Phase 8.1 -- normalized Blog taxonomy/relationship tables. One category
+-- per post (blog_posts.category_id above), many-to-many tags, many-to-many
+-- related tools reusing the real Tool Registry (tools(id)) directly rather
+-- than duplicating tool data -- see migrations/0012_blog_data_model.sql.
+CREATE TABLE IF NOT EXISTS blog_categories (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL UNIQUE,
+  slug TEXT NOT NULL UNIQUE,
+  status TEXT NOT NULL DEFAULT 'active',
+  sort_order INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS blog_tags (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL UNIQUE,
+  slug TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS blog_post_tags (
+  post_id INTEGER NOT NULL,
+  tag_id INTEGER NOT NULL,
+  PRIMARY KEY (post_id, tag_id),
+  FOREIGN KEY (post_id) REFERENCES blog_posts(id) ON DELETE CASCADE,
+  FOREIGN KEY (tag_id) REFERENCES blog_tags(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS blog_post_related_tools (
+  post_id INTEGER NOT NULL,
+  tool_id INTEGER NOT NULL,
+  PRIMARY KEY (post_id, tool_id),
+  FOREIGN KEY (post_id) REFERENCES blog_posts(id) ON DELETE CASCADE,
+  FOREIGN KEY (tool_id) REFERENCES tools(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS analytics_events (
@@ -267,6 +319,11 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 CREATE INDEX IF NOT EXISTS idx_tools_category ON tools(category_id);
 CREATE INDEX IF NOT EXISTS idx_pages_status ON pages(status);
 CREATE INDEX IF NOT EXISTS idx_blog_status ON blog_posts(status);
+CREATE INDEX IF NOT EXISTS idx_blog_posts_category_id ON blog_posts(category_id);
+CREATE INDEX IF NOT EXISTS idx_blog_posts_author_id ON blog_posts(author_id);
+CREATE INDEX IF NOT EXISTS idx_blog_posts_status_published_at ON blog_posts(status, published_at);
+CREATE INDEX IF NOT EXISTS idx_blog_post_tags_tag_id ON blog_post_tags(tag_id);
+CREATE INDEX IF NOT EXISTS idx_blog_post_related_tools_tool_id ON blog_post_related_tools(tool_id);
 CREATE INDEX IF NOT EXISTS idx_events_name_date ON analytics_events(event_name, created_at);
 CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at);
