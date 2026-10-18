@@ -34,6 +34,15 @@
  *    URL) — Cloudflare's own asset-fallback behavior for the same
  *    `not_found_handling` setting; a different problem category (asset
  *    delivery, not page indexability), out of scope for this fix.
+ *
+ * Post-Phase-8.5 fix: `isKnownPublicRoute()` did not have a case for
+ * `/blog/:slug` when Phase 8.5 added the public article route, so every
+ * real, published article was incorrectly soft-404'd identically to a
+ * genuinely nonexistent slug. `isPublishedBlogPostSlug()` below closes that
+ * gap, mirroring `isPublishedCmsSlug()`'s exact shape (parameterized query,
+ * same `status = 'published'` condition the public blog API itself uses —
+ * `worker/blog.ts`'s `handlePublicBlogPost` — so a draft/scheduled article
+ * is correctly left unrecognized, not just a nonexistent one).
  */
 
 import type { Env } from "./types";
@@ -65,12 +74,26 @@ async function isPublishedCmsSlug(env: Env, pathname: string): Promise<boolean> 
   return row !== null;
 }
 
+/** Mirrors isPublishedCmsSlug() exactly, for the one-segment `/blog/:slug`
+ * article path instead of the catch-all `/:slug` CMS path — a draft or
+ * scheduled post's slug correctly returns false, same as a nonexistent one. */
+async function isPublishedBlogPostSlug(env: Env, pathname: string): Promise<boolean> {
+  const match = pathname.match(/^\/blog\/([^/]+)$/);
+  if (!match) return false;
+  const slug = decodeURIComponent(match[1]);
+  const row = await env.DB.prepare("SELECT id FROM blog_posts WHERE slug = ? AND status = 'published'")
+    .bind(slug)
+    .first();
+  return row !== null;
+}
+
 /** True if `pathname` is a real, currently-routable public page — the exact
  * set of paths the client-side router renders real content for, not a
  * `NotFoundPage` fallback. Callers should normalize the pathname first. */
 export async function isKnownPublicRoute(pathname: string, env: Env): Promise<boolean> {
   if (STATIC_PAGE_PATHS.has(pathname)) return true;
   if (isRealToolPath(pathname)) return true;
+  if (await isPublishedBlogPostSlug(env, pathname)) return true;
   return isPublishedCmsSlug(env, pathname);
 }
 

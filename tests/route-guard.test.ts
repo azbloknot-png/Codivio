@@ -35,6 +35,23 @@ describe("isKnownPublicRoute", () => {
     expect(await isKnownPublicRoute("/draft-cms-page", env)).toBe(false);
     expect(await isKnownPublicRoute("/totally-made-up-page", env)).toBe(false);
   });
+
+  // Post-Phase-8.5 fix: a real published article was previously
+  // indistinguishable from a nonexistent one (both fell through every
+  // existing case to "unknown"). Mirrors the CMS-page test immediately
+  // above exactly, for the /blog/:slug shape instead.
+  it("recognizes a published blog article slug and rejects a draft, scheduled, or nonexistent one", async () => {
+    const env = makeEnv();
+    const fake = env.DB as import("./helpers/fake-d1").FakeD1;
+    fake.blogPosts.push({ id: 1, slug: "real-published-article", status: "published" });
+    fake.blogPosts.push({ id: 2, slug: "draft-article", status: "draft" });
+    fake.blogPosts.push({ id: 3, slug: "scheduled-article", status: "scheduled" });
+
+    expect(await isKnownPublicRoute("/blog/real-published-article", env)).toBe(true);
+    expect(await isKnownPublicRoute("/blog/draft-article", env)).toBe(false);
+    expect(await isKnownPublicRoute("/blog/scheduled-article", env)).toBe(false);
+    expect(await isKnownPublicRoute("/blog/totally-made-up-article", env)).toBe(false);
+  });
 });
 
 describe("normalizePathname", () => {
@@ -70,6 +87,26 @@ describe("Worker fetch() end to end — soft-404 fix", () => {
       const response = await worker.fetch(new Request(`http://localhost${path}`), env);
       expect(response.status, path).toBe(200);
     }
+  });
+
+  // Post-Phase-8.5 fix, end-to-end proof: before this fix, both of these
+  // requests returned 404 — a real published article was indistinguishable
+  // from a draft one at the actual HTTP layer, not just in the pure
+  // isKnownPublicRoute() unit above.
+  it("a real published blog article now returns 200; a draft article's slug still returns 404", async () => {
+    const env = makeEnv();
+    const fake = env.DB as import("./helpers/fake-d1").FakeD1;
+    fake.blogPosts.push({ id: 1, slug: "real-published-article", status: "published" });
+    fake.blogPosts.push({ id: 2, slug: "draft-article", status: "draft" });
+
+    const publishedResponse = await worker.fetch(new Request("http://localhost/blog/real-published-article"), env);
+    expect(publishedResponse.status).toBe(200);
+
+    const draftResponse = await worker.fetch(new Request("http://localhost/blog/draft-article"), env);
+    expect(draftResponse.status).toBe(404);
+
+    const nonexistentResponse = await worker.fetch(new Request("http://localhost/blog/totally-made-up-article"), env);
+    expect(nonexistentResponse.status).toBe(404);
   });
 
   it("an unmatched /api/* path returns a real JSON 404, not the SPA shell's HTML", async () => {
