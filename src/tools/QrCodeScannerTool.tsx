@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
-import { AlertTriangle, Camera, Check, Copy, ImageOff, RotateCcw, ScanLine, Upload, VideoOff } from "lucide-react";
+import { AlertTriangle, Camera, Check, Copy, Download, ImageOff, RotateCcw, ScanLine, Upload, VideoOff } from "lucide-react";
 import { decodeQrFromImageData } from "../lib/qr-scanner-engine";
 import { classifyScannedQrContent } from "../../shared/qr";
 import { trackQrScan } from "../lib/qr-analytics";
 import { trackToolStart, trackToolComplete } from "../lib/tool-analytics";
+import { downloadTextAsFile } from "../lib/download-file";
 
 /**
  * Phase 4.6 — QR Code Scanner. Loaded via its own lazy chunk from
@@ -18,14 +19,16 @@ import { trackToolStart, trackToolComplete } from "../lib/tool-analytics";
  * Decoded content is rendered as plain text only (never
  * dangerouslySetInnerHTML), is never logged, never sent to a server, never
  * placed in a URL/query parameter, and never used to auto-navigate — the
- * user must explicitly copy it. Camera tracks are always stopped on
- * success, on explicit stop/reset, and on unmount.
+ * user must explicitly copy or download it. Camera tracks are always
+ * stopped on success, on explicit stop/reset, and on unmount.
  *
- * Scope: generic decode + safe display only, per Phase 4.6 — no download/
- * export UI (reserved for Phase 4.7), no automatic action on decoded
- * content (no auto-open link/call/add-contact), no full per-format parsing
- * (see shared/qr/classify.ts for the deliberately minimal, prefix-only
- * content labeling).
+ * Scope: generic decode + safe display only, per Phase 4.6 — no automatic
+ * action on decoded content (no auto-open link/call/add-contact), no full
+ * per-format parsing (see shared/qr/classify.ts for the deliberately
+ * minimal, prefix-only content labeling). A plain-text .txt download of the
+ * decoded result was added as a small, separately-authorized follow-up,
+ * reusing src/lib/download-file.ts's existing downloadTextAsFile — the same
+ * utility the QR Generator already uses for its SVG export.
  */
 
 type ScannerPhase =
@@ -282,6 +285,14 @@ function QrCodeScannerTool() {
     }
   }, [decodedText]);
 
+  // Downloads the exact decoded text as a plain .txt file, reusing the same
+  // generic, tool-agnostic utility the QR Generator already uses for its
+  // SVG export — no new download mechanism, no new dependency.
+  const downloadResult = useCallback(() => {
+    if (!decodedText) return;
+    downloadTextAsFile(decodedText, "qr-scan-result.txt", "text/plain");
+  }, [decodedText]);
+
   const classification = decodedText ? classifyScannedQrContent(decodedText) : null;
   const isCameraVisible = phase === "camera-starting" || phase === "camera-active";
 
@@ -410,6 +421,10 @@ function QrCodeScannerTool() {
               <button type="button" className="primary-button" onClick={() => void copyResult()}>
                 <Copy size={16} aria-hidden="true" />
                 {copyState === "copied" ? "Copied!" : "Copy"}
+              </button>
+              <button type="button" className="primary-button" onClick={downloadResult} aria-label="Download decoded result as a .txt file">
+                <Download size={16} aria-hidden="true" />
+                Download as .txt
               </button>
               <button type="button" className="primary-button" onClick={reset}>
                 <RotateCcw size={16} aria-hidden="true" />

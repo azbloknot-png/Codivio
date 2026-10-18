@@ -57,9 +57,9 @@ describe("QrCodeScannerTool privacy and security", () => {
     expect(source).toContain("getTracks().forEach");
   });
 
-  it("does not implement download/export controls (reserved for Phase 4.7)", () => {
-    expect(source).not.toMatch(/download=/i);
-    expect(source).not.toMatch(/>\s*Download/i);
+  it("downloads the decoded result as a plain .txt file via the shared download utility, not a new mechanism", () => {
+    expect(source).toContain('import { downloadTextAsFile } from "../lib/download-file"');
+    expect(source).toMatch(/downloadTextAsFile\(\s*decodedText\s*,\s*["']qr-scan-result\.txt["']\s*,\s*["']text\/plain["']\s*\)/);
   });
 });
 
@@ -72,6 +72,15 @@ describe("QrCodeScannerTool states and UX", () => {
 
   it("provides a copy action using the real Clipboard API", () => {
     expect(source).toMatch(/navigator\.clipboard\??\.writeText/);
+  });
+
+  it("provides an accessible download action alongside copy, only within the success-result block", () => {
+    expect(source).toContain('aria-label="Download decoded result as a .txt file"');
+    // Both the download handler's own guard and the success-result JSX
+    // block gate on decodedText, so the button can never render or fire
+    // without an actual decoded result.
+    const successBlockMatch = source.match(/phase === "success" && decodedText &&[\s\S]*?Download as \.txt[\s\S]*?Scan again/);
+    expect(successBlockMatch).not.toBeNull();
   });
 
   it("provides a reset/scan-again action", () => {
