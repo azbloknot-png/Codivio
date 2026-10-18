@@ -194,6 +194,10 @@ export interface Translations {
     editAdSlot: string;
     noAdSlotsYet: string;
     loadingAdSlots: string;
+    newBlogPost: string;
+    editBlogPost: string;
+    noBlogPostsYet: string;
+    loadingBlogPosts: string;
   };
   site: {
     navHome: string;

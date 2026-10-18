@@ -50,6 +50,10 @@ export const AUDIT_ACTIONS = [
   "AD_SLOT_ACTIVATED",
   "AD_SLOT_DEACTIVATED",
   "AD_SLOT_DELETED",
+  "BLOG_POST_CREATED",
+  "BLOG_POST_UPDATED",
+  "BLOG_POST_PUBLISHED",
+  "BLOG_POST_DELETED",
 ] as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
 

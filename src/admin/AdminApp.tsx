@@ -238,7 +238,7 @@ function getNavItems(t: Translations): { permission?: Permission; icon: ReactNod
     { permission: "tools.view", icon: <Box size={18} />, label: t.nav.tools, to: "/admin/tools" },
     { permission: "faq.view", icon: <CircleHelp size={18} />, label: t.nav.faq, to: "/admin/faq" },
     { permission: "users.view", icon: <Users size={18} />, label: t.nav.usersCrm, to: "/admin/users" },
-    { icon: <BookOpen size={18} />, label: t.nav.blog, to: "/admin/blog" },
+    { permission: "blog.view", icon: <BookOpen size={18} />, label: t.nav.blog, to: "/admin/blog" },
     { permission: "analytics.view", icon: <BarChart3 size={18} />, label: t.nav.analytics, to: "/admin/analytics" },
     { permission: "seo.view", icon: <TrendingUp size={18} />, label: t.nav.seo, to: "/admin/seo" },
     { icon: <Search size={18} />, label: t.nav.searchConsole, to: "/admin/search-console" },

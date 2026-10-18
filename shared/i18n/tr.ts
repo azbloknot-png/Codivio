@@ -225,6 +225,10 @@ export const tr: Translations = {
     editAdSlot: "Reklam alanını düzenle",
     noAdSlotsYet: "Henüz reklam alanı yok",
     loadingAdSlots: "Reklam alanları yükleniyor…",
+    newBlogPost: "Yeni blog yazısı",
+    editBlogPost: "Blog yazısını düzenle",
+    noBlogPostsYet: "Henüz blog yazısı yok",
+    loadingBlogPosts: "Blog yazıları yükleniyor…",
   },
   site: {
     navHome: "Ana sayfa",

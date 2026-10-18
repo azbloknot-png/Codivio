@@ -55,6 +55,14 @@ import {
   handleUpdateSeoOverride,
 } from "./seo-overrides";
 import { handleCreateAdSlot, handleDeleteAdSlot, handleListAdSlots, handleUpdateAdSlot } from "./ad-slots";
+import {
+  handleCreateBlogPost,
+  handleDeleteBlogPost,
+  handleGetBlogPost,
+  handleListBlogCategories,
+  handleListBlogPosts,
+  handleUpdateBlogPost,
+} from "./blog";
 import { withSecurityHeaders } from "./security-headers";
 
 export type { Env };
@@ -214,6 +222,25 @@ async function route(request: Request, env: Env): Promise<Response> {
       if (request.method === "PATCH") return handleUpdateAdSlot(request, env, id);
       if (request.method === "DELETE") return handleDeleteAdSlot(request, env, id);
       return methodNotAllowed(["PATCH", "DELETE"]);
+    }
+
+    if (url.pathname === "/api/admin/blog-posts") {
+      if (request.method === "GET") return handleListBlogPosts(request, env);
+      if (request.method === "POST") return handleCreateBlogPost(request, env);
+      return methodNotAllowed(["GET", "POST"]);
+    }
+
+    const adminBlogPostMatch = url.pathname.match(/^\/api\/admin\/blog-posts\/([^/]+)$/);
+    if (adminBlogPostMatch) {
+      const id = adminBlogPostMatch[1];
+      if (request.method === "GET") return handleGetBlogPost(request, env, id);
+      if (request.method === "PATCH") return handleUpdateBlogPost(request, env, id);
+      if (request.method === "DELETE") return handleDeleteBlogPost(request, env, id);
+      return methodNotAllowed(["GET", "PATCH", "DELETE"]);
+    }
+
+    if (url.pathname === "/api/admin/blog-categories") {
+      return request.method === "GET" ? handleListBlogCategories(request, env) : methodNotAllowed(["GET"]);
     }
 
     // Every specific /api/* route above has already had its chance to

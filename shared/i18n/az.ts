@@ -226,6 +226,10 @@ export const az: Translations = {
     editAdSlot: "Reklam blokunu redaktə et",
     noAdSlotsYet: "Hələ reklam bloku yoxdur",
     loadingAdSlots: "Reklam blokları yüklənir…",
+    newBlogPost: "Yeni bloq yazısı",
+    editBlogPost: "Bloq yazısını redaktə et",
+    noBlogPostsYet: "Hələ bloq yazısı yoxdur",
+    loadingBlogPosts: "Bloq yazıları yüklənir…",
   },
   site: {
     navHome: "Ana səhifə",

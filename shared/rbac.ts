@@ -38,6 +38,8 @@ export const PERMISSIONS = [
   "audit.view",
   "advertising.view",
   "advertising.manage",
+  "blog.view",
+  "blog.manage",
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 
@@ -95,6 +97,8 @@ const ROLE_PERMISSIONS: Readonly<Record<Role, readonly Permission[]>> = {
     "audit.view",
     "advertising.view",
     "advertising.manage",
+    "blog.view",
+    "blog.manage",
   ],
   editor: [
     "admin.access",
@@ -108,6 +112,8 @@ const ROLE_PERMISSIONS: Readonly<Record<Role, readonly Permission[]>> = {
     "seo.view",
     "seo.manage",
     "advertising.view",
+    "blog.view",
+    "blog.manage",
   ],
   analyst: ["admin.access", "dashboard.view", "analytics.view"],
 };

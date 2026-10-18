@@ -73,6 +73,17 @@ describe("hasPermission", () => {
     expect(hasPermission("super_admin", "advertising.manage")).toBe(true);
   });
 
+  it("blog.view/blog.manage (Phase 8.2) follow the pages/tools/faq/seo admin+editor pattern, NOT the advertising admin-only-manage exception — Blog is editorial content, not revenue-affecting", () => {
+    for (const role of ["admin", "editor"] as const) {
+      expect(hasPermission(role, "blog.view")).toBe(true);
+      expect(hasPermission(role, "blog.manage")).toBe(true);
+    }
+    expect(hasPermission("super_admin", "blog.view")).toBe(true);
+    expect(hasPermission("super_admin", "blog.manage")).toBe(true);
+    expect(hasPermission("analyst", "blog.view")).toBe(false);
+    expect(hasPermission("analyst", "blog.manage")).toBe(false);
+  });
+
   it("seo.view/seo.manage (Phase 3.15-B) follow the exact same admin+editor-only pattern as pages/tools/faq — never granted alone, never to analyst", () => {
     for (const role of ["admin", "editor"] as const) {
       expect(hasPermission(role, "seo.view")).toBe(hasPermission(role, "pages.view"));

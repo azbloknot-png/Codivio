@@ -62,6 +62,7 @@ const AdminFaqPage = lazy(() => import("./admin/AdminFaqPage"));
 const AdminComingSoonPage = lazy(() => import("./admin/AdminComingSoonPage"));
 const AdminSeoPage = lazy(() => import("./admin/AdminSeoPage"));
 const AdminAdvertisingPage = lazy(() => import("./admin/AdminAdvertisingPage"));
+const AdminBlogPage = lazy(() => import("./admin/AdminBlogPage"));
 import { useLanguage } from "./i18n/LanguageContext";
 import { LanguageSwitcher } from "./i18n/LanguageSwitcher";
 import { usePageMeta } from "./seo/useSeo";
@@ -2551,7 +2552,7 @@ function App() {
           path="blog"
           element={
             <Suspense fallback={null}>
-              <AdminComingSoonPage moduleKey="blog" />
+              <AdminBlogPage />
             </Suspense>
           }
         />

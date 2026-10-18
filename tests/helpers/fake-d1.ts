@@ -22,6 +22,11 @@ export class FakeD1 implements D1Database {
   siteFaqs: Record<string, unknown>[] = [];
   seoOverrides: Record<string, unknown>[] = [];
   adSlots: Record<string, unknown>[] = [];
+  blogPosts: Record<string, unknown>[] = [];
+  blogCategories: Record<string, unknown>[] = [];
+  blogTags: Record<string, unknown>[] = [];
+  blogPostTags: Record<string, unknown>[] = [];
+  blogPostRelatedTools: Record<string, unknown>[] = [];
   private nextUserId = 1;
   private nextAuditId = 1;
   private nextPageId = 1;
@@ -29,6 +34,8 @@ export class FakeD1 implements D1Database {
   private nextFaqId = 1;
   private nextSeoOverrideId = 1;
   private nextAdSlotId = 1;
+  private nextBlogPostId = 1;
+  private nextBlogTagId = 1;
 
   /** Seeds the same 4 category rows migrations/0006_tools_management.sql
    * inserts. Real tool rows are seeded separately per-test via
@@ -583,6 +590,131 @@ export class FakeD1 implements D1Database {
       const [id] = v;
       this.adSlots = this.adSlots.filter((a) => a.id !== id);
       return { first: null, all: [] };
+    }
+    if (q.startsWith("SELECT id, name, slug FROM blog_categories")) {
+      if (q.includes("WHERE id = ?")) {
+        const row = this.blogCategories.find((c) => c.id === v[0]) ?? null;
+        return { first: row ? { ...row } : null, all: row ? [{ ...row }] : [] };
+      }
+      const rows = this.blogCategories.map((c) => ({ ...c }));
+      return { first: rows[0] ?? null, all: rows };
+    }
+    if (
+      q.startsWith(
+        "SELECT id, title, slug, excerpt, content, featured_image, status, published_at, created_at, updated_at, category_id, author_id, scheduled_at, seo_title, seo_description, canonical_url, og_image, created_by, updated_by FROM blog_posts"
+      )
+    ) {
+      if (q.includes("WHERE id = ?")) {
+        const row = this.blogPosts.find((p) => p.id === v[0]) ?? null;
+        return { first: row ? { ...row } : null, all: row ? [{ ...row }] : [] };
+      }
+      if (q.includes("WHERE slug = ?")) {
+        const row = this.blogPosts.find((p) => p.slug === v[0]) ?? null;
+        return { first: row ? { ...row } : null, all: row ? [{ ...row }] : [] };
+      }
+      // ORDER BY updated_at DESC (admin list-all query)
+      const rows = [...this.blogPosts]
+        .sort((a, b) => (b.updated_at as string).localeCompare(a.updated_at as string))
+        .map((p) => ({ ...p }));
+      return { first: rows[0] ?? null, all: rows };
+    }
+    if (q.startsWith("INSERT INTO blog_posts")) {
+      const [title, slug, excerpt, content, status, published_at, created_at, updated_at, category_id, author_id, scheduled_at, seo_title, seo_description, canonical_url, og_image, created_by, updated_by] =
+        v;
+      const id = this.nextBlogPostId++;
+      this.blogPosts.push({
+        id,
+        title,
+        slug,
+        excerpt,
+        content,
+        featured_image: "",
+        status,
+        published_at,
+        created_at,
+        updated_at,
+        category_id,
+        author_id,
+        scheduled_at,
+        seo_title,
+        seo_description,
+        canonical_url,
+        og_image,
+        created_by,
+        updated_by,
+      });
+      return { first: null, all: [], lastRowId: id };
+    }
+    if (q.startsWith("UPDATE blog_posts SET title")) {
+      const [title, slug, excerpt, content, status, published_at, updated_at, category_id, scheduled_at, seo_title, seo_description, canonical_url, og_image, featured_image, updated_by, id] = v;
+      const row = this.blogPosts.find((p) => p.id === id);
+      if (row) {
+        Object.assign(row, {
+          title,
+          slug,
+          excerpt,
+          content,
+          status,
+          published_at,
+          updated_at,
+          category_id,
+          scheduled_at,
+          seo_title,
+          seo_description,
+          canonical_url,
+          og_image,
+          featured_image,
+          updated_by,
+        });
+      }
+      return { first: null, all: [] };
+    }
+    if (q.startsWith("DELETE FROM blog_posts")) {
+      const [id] = v;
+      this.blogPosts = this.blogPosts.filter((p) => p.id !== id);
+      return { first: null, all: [] };
+    }
+    if (q.startsWith("SELECT id, name, slug FROM blog_tags WHERE slug = ?")) {
+      const row = this.blogTags.find((t) => t.slug === v[0]) ?? null;
+      return { first: row ? { ...row } : null, all: row ? [{ ...row }] : [] };
+    }
+    if (q.startsWith("INSERT INTO blog_tags")) {
+      const [name, slug] = v;
+      const id = this.nextBlogTagId++;
+      this.blogTags.push({ id, name, slug });
+      return { first: null, all: [], lastRowId: id };
+    }
+    if (q.startsWith("DELETE FROM blog_post_tags WHERE post_id = ?")) {
+      const [postId] = v;
+      this.blogPostTags = this.blogPostTags.filter((r) => r.post_id !== postId);
+      return { first: null, all: [] };
+    }
+    if (q.startsWith("INSERT INTO blog_post_tags")) {
+      const [postId, tagId] = v;
+      this.blogPostTags.push({ post_id: postId, tag_id: tagId });
+      return { first: null, all: [] };
+    }
+    if (q.startsWith("SELECT t.name FROM blog_post_tags")) {
+      const [postId] = v;
+      const tagIds = this.blogPostTags.filter((r) => r.post_id === postId).map((r) => r.tag_id);
+      const rows = this.blogTags.filter((t) => tagIds.includes(t.id)).map((t) => ({ name: t.name }));
+      return { first: rows[0] ?? null, all: rows };
+    }
+    if (q.startsWith("DELETE FROM blog_post_related_tools WHERE post_id = ?")) {
+      const [postId] = v;
+      this.blogPostRelatedTools = this.blogPostRelatedTools.filter((r) => r.post_id !== postId);
+      return { first: null, all: [] };
+    }
+    if (q.startsWith("INSERT INTO blog_post_related_tools")) {
+      const [postId, toolId] = v;
+      this.blogPostRelatedTools.push({ post_id: postId, tool_id: toolId });
+      return { first: null, all: [] };
+    }
+    if (q.startsWith("SELECT t.slug FROM blog_post_related_tools")) {
+      const [postId] = v;
+      const toolIds = this.blogPostRelatedTools.filter((r) => r.post_id === postId).map((r) => r.tool_id);
+      const rows = this.tools.filter((t) => toolIds.includes(t.id)).map((t) => ({ slug: t.slug }));
+      return { first: rows[0] ?? null, all: rows };
     }
     throw new Error(`FakeD1: unhandled query: ${q}`);
   }
