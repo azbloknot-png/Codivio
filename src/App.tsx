@@ -682,6 +682,12 @@ function SiteHeader() {
           Codivio
         </Link>
 
+        <div
+          className={`nav-backdrop ${menuOpen ? "open" : ""}`}
+          onClick={() => setMenuOpen(false)}
+          aria-hidden="true"
+        />
+
         <nav id="site-mobile-nav" className={`nav-links ${menuOpen ? "open" : ""}`}>
           <Link to="/" onClick={() => setMenuOpen(false)}>
             {t.site.navHome}
