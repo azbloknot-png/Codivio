@@ -373,6 +373,8 @@ describe("homepage accessibility structure (Phase 2.14)", () => {
       ".mobile-menu:focus-visible",
       ".popular-tools-track:focus-visible",
       ".nav-links a:focus-visible",
+      ".primary-button:focus-visible",
+      ".category-filter button:focus-visible",
     ]) {
       expect(styleSource).toContain(selector);
     }

@@ -5,7 +5,7 @@
 .language-switcher:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px}
 .language-switcher-admin{height:36px;background:transparent;border-color:rgba(255,255,255,.25);color:#fff}
 .skip-link{position:absolute;top:-48px;left:12px;z-index:50;background:var(--color-primary);color:#fff;padding:12px 18px;border-radius:0 0 10px 10px;font-weight:700;font-size:14px;text-decoration:none;transition:top .15s ease}.skip-link:focus{top:0}
-.hero{background:linear-gradient(135deg,#f7fbff,#eef5ff);border-bottom:1px solid #e6edf7}.hero-grid{min-height:510px;display:grid;grid-template-columns:1.1fr .9fr;align-items:center;gap:30px}.eyebrow{font-size:11px;font-weight:800;letter-spacing:.12em;color:#1769e0}.hero h1{font-size:52px;line-height:1.05;margin:10px 0 16px;letter-spacing:-.04em;color:#172b49}.hero h1 span{color:#1769e0}.hero p{max-width:650px;font-size:17px;color:#637289;margin:0 0 24px}.hero-search{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #d9e2ef;border-radius:13px;padding:7px 8px 7px 14px;max-width:650px;box-shadow:0 12px 30px rgba(35,74,120,.08)}.hero-search button{border:0;border-radius:9px;background:#1769e0;color:#fff;padding:11px 18px;font-weight:700;cursor:pointer}.trust-row{display:flex;gap:24px;margin-top:18px;color:#52627a;font-size:13px}.trust-row span{display:flex;align-items:center;gap:6px}.trust-row svg{color:#20a466}.hero-ad-slot{height:360px;border-radius:22px;background:#fff;border:1px solid #e1e8f2;box-shadow:0 24px 60px rgba(27,64,108,.1);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#9aa5b5}.hero-ad-label{font-size:11px;font-weight:800;letter-spacing:.1em}.hero-ad-note{font-size:12px;color:#b9c2cf}
+.hero{background:linear-gradient(135deg,#f7fbff,#eef5ff);border-bottom:1px solid #e6edf7}.hero-grid{min-height:510px;display:grid;grid-template-columns:1.1fr .9fr;align-items:center;gap:30px}.eyebrow{font-size:11px;font-weight:800;letter-spacing:.12em;color:#1769e0}.hero h1{font-size:52px;line-height:1.05;margin:10px 0 16px;letter-spacing:-.04em;color:#172b49}.hero h1 span{color:#1769e0}.hero p{max-width:650px;font-size:17px;color:#637289;margin:0 0 24px}.hero-search{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #d9e2ef;border-radius:13px;padding:7px 8px 7px 14px;max-width:650px;box-shadow:0 12px 30px rgba(35,74,120,.08)}.hero-search button{border:0;border-radius:9px;background:var(--color-accent);color:#fff;padding:11px 18px;font-weight:700;cursor:pointer;transition:background-color .18s ease,transform .1s ease}.hero-search button:hover{background:var(--color-accent-hover)}.hero-search button:active{transform:scale(.97)}.hero-search button:focus-visible{outline:2px solid var(--color-accent-hover);outline-offset:3px}.trust-row{display:flex;gap:24px;margin-top:18px;color:#52627a;font-size:13px}.trust-row span{display:flex;align-items:center;gap:6px}.trust-row svg{color:#20a466}.hero-ad-slot{height:360px;border-radius:22px;background:#fff;border:1px solid #e1e8f2;box-shadow:0 24px 60px rgba(27,64,108,.1);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#9aa5b5}.hero-ad-label{font-size:11px;font-weight:800;letter-spacing:.1em}.hero-ad-note{font-size:12px;color:#b9c2cf}
 .ad-slot{height:90px;margin-top:28px;margin-bottom:15px;border-radius:10px;background:#edf1f6;display:flex;align-items:center;justify-content:center;flex-direction:column;color:#7c899b;font-size:11px;font-weight:800;letter-spacing:.08em}.ad-slot span{font-size:10px;font-weight:600;margin-top:2px}.ad-slot-device-mobile{display:none}
 .section{padding:48px 0}.section-heading{display:flex;justify-content:space-between;align-items:end;margin-bottom:20px}.section-heading h2,.content-section h2,.faq h2{font-size:30px;line-height:1.15;margin:6px 0 0;color:#172b49;letter-spacing:-.025em}.section-heading>a{display:flex;align-items:center;gap:5px;color:#1769e0;text-decoration:none;font-weight:700;font-size:13px}.tool-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}.tool-card{position:relative;background:#fff;border:1px solid #e4eaf2;border-radius:16px;padding:20px;text-decoration:none;color:inherit;min-height:205px;transition:.18s ease;box-shadow:0 7px 25px rgba(26,52,84,.035)}.tool-card:hover{transform:translateY(-3px);border-color:#bfd3ef;box-shadow:0 15px 35px rgba(26,52,84,.09)}.tool-card:focus-visible{outline:2px solid var(--color-primary);outline-offset:3px}.tool-icon{width:46px;height:46px;border-radius:12px;background:#edf5ff;color:#1769e0;display:grid;place-items:center;margin-bottom:15px}.tool-category{font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:#8290a3;font-weight:800}.tool-card h3{font-size:16px;margin:5px 0;color:#24364f}.tool-card p{font-size:12px;color:#738197;margin:0;max-width:230px}.tool-arrow{position:absolute;right:18px;bottom:18px;color:#1769e0}
 .content-section{padding:58px 0}.content-section-inner{display:grid;grid-template-columns:.75fr 1.25fr;gap:40px}.content-section>div>p{color:#68778d}.article-list{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.article-list article{background:#fff;border:1px solid #e4eaf2;border-radius:15px;padding:18px}.article-list span{font-size:10px;font-weight:800;color:#1769e0}.article-list h3{font-size:15px;color:#26364a;min-height:70px}.article-list a{display:flex;align-items:center;gap:4px;color:#1769e0;text-decoration:none;font-weight:700;font-size:12px}
@@ -39,8 +39,11 @@
 /* Phase 4.3 — Text/URL mode toggle, reusing .category-filter's existing
    pill-button styling. Only justify-content/margin are overridden (not
    touched by .category-filter's own mobile rule, so no specificity-order
-   risk); a dedicated :focus-visible is added since the base
-   .category-filter button has none. */
+   risk). The :focus-visible rule below is now redundant with the base
+   .category-filter button's own :focus-visible (added in the design-
+   system completion pass) — left in place rather than removed, since
+   either rule alone already produces the correct result and this file's
+   convention is additive, not retroactive cleanup of unrelated code. */
 .category-filter.qr-generator-mode-toggle{justify-content:flex-start;margin:0 0 18px}
 .qr-generator-mode-toggle button:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px}
 .qr-generator-field{display:block;margin-bottom:16px;color:#243b5a;font-size:13px;font-weight:700}
@@ -295,7 +298,7 @@
 }
 
 /* Phase 1 UI/CSS fix pass: verified against actual src/App.tsx JSX (not copied blindly from phase1f-b1.css) */
-:root{--color-primary:#1769e0;--color-ink:#172b49;--color-muted:#68778d;--radius-md:14px}
+:root{--color-primary:#1769e0;--color-ink:#172b49;--color-muted:#68778d;--radius-md:14px;--color-accent:#b45309;--color-accent-hover:#92400e}
 
 .tool-icon,.blog-card-icon,.about-icon{width:46px;height:46px;border-radius:var(--radius-md);background:#edf5ff;color:var(--color-primary);display:grid;place-items:center;margin-bottom:15px}
 
@@ -309,6 +312,7 @@
 .primary-text-link:hover{text-decoration:underline}
 .primary-button{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 20px;border:0;border-radius:11px;background:var(--color-primary);color:#fff;font:inherit;font-size:14px;font-weight:750;cursor:pointer;text-decoration:none}
 .primary-button:hover{background:#1259c1}
+.primary-button:focus-visible{outline:2px solid var(--color-primary);outline-offset:3px}
 
 .tool-slider-section{margin-top:54px}
 .tool-slider-actions{display:flex;gap:8px}
@@ -327,6 +331,7 @@
 .category-filter{display:flex;flex-wrap:wrap;justify-content:center;gap:9px;margin:0 auto 30px}
 .category-filter button{min-height:38px;padding:0 15px;border:1px solid #dbe4ef;border-radius:999px;background:#fff;color:#52627a;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
 .category-filter button:hover{border-color:#bcd2ec;color:var(--color-primary)}
+.category-filter button:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px}
 .category-filter button.active{background:var(--color-primary);border-color:var(--color-primary);color:#fff}
 
 .blog-page-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
