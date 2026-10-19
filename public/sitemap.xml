@@ -40,75 +40,113 @@
   Static (not worker-generated) for now, matching robots.txt/llms.txt —
   see DECISIONS.md's "SEO Metadata Architecture" entry for why a dynamic,
   D1-driven sitemap is future work rather than being built here.
+
+  SEO Sitemap Completion audit (2026-09-22): added a lastmod date to every
+  URL. Each value is the real last-changed date of that page's actual
+  content source, taken from `git log`'s commit date for the relevant file
+  (a pickaxe search on the page's own component function for the pages
+  defined inside src/App.tsx, or the file's own last-commit date for a
+  standalone file) — never a fabricated "today" date. Update the relevant
+  lastmod field by hand whenever a page's real content changes, the same
+  way priority/changefreq are already hand-maintained.
+
+  Follow-up correction (2026-10-19): the original audit's pickaxe method
+  missed body-only edits (it only detects a function's own signature line
+  changing) and shared-component dependencies (e.g. /privacy, /terms, and
+  /cookies all render through the shared LegalPage component, not just
+  their own wrapper function). Re-verified every lastmod against real git
+  history with this gap accounted for; 5 of 14 values were stale and have
+  been corrected here. /blog's changefreq stays monthly, but its original
+  rationale ("a static, hand-written preview list — no CMS exists yet")
+  is itself now stale: Phase 8.5 replaced that static list with real,
+  D1-backed, Admin-published content. monthly is kept as a reasonable
+  default, not because it has been empirically validated — only one real
+  article has ever been published, which is not enough data to establish
+  an actual cadence. Revisit this value once real publishing frequency is
+  known.
 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://codivio.online/</loc>
+    <lastmod>2026-10-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://codivio.online/tools</loc>
+    <lastmod>2026-09-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://codivio.online/tools/qr-code-generator</loc>
+    <lastmod>2026-09-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://codivio.online/tools/qr-code-scanner</loc>
+    <lastmod>2026-10-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://codivio.online/blog</loc>
-    <changefreq>weekly</changefreq>
+    <lastmod>2026-10-18</lastmod>
+    <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://codivio.online/faq</loc>
+    <lastmod>2026-09-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://codivio.online/about</loc>
+    <lastmod>2026-09-13</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
     <loc>https://codivio.online/contact</loc>
+    <lastmod>2026-09-13</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
     <loc>https://codivio.online/privacy</loc>
+    <lastmod>2026-09-15</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.2</priority>
   </url>
   <url>
     <loc>https://codivio.online/terms</loc>
+    <lastmod>2026-09-15</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.2</priority>
   </url>
   <url>
     <loc>https://codivio.online/cookies</loc>
+    <lastmod>2026-09-15</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.2</priority>
   </url>
   <url>
     <loc>https://codivio.online/pricing</loc>
+    <lastmod>2026-09-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://codivio.online/sitemap</loc>
+    <lastmod>2026-09-21</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://codivio.online/robots</loc>
+    <lastmod>2026-09-21</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>

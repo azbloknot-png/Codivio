@@ -41,8 +41,20 @@ describe("public/sitemap.xml — XSLT stylesheet reference", () => {
     expect(new Set(locs).size).toBe(locs.length);
   });
 
-  it("every url/loc/changefreq/priority tag is still balanced (open/close counts match)", () => {
-    for (const tag of ["url", "loc", "changefreq", "priority"]) {
+  it("gives every URL a real, valid-format lastmod date (YYYY-MM-DD), never fabricated or missing", () => {
+    const locs = [...sitemapXml.matchAll(/<loc>(.*?)<\/loc>/g)].map((m) => m[1]);
+    const lastmods = [...sitemapXml.matchAll(/<lastmod>(.*?)<\/lastmod>/g)].map((m) => m[1]);
+    expect(lastmods.length).toBe(locs.length);
+    for (const lastmod of lastmods) {
+      expect(lastmod).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(Number.isNaN(new Date(lastmod).getTime())).toBe(false);
+      // A sitemap date must be real and in the past/present, never postdated.
+      expect(new Date(lastmod).getTime()).toBeLessThanOrEqual(Date.now());
+    }
+  });
+
+  it("every url/loc/lastmod/changefreq/priority tag is still balanced (open/close counts match)", () => {
+    for (const tag of ["url", "loc", "lastmod", "changefreq", "priority"]) {
       const opens = sitemapXml.match(new RegExp(`<${tag}>`, "g"))?.length ?? 0;
       const closes = sitemapXml.match(new RegExp(`</${tag}>`, "g"))?.length ?? 0;
       expect(opens, `${tag} open/close mismatch`).toBe(closes);
@@ -61,9 +73,10 @@ describe("public/sitemap.xsl — XSLT transform", () => {
     expect(sitemapXsl.match(/<\/xsl:stylesheet>/g)?.length).toBe(1);
   });
 
-  it("renders every real sitemap field (a clickable loc link, changefreq, priority) and a total-URL count", () => {
+  it("renders every real sitemap field (a clickable loc link, lastmod, changefreq, priority) and a total-URL count", () => {
     expect(sitemapXsl).toContain('select="/sm:urlset/sm:url"');
     expect(sitemapXsl).toContain('<a href="{sm:loc}">');
+    expect(sitemapXsl).toContain("sm:lastmod");
     expect(sitemapXsl).toContain("sm:changefreq");
     expect(sitemapXsl).toContain("sm:priority");
     expect(sitemapXsl).toContain("count(/sm:urlset/sm:url)");

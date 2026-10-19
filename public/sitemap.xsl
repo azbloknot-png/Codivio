@@ -74,6 +74,7 @@
                 <thead>
                   <tr>
                     <th scope="col">URL</th>
+                    <th scope="col">Last Modified</th>
                     <th scope="col">Change Frequency</th>
                     <th scope="col">Priority</th>
                   </tr>
@@ -83,6 +84,9 @@
                     <tr>
                       <td class="xsl-loc" data-label="URL">
                         <a href="{sm:loc}"><xsl:value-of select="sm:loc"/></a>
+                      </td>
+                      <td data-label="Last Modified">
+                        <xsl:value-of select="sm:lastmod"/>
                       </td>
                       <td data-label="Change Frequency">
                         <span class="xsl-pill"><xsl:value-of select="sm:changefreq"/></span>

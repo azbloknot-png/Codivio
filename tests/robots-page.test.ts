@@ -94,12 +94,13 @@ describe("public/sitemap.xml — /robots is listed like every other real PAGE_SE
   it("lists /robots exactly once, with priority 0.5 and changefreq monthly, matching /sitemap's tier", () => {
     const matches = [
       ...sitemapXml.matchAll(
-        /<url>\s*<loc>(https:\/\/codivio\.online\/robots)<\/loc>\s*<changefreq>([a-z]+)<\/changefreq>\s*<priority>([0-9.]+)<\/priority>\s*<\/url>/g
+        /<url>\s*<loc>(https:\/\/codivio\.online\/robots)<\/loc>\s*<lastmod>([0-9-]+)<\/lastmod>\s*<changefreq>([a-z]+)<\/changefreq>\s*<priority>([0-9.]+)<\/priority>\s*<\/url>/g
       ),
     ];
     expect(matches.length).toBe(1);
-    const [, loc, changefreq, priority] = matches[0];
+    const [, loc, lastmod, changefreq, priority] = matches[0];
     expect(loc).toBe("https://codivio.online/robots");
+    expect(lastmod).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     expect(changefreq).toBe("monthly");
     expect(priority).toBe("0.5");
   });
